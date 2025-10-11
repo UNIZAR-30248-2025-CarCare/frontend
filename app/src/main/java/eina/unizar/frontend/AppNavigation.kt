@@ -8,11 +8,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import java.time.LocalDate
+import java.time.YearMonth
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
 
     // --- Datos de Ejemplo para IncidenciasScreen (SOLO PARA COMPILAR) ---
     val usuarioEjemplo = Usuario("1", "Juan Pérez", "juan@eina.com")
@@ -42,6 +44,24 @@ fun AppNavigation() {
     val incidenciasActivas = listOf(incidenciaActivaEjemplo)
     val incidenciasResueltas = listOf(incidenciaResueltaEjemplo)
     // ---------------------------------------------------------------------
+
+
+
+    // --- Datos de Ejemplo (Mantenerlos para que las pantallas compilen) ---
+    val reservasEjemplo = listOf(
+        Reserva(
+            id = "R01",
+            usuario = usuarioEjemplo,
+            vehiculo = vehiculoEjemplo,
+            fecha = LocalDate.now(), // Para que aparezca en el día actual
+            horaInicio = "09:00",
+            horaFin = "11:00",
+            tipo = TipoReserva.TRABAJO,
+            estado = EstadoReserva.CONFIRMADA
+        )
+    )
+    // ---------------------------------------------------------------------
+
 
     NavHost(
         navController = navController,
@@ -86,12 +106,29 @@ fun AppNavigation() {
                 },
                 onAddIncidenciaClick = { /* Lógica para añadir */ },
                 selectedTab = 0,
-                onTabSelected = { newTab ->
+                onTabSelected = { navController.navigate("reservas") }
                     // Lógica para cambiar de pestaña si es necesario en el ViewModel
-                }
             )
         }
         // ------------------------------------
+
+        // --- RUTA DE RESERVAS/CALENDARIO  ---
+        composable("reservas") { // "reservas"
+            CalendarioScreen(
+                vehiculoSeleccionado = vehiculoEjemplo,
+                reservas = reservasEjemplo,
+                mesActual = YearMonth.now(),
+                diaSeleccionado = LocalDate.now(),
+                onBackClick = { navController.popBackStack() },
+                onVehiculoClick = { /* Lógica */ },
+                onMesAnterior = { /* Lógica */ },
+                onMesSiguiente = { /* Lógica */ },
+                onDiaClick = { /* Lógica */ },
+                onAddReservaClick = { /* Lógica */ },
+                selectedTab = 2, // Índice de la pestaña 'Reservas'
+                onTabSelected = {  } // Usar la función de navegación
+            )
+        }
 
     }
 }
