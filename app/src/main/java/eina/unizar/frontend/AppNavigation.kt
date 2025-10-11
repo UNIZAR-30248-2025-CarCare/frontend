@@ -19,6 +19,8 @@ fun AppNavigation() {
     // --- Datos de Ejemplo para IncidenciasScreen (SOLO PARA COMPILAR) ---
     val usuarioEjemplo = Usuario("1", "Juan Pérez", "juan@eina.com")
     val vehiculoEjemplo = Vehiculo("V01", "Furgoneta 1", "Z-1234-AZ", TipoVehiculo.FURGONETA)
+    val vehiculoEjemplo2 = Vehiculo("V02", "Camión 2", "B-5678-CX", TipoVehiculo.CAMION)
+    val vehiculosDisponibles = listOf(vehiculoEjemplo, vehiculoEjemplo2)
     val incidenciaActivaEjemplo = Incidencia(
         id = "I01",
         titulo = "Rueda pinchada",
@@ -124,9 +126,25 @@ fun AppNavigation() {
                 onMesAnterior = { /* Lógica */ },
                 onMesSiguiente = { /* Lógica */ },
                 onDiaClick = { /* Lógica */ },
-                onAddReservaClick = { /* Lógica */ },
+                onAddReservaClick = {
+                    navController.navigate("nueva_reserva")
+                },
                 selectedTab = 2, // Índice de la pestaña 'Reservas'
                 onTabSelected = {  } // Usar la función de navegación
+            )
+        }
+
+        // --- NUEVA RUTA DE RESERVA ---
+        composable("nueva_reserva") {
+            // Asegúrate de usar @RequiresApi si es necesario
+            NuevaReservaScreen(
+                vehiculos = vehiculosDisponibles, // Pasar los vehículos disponibles
+                onBackClick = { navController.popBackStack() },
+                onCrearReserva = { nuevaReservaData ->
+                    // Aquí iría la lógica para enviar los datos al backend
+                    println("Reserva creada: $nuevaReservaData")
+                    navController.popBackStack() // Volver al calendario tras crear
+                }
             )
         }
 
