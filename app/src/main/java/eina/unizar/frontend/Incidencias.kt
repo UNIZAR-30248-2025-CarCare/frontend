@@ -44,6 +44,7 @@ enum class TipoVehiculo(val icon: ImageVector, val color: Color) {
     CAMION(Icons.Default.ShoppingCart, Color(0xFF3B82F6)),
     FURGONETA(Icons.Default.ShoppingCart, Color(0xFFF59E0B)),
     COCHE(Icons.Default.ShoppingCart, Color(0xFF10B981)),
+    MOTO(Icons.Default.ShoppingCart, Color(0xFFEF4444)),
     OTRO(Icons.Default.ShoppingCart, Color(0xFF6B7280))
 }
 

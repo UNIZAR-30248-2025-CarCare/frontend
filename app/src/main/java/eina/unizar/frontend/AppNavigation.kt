@@ -105,7 +105,7 @@ fun AppNavigation() {
                     //navController.navigate("vehiculo_detalle/$vehiculoId")
                 },
                 onAddVehiculoClick = {
-                    //navController.navigate("add_vehiculo")
+                    navController.navigate("add_vehiculo")
                 },
                 onMapaClick = {
                     // Si tienes una ruta de mapa, descomenta la siguiente línea:
@@ -125,6 +125,23 @@ fun AppNavigation() {
                 }
             )
         }
+
+        // ----------------------------------------------------------
+        // *** RUTA PARA AÑADIR VEHÍCULO ***
+        composable("add_vehiculo") {
+            AddVehiculoScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onAddClick = { vehiculoData ->
+                    // Lógica para enviar 'vehiculoData' al backend o ViewModel
+                    println("Vehículo a añadir: $vehiculoData")
+                    // Después de un guardado exitoso, vuelve a la pantalla anterior
+                    navController.popBackStack()
+                }
+            )
+        }
+        // ----------------------------------------------------------
 
 
         // --- NUEVA RUTA DE INCIDENCIAS ---
