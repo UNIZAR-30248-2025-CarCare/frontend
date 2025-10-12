@@ -16,10 +16,10 @@ fun AppNavigation() {
     val navController = rememberNavController()
 
 
-    // --- Datos de Ejemplo para IncidenciasScreen (SOLO PARA COMPILAR) ---
+    // --- Datos de Ejemplo para Home y otras pantallas ---
     val usuarioEjemplo = Usuario("1", "Juan Pérez", "juan@eina.com")
-    val vehiculoEjemplo = Vehiculo("V01", "Furgoneta 1", "Z-1234-AZ", TipoVehiculo.FURGONETA)
-    val vehiculoEjemplo2 = Vehiculo("V02", "Camión 2", "B-5678-CX", TipoVehiculo.CAMION)
+    val vehiculoEjemplo = Vehiculo("V01", EstadoVehiculo.DISPONIBLE,"Furgoneta 1", "Z-1234-AZ", TipoVehiculo.FURGONETA) // Añadido EstadoVehiculo para HomeScreen
+    val vehiculoEjemplo2 = Vehiculo("V02", EstadoVehiculo.EN_USO, "Camión 2", "B-5678-CX", TipoVehiculo.CAMION) // Añadido EstadoVehiculo
     val vehiculosDisponibles = listOf(vehiculoEjemplo, vehiculoEjemplo2)
     val incidenciaActivaEjemplo = Incidencia(
         id = "I01",
@@ -90,10 +90,43 @@ fun AppNavigation() {
                 onRegisterClick = { /* acción de registro */ },
                 onLoginClick = {
                     //Ir al login
-                    navController.navigate("incidencias")
+                    navController.navigate("home")
                 }
             )
         }
+
+        composable("home") {
+            HomeScreen(
+                userName = usuarioEjemplo.nombre, // Usamos el nombre del usuario de ejemplo
+                vehiculos = vehiculosDisponibles, // Pasamos la lista de vehículos
+
+                // Callbacks de navegación de la pantalla:
+                onVehiculoClick = { vehiculoId ->
+                    //navController.navigate("vehiculo_detalle/$vehiculoId")
+                },
+                onAddVehiculoClick = {
+                    //navController.navigate("add_vehiculo")
+                },
+                onMapaClick = {
+                    // Si tienes una ruta de mapa, descomenta la siguiente línea:
+                    // navController.navigate("mapa")
+                },
+                onCalendarioClick = {
+                    navController.navigate("reservas")
+                },
+                onIncidenciasClick = {
+                    navController.navigate("incidencias")
+                },
+
+                // Bottom Navigation Logic:
+                selectedTab = 0,
+                onTabSelected = {
+
+                }
+            )
+        }
+
+
         // --- NUEVA RUTA DE INCIDENCIAS ---
         composable("incidencias") {
             IncidenciasScreen(

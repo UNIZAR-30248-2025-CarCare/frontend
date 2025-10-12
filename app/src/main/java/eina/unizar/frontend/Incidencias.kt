@@ -33,6 +33,7 @@ data class Usuario(
 
 data class Vehiculo(
     val id: String,
+    val estado: EstadoVehiculo,
     val nombre: String,
     val matricula: String,
     val tipo: TipoVehiculo
