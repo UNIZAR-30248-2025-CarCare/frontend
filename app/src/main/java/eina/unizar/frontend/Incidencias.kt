@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 data class Usuario(
     val id: String,
     val nombre: String,
+    val iniciales: String,
     val email: String
 )
 

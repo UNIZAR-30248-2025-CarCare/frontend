@@ -4,9 +4,11 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -17,7 +19,7 @@ fun AppNavigation() {
 
 
     // --- Datos de Ejemplo para Home y otras pantallas ---
-    val usuarioEjemplo = Usuario("1", "Juan Pérez", "juan@eina.com")
+    val usuarioEjemplo = Usuario("1", "Juan Pérez", "jp", "juan@eina.com")
     val vehiculoEjemplo = Vehiculo("V01", EstadoVehiculo.DISPONIBLE,"Furgoneta 1", "Z-1234-AZ", TipoVehiculo.FURGONETA) // Añadido EstadoVehiculo para HomeScreen
     val vehiculoEjemplo2 = Vehiculo("V02", EstadoVehiculo.EN_USO, "Camión 2", "B-5678-CX", TipoVehiculo.CAMION) // Añadido EstadoVehiculo
     val vehiculosDisponibles = listOf(vehiculoEjemplo, vehiculoEjemplo2)
@@ -47,7 +49,21 @@ fun AppNavigation() {
     val incidenciasResueltas = listOf(incidenciaResueltaEjemplo)
     // ---------------------------------------------------------------------
 
-
+    // *** NUEVOS DATOS DE EJEMPLO PARA DetalleVehiculoScreen ***
+        val vehiculoDetalleEjemplo = VehiculoDetalle(
+            id = "V01",
+            nombre = "Furgoneta 1",
+            matricula = "Z-1234-AZ",
+            fabricante = "Peugeot",
+            modelo = "Boxer",
+            anio = 2020,
+            combustible = "Diésel",
+            capacidadDeposito = 90,
+            consumoMedio = 7.5,
+            tipo = TipoVehiculo.FURGONETA,
+            estado = EstadoVehiculo.DISPONIBLE,
+            usuariosVinculados = listOf(usuarioEjemplo, usuarioEjemplo)
+        )
 
     // --- Datos de Ejemplo (Mantenerlos para que las pantallas compilen) ---
     val reservasEjemplo = listOf(
@@ -102,13 +118,12 @@ fun AppNavigation() {
 
                 // Callbacks de navegación de la pantalla:
                 onVehiculoClick = { vehiculoId ->
-                    //navController.navigate("vehiculo_detalle/$vehiculoId")
+                    navController.navigate("vehiculo_detalle/$vehiculoId")
                 },
                 onAddVehiculoClick = {
                     navController.navigate("add_vehiculo")
                 },
                 onMapaClick = {
-                    // Si tienes una ruta de mapa, descomenta la siguiente línea:
                     // navController.navigate("mapa")
                 },
                 onCalendarioClick = {
@@ -138,6 +153,32 @@ fun AppNavigation() {
                     println("Vehículo a añadir: $vehiculoData")
                     // Después de un guardado exitoso, vuelve a la pantalla anterior
                     navController.popBackStack()
+                }
+            )
+        }
+        // ----------------------------------------------------------
+
+        // ----------------------------------------------------------
+        // *** NUEVA RUTA DE DETALLE DE VEHÍCULO ***
+        composable(
+            route = "vehiculo_detalle/{vehiculoId}",
+            arguments = listOf(navArgument("vehiculoId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val vehiculoId = backStackEntry.arguments?.getString("vehiculoId") ?: "V01" // Default por si acaso
+
+            // Simular obtener los datos del vehículo por ID
+            val vehiculoDetalle = vehiculoDetalleEjemplo
+
+            DetalleVehiculoScreen(
+                vehiculo = vehiculoDetalle,
+                onBackClick = { navController.popBackStack() },
+                onVerMapaClick = {
+                    // Aquí iría la navegación a la pantalla de mapa
+                    println("Navegar a mapa para el vehículo: $vehiculoId")
+                },
+                onAddUsuarioClick = {
+                    // Aquí iría la navegación a la pantalla para vincular usuarios
+                    println("Navegar a vincular usuario para el vehículo: $vehiculoId")
                 }
             )
         }
