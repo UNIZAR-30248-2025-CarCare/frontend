@@ -197,13 +197,27 @@ fun AppNavigation() {
                     // Lógica para ver detalles
                     println("Ver incidencia: $incidenciaId")
                 },
-                onAddIncidenciaClick = { /* Lógica para añadir */ },
+                onAddIncidenciaClick = { navController.navigate("add_incidencia") },
                 selectedTab = 0,
                 onTabSelected = { navController.navigate("reservas") }
                     // Lógica para cambiar de pestaña si es necesario en el ViewModel
             )
         }
         // ------------------------------------
+
+        // === NUEVA RUTA PARA REPORTAR INCIDENCIA ===
+        composable("add_incidencia") {
+            NuevaIncidenciaScreen(
+                vehiculos = vehiculosDisponibles, // Puedes usar la misma lista de ejemplo
+                onBackClick = { navController.popBackStack() },
+                onReportarIncidencia = { nuevaIncidenciaData ->
+                    // Lógica para enviar los datos al backend
+                    println("Incidencia reportada: $nuevaIncidenciaData")
+                    navController.popBackStack() // Volver a la pantalla anterior
+                }
+            )
+        }
+        // ===========================================
 
         // --- RUTA DE RESERVAS/CALENDARIO  ---
         composable("reservas") { // "reservas"
