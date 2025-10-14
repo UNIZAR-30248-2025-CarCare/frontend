@@ -8,7 +8,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+<<<<<<< HEAD
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+=======
+>>>>>>> e45c30ab23000cb41f90f0969047b60c3825eec7
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -67,7 +70,11 @@ fun NuevaIncidenciaScreen(
             ) {
                 IconButton(onClick = onBackClick) {
                     Icon(
+<<<<<<< HEAD
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+=======
+                        imageVector = Icons.Default.ArrowBack,
+>>>>>>> e45c30ab23000cb41f90f0969047b60c3825eec7
                         contentDescription = "Volver",
                         tint = Color.White
                     )
