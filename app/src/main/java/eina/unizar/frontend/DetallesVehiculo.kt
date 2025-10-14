@@ -7,10 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-<<<<<<< HEAD
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-=======
->>>>>>> e45c30ab23000cb41f90f0969047b60c3825eec7
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,11 +34,7 @@ data class VehiculoDetalle(
     val usuariosVinculados: List<Usuario>
 )
 
-
-<<<<<<< HEAD
-=======
 @OptIn(ExperimentalMaterial3Api::class)
->>>>>>> e45c30ab23000cb41f90f0969047b60c3825eec7
 @Composable
 fun DetalleVehiculoScreen(
     vehiculo: VehiculoDetalle,
@@ -68,11 +61,7 @@ fun DetalleVehiculoScreen(
             ) {
                 IconButton(onClick = onBackClick) {
                     Icon(
-<<<<<<< HEAD
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-=======
-                        imageVector = Icons.Default.ArrowBack,
->>>>>>> e45c30ab23000cb41f90f0969047b60c3825eec7
                         contentDescription = "Volver",
                         tint = Color.White
                     )
@@ -195,11 +184,7 @@ fun DetalleVehiculoScreen(
                         )
                     }
 
-<<<<<<< HEAD
                     HorizontalDivider(
-=======
-                    Divider(
->>>>>>> e45c30ab23000cb41f90f0969047b60c3825eec7
                         modifier = Modifier.padding(vertical = 15.dp),
                         color = Color(0xFFE5E7EB)
                     )
@@ -218,11 +203,7 @@ fun DetalleVehiculoScreen(
                         )
                     }
 
-<<<<<<< HEAD
                     HorizontalDivider(
-=======
-                    Divider(
->>>>>>> e45c30ab23000cb41f90f0969047b60c3825eec7
                         modifier = Modifier.padding(vertical = 15.dp),
                         color = Color(0xFFE5E7EB)
                     )
@@ -241,11 +222,7 @@ fun DetalleVehiculoScreen(
                         )
                     }
 
-<<<<<<< HEAD
                     HorizontalDivider(
-=======
-                    Divider(
->>>>>>> e45c30ab23000cb41f90f0969047b60c3825eec7
                         modifier = Modifier.padding(vertical = 15.dp),
                         color = Color(0xFFE5E7EB)
                     )
