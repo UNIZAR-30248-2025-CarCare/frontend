@@ -133,19 +133,16 @@ fun AppNavigation() {
                 onIncidenciasClick = {
                     navController.navigate("incidencias")
                 },
-
-                // Bottom Navigation Logic:
-                selectedTab = 0,
-                onTabSelected = {
-
-                }
+                navController = navController
             )
         }
 
         composable("mapa") {
             UbicacionVehiculoScreen(
                 onBackClick = { navController.popBackStack() },
+                navController = navController
             )
+
         }
 
         // ----------------------------------------------------------
@@ -205,9 +202,7 @@ fun AppNavigation() {
                     println("Ver incidencia: $incidenciaId")
                 },
                 onAddIncidenciaClick = { navController.navigate("add_incidencia") },
-                selectedTab = 0,
-                onTabSelected = { navController.navigate("reservas") }
-                    // Lógica para cambiar de pestaña si es necesario en el ViewModel
+                navController = navController
             )
         }
         // ------------------------------------
@@ -241,8 +236,7 @@ fun AppNavigation() {
                 onAddReservaClick = {
                     navController.navigate("nueva_reserva")
                 },
-                selectedTab = 2, // Índice de la pestaña 'Reservas'
-                onTabSelected = {  } // Usar la función de navegación
+                navController = navController
             )
         }
 

@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavHost
+import androidx.navigation.NavHostController
 import org.maplibre.android.MapLibre
 import org.maplibre.android.WellKnownTileServer
 import org.maplibre.android.camera.CameraPosition
@@ -30,10 +32,13 @@ fun UbicacionVehiculoScreen(
     onBackClick: () -> Unit = {},
     onInicioClick: () -> Unit = {},
     onMapaClick: () -> Unit = {},
-    onReservasClick: () -> Unit = {}
+    onReservasClick: () -> Unit = {},
+    navController: NavHostController
 ) {
     val vehiclePosition = LatLng(41.6833, -0.8880)
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
 
     Scaffold(
         topBar = {
@@ -48,10 +53,16 @@ fun UbicacionVehiculoScreen(
             )
         },
         bottomBar = {
-            BottomNavigationBar(
-                onInicioClick = onInicioClick,
-                onMapaClick = onMapaClick,
-                onReservasClick = onReservasClick
+            eina.unizar.frontend.BottomNavigationBar(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    if (route != currentRoute) {
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                }
             )
         }
     ) { padding ->

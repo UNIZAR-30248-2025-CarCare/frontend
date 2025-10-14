@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -62,16 +63,33 @@ fun CalendarioScreen(
     onMesSiguiente: () -> Unit,
     onDiaClick: (LocalDate) -> Unit,
     onAddReservaClick: () -> Unit,
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit
+    navController: NavHostController
 ) {
     val reservasDelDia = reservas.filter { it.fecha == diaSeleccionado }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    if (route != currentRoute) {
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color(0xFFF5F5F5))
+        ) {
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -249,17 +267,11 @@ fun CalendarioScreen(
             }
         }
 
-        // Bottom Navigation
-        BottomNavigationBar(
-            selectedTab = selectedTab,
-            onTabSelected = onTabSelected
-        )
-
         // Botón flotante añadir reserva
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(end = 20.dp, bottom = 100.dp),
+                .padding(end = 20.dp, bottom = 10.dp),
             contentAlignment = Alignment.BottomEnd
         ) {
             FloatingActionButton(
@@ -277,6 +289,8 @@ fun CalendarioScreen(
         }
     }
 }
+        }
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

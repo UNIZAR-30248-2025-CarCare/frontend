@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 
 
 enum class EstadoVehiculo(val color: Color, val texto: String) {
@@ -37,14 +38,34 @@ fun HomeScreen(
     onMapaClick: () -> Unit,
     onCalendarioClick: () -> Unit,
     onIncidenciasClick: () -> Unit,
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit
+    navController: NavHostController
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
+
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    if (route != currentRoute) {
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color(0xFFF5F5F5))
+        ) {
+
+
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -175,14 +196,11 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
-
-        // Bottom Navigation
-        BottomNavigationBar(
-            selectedTab = selectedTab,
-            onTabSelected = onTabSelected
-        )
     }
 }
+    }
+
+
 
 @Composable
 fun VehiculoCard(
