@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.carcare.ui.UbicacionVehiculoScreen
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -124,7 +125,7 @@ fun AppNavigation() {
                     navController.navigate("add_vehiculo")
                 },
                 onMapaClick = {
-                    // navController.navigate("mapa")
+                    navController.navigate("mapa")
                 },
                 onCalendarioClick = {
                     navController.navigate("reservas")
@@ -138,6 +139,12 @@ fun AppNavigation() {
                 onTabSelected = {
 
                 }
+            )
+        }
+
+        composable("mapa") {
+            UbicacionVehiculoScreen(
+                onBackClick = { navController.popBackStack() },
             )
         }
 
