@@ -1,6 +1,9 @@
 package eina.unizar.frontend
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
@@ -24,6 +27,19 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.*
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import java.security.MessageDigest
+import eina.unizar.frontend.models.Usuario
+import eina.unizar.frontend.models.LoginRequest
+import eina.unizar.frontend.models.LoginResponse
+import eina.unizar.frontend.network.RetrofitClient
+import eina.unizar.frontend.viewmodels.AuthViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class EleccionInicioActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +50,7 @@ class EleccionInicioActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("ContextCastToActivity")
 @Composable
 fun PantallaEleccionInicio(
     onLoginClick: () -> Unit = {},
@@ -42,6 +59,8 @@ fun PantallaEleccionInicio(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as ComponentActivity)
 
     Box(
         modifier = Modifier
@@ -122,16 +141,73 @@ fun PantallaEleccionInicio(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón Iniciar Sesión
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+            var errorMessage by remember { mutableStateOf<String?>(null) }
+
             Button(
-                onClick = onLoginClick,
+                onClick = {
+                    val hashedPassword = hashPassword(password)
+                    Log.d("EleccionInicio", "Hashed Password: $hashedPassword") // Depuración
+                    val loginRequest = LoginRequest(email = email, contraseña = hashedPassword)
+
+                    scope.launch(Dispatchers.IO) {
+                        RetrofitClient.instance.iniciarSesion(loginRequest)
+                            .enqueue(object : Callback<LoginResponse> {
+                                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                                    if (response.isSuccessful) {
+                                        val loginResponse = response.body()
+                                        scope.launch(Dispatchers.Main) {
+                                            Toast.makeText(context, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show()
+                                            if (loginResponse != null) {
+                                                authViewModel.saveLoginData(loginResponse.userId, loginResponse.token)
+                                            }
+                                            Log.d("EleccionInicio", "UserID: ${loginResponse?.userId}, Token: ${loginResponse?.token}") // Depuración
+                                            // Navegar a la pantalla principal
+                                            onLoginClick()
+                                        }
+                                    } else {
+                                        val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                                        scope.launch(Dispatchers.Main) {
+                                            errorMessage = extractErrorMessage(errorBody)
+                                        }
+                                    }
+                                }
+
+                                // Función para extraer solo el mensaje de error
+                                private fun extractErrorMessage(errorBody: String): String {
+                                    // Intentar extraer el mensaje entre comillas después de "error":"
+                                    val regex = "\"error\":\"(.*?)\"".toRegex()
+                                    val matchResult = regex.find(errorBody)
+                                    return matchResult?.groupValues?.getOrNull(1) ?: errorBody
+                                }
+
+                                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                                    scope.launch(Dispatchers.Main) {
+                                        errorMessage = "Error de conexión: ${t.message}"
+                                    }
+                                }
+                            })
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text(text = "Iniciar Sesión", color = Color.White, fontSize = 16.sp)
+                Text("Iniciar Sesión", color = Color.White, fontSize = 16.sp)
+            }
+
+            // Mostrar mensaje de error
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
