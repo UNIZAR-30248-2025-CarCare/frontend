@@ -1,5 +1,6 @@
 package eina.unizar.frontend
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +20,25 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.widget.Toast
+import androidx.compose.runtime.rememberCoroutineScope
+import eina.unizar.frontend.models.Usuario
+import eina.unizar.frontend.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import androidx.compose.ui.platform.LocalContext
+import java.security.MessageDigest
+import android.app.DatePickerDialog
+import java.text.SimpleDateFormat
+import java.util.*
+
+fun hashPassword(password: String): String {
+    val bytes = MessageDigest.getInstance("SHA-256").digest(password.toByteArray())
+    return bytes.joinToString("") { "%02x".format(it) }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +52,29 @@ fun RegistroUsuarioScreen(
     var password by remember { mutableStateOf("") }
     var fechaNacimiento by remember { mutableStateOf("") }
     var aceptoTerminos by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Obtener el contexto para mostrar el DatePickerDialog
+    val context = LocalContext.current
+
+    // Crear calendario para la fecha actual
+    val calendario = Calendar.getInstance()
+
+    // Configurar el DatePickerDialog
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, año, mes, dia ->
+            // Formato de la fecha seleccionada (DD/MM/AAAA)
+            val fechaSeleccionada = String.format("%02d/%02d/%04d", dia, mes + 1, año)
+            fechaNacimiento = fechaSeleccionada
+        },
+        calendario.get(Calendar.YEAR),
+        calendario.get(Calendar.MONTH),
+        calendario.get(Calendar.DAY_OF_MONTH)
+    )
+
+    // Configurar fecha máxima (hoy)
+    datePickerDialog.datePicker.maxDate = calendario.timeInMillis
 
     Scaffold(
         topBar = {
@@ -67,7 +110,6 @@ fun RegistroUsuarioScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
@@ -81,7 +123,7 @@ fun RegistroUsuarioScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Nombre
+            // Campos de entrada
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
@@ -93,7 +135,6 @@ fun RegistroUsuarioScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -105,12 +146,11 @@ fun RegistroUsuarioScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Contraseña
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("Contraseña") },
-                placeholder = { Text("Mínimo 8 caracteres") },
+                placeholder = { Text("Clave") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
@@ -118,7 +158,6 @@ fun RegistroUsuarioScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Fecha de nacimiento
             OutlinedTextField(
                 value = fechaNacimiento,
                 onValueChange = { fechaNacimiento = it },
@@ -126,19 +165,18 @@ fun RegistroUsuarioScreen(
                 placeholder = { Text("DD/MM/AAAA") },
                 singleLine = true,
                 trailingIcon = {
-                    IconButton(onClick = { /* abrir date picker */ }) {
+                    IconButton(onClick = { datePickerDialog.show() }) {
                         Icon(
                             imageVector = Icons.Filled.DateRange,
                             contentDescription = "Seleccionar fecha"
                         )
                     }
                 },
-                        modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Checkbox términos
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -160,22 +198,92 @@ fun RegistroUsuarioScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón Registrarse
+            // Mostrar mensaje de error
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+
+            fun convertirFormatoFecha(fechaOriginal: String): String {
+                try {
+                    val formatoEntrada = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    val formatoSalida = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val fecha = formatoEntrada.parse(fechaOriginal)
+                    return formatoSalida.format(fecha!!)
+                } catch (e: Exception) {
+                    Log.e("RegistroUsuario", "Error al convertir fecha: ${e.message}")
+                    return fechaOriginal
+                }
+            }
+
             Button(
-                onClick = onRegisterClick,
+                onClick = {
+                    if (aceptoTerminos) {
+                        val hashedPassword = hashPassword(password) // Hashear la contraseña
+                        Log.d("RegistroUsuario", "Hashed Password: $hashedPassword") // Depuración
+                        Log.d("RegistroUsuario", "Fecha de Nacimiento: $fechaNacimiento") // Depuración
+                        val usuario = Usuario(
+                            nombre = nombre,
+                            email = email,
+                            contraseña = hashedPassword, // Usar la contraseña hasheada
+                            fecha_nacimiento = convertirFormatoFecha(fechaNacimiento)
+                        )
+
+                        scope.launch(Dispatchers.IO) {
+                            RetrofitClient.instance.registrarUsuario(usuario)
+                                .enqueue(object : Callback<Void> {
+                                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                        if (response.isSuccessful) {
+                                            scope.launch(Dispatchers.Main) {
+                                                Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
+                                                onRegisterClick()
+                                            }
+                                        } else {
+                                            val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                                            scope.launch(Dispatchers.Main) {
+                                                errorMessage = extractErrorMessage(errorBody)
+                                            }
+                                        }
+                                    }
+
+                                    // Función para extraer solo el mensaje de error
+                                    private fun extractErrorMessage(errorBody: String): String {
+                                        // Intentar extraer el mensaje entre comillas después de "error":"
+                                        val regex = "\"error\":\"(.*?)\"".toRegex()
+                                        val matchResult = regex.find(errorBody)
+                                        return matchResult?.groupValues?.getOrNull(1) ?: errorBody
+                                    }
+
+                                    override fun onFailure(call: Call<Void>, t: Throwable) {
+                                        scope.launch(Dispatchers.Main) {
+                                            errorMessage = "Error de conexión: ${t.message}"
+                                        }
+                                    }
+                                })
+                        }
+                    }
+                },
+                enabled = aceptoTerminos,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                enabled = aceptoTerminos
+                    .height(50.dp)
             ) {
                 Text("Registrarse", color = Color.White, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Texto inferior
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()

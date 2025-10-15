@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eina.unizar.frontend.viewmodels.HomeViewModel
 
 
 enum class EstadoVehiculo(val color: Color, val texto: String) {
@@ -27,6 +28,38 @@ enum class EstadoVehiculo(val color: Color, val texto: String) {
     EN_REPARACION(Color(0xFFEF4444), "En reparación")
 }
 
+@Composable
+fun HomeScreenWrapper(
+    userId: String,
+    token: String,
+    vehiculos: List<Vehiculo>,
+    onVehiculoClick: (String) -> Unit,
+    onAddVehiculoClick: () -> Unit,
+    onMapaClick: () -> Unit,
+    onCalendarioClick: () -> Unit,
+    onIncidenciasClick: () -> Unit,
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    val viewModel = remember { HomeViewModel() }
+
+    // Llama a la API al cargar la pantalla
+    LaunchedEffect(Unit) {
+        viewModel.fetchUserName(userId, token)
+    }
+
+    HomeScreen(
+        userName = viewModel.userName,
+        vehiculos = vehiculos,
+        onVehiculoClick = onVehiculoClick,
+        onAddVehiculoClick = onAddVehiculoClick,
+        onMapaClick = onMapaClick,
+        onCalendarioClick = onCalendarioClick,
+        onIncidenciasClick = onIncidenciasClick,
+        selectedTab = selectedTab,
+        onTabSelected = onTabSelected
+    )
+}
 
 @Composable
 fun HomeScreen(
