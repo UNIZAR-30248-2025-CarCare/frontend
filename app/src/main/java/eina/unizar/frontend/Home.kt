@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import eina.unizar.frontend.viewmodels.HomeViewModel
+import androidx.navigation.NavHostController
 
 
 enum class EstadoVehiculo(val color: Color, val texto: String) {
@@ -28,38 +28,6 @@ enum class EstadoVehiculo(val color: Color, val texto: String) {
     EN_REPARACION(Color(0xFFEF4444), "En reparación")
 }
 
-@Composable
-fun HomeScreenWrapper(
-    userId: String,
-    token: String,
-    vehiculos: List<Vehiculo>,
-    onVehiculoClick: (String) -> Unit,
-    onAddVehiculoClick: () -> Unit,
-    onMapaClick: () -> Unit,
-    onCalendarioClick: () -> Unit,
-    onIncidenciasClick: () -> Unit,
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit
-) {
-    val viewModel = remember { HomeViewModel() }
-
-    // Llama a la API al cargar la pantalla
-    LaunchedEffect(Unit) {
-        viewModel.fetchUserName(userId, token)
-    }
-
-    HomeScreen(
-        userName = viewModel.userName,
-        vehiculos = vehiculos,
-        onVehiculoClick = onVehiculoClick,
-        onAddVehiculoClick = onAddVehiculoClick,
-        onMapaClick = onMapaClick,
-        onCalendarioClick = onCalendarioClick,
-        onIncidenciasClick = onIncidenciasClick,
-        selectedTab = selectedTab,
-        onTabSelected = onTabSelected
-    )
-}
 
 @Composable
 fun HomeScreen(
@@ -70,14 +38,34 @@ fun HomeScreen(
     onMapaClick: () -> Unit,
     onCalendarioClick: () -> Unit,
     onIncidenciasClick: () -> Unit,
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit
+    navController: NavHostController
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
+
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    if (route != currentRoute) {
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color(0xFFF5F5F5))
+        ) {
+
+
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -208,14 +196,11 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
-
-        // Bottom Navigation
-        BottomNavigationBar(
-            selectedTab = selectedTab,
-            onTabSelected = onTabSelected
-        )
     }
 }
+    }
+
+
 
 @Composable
 fun VehiculoCard(
