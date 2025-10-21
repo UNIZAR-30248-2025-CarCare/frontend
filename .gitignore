@@ -28,3 +28,8 @@ replay_pid*
 
 #PATH para el SDK
 local.properties
+
+.idea/
+
+.gradle/
+
