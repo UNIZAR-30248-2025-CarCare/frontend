@@ -1,15 +1,8 @@
 package eina.unizar.frontend
 
-import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,39 +10,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.carcare.ui.UbicacionVehiculoScreen
-import eina.unizar.frontend.viewmodels.AuthViewModel
 import java.time.LocalDate
 import java.time.YearMonth
-import androidx.activity.ComponentActivity
-import androidx.compose.ui.platform.LocalContext
 
-@SuppressLint("ContextCastToActivity")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val context = LocalContext.current
-    val activity = context as ComponentActivity
-
-    val authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = activity)
-
-    // Asegúrate de que los valores se recolectan correctamente
-    val userId by authViewModel.userId.collectAsState()
-    val token by authViewModel.token.collectAsState()
-
-    // Log para depuración
-    Log.d("AppNavigation", "AuthViewModel userId: $userId, token: $token")
-
-    // Revisa si hay datos almacenados en SharedPreferences
-    val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-    val storedUserId = sharedPrefs.getString("user_id", null)
-    val storedToken = sharedPrefs.getString("token", null)
-    Log.d("AppNavigation", "SharedPrefs userId: $storedUserId, token: $storedToken")
-
-    // Usa los valores de SharedPreferences si los valores del ViewModel son nulos
-    val efectiveUserId = userId ?: storedUserId
-    val efectiveToken = token ?: storedToken
-
 
 
     // --- Datos de Ejemplo para Home y otras pantallas ---
@@ -117,7 +84,7 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = if (efectiveUserId == null || efectiveToken == null) "inicio" else "home"
+        startDestination = "inicio"
     ) {
         composable("inicio") {
             PantallaPrincipal {
@@ -126,7 +93,7 @@ fun AppNavigation() {
         }
         composable("eleccion") {
             PantallaEleccionInicio(
-                onLoginClick = { navController.navigate("home") },
+                onLoginClick = { /* lógica de login */ },
                 onRegisterClick = {
                     navController.navigate("registro")
                 },
@@ -137,7 +104,7 @@ fun AppNavigation() {
         composable("registro") {
             RegistroUsuarioScreen(
                 onBackClick = { navController.popBackStack() },
-                onRegisterClick = { navController.navigate("eleccion") },
+                onRegisterClick = { /* acción de registro */ },
                 onLoginClick = {
                     //Ir al login
                     navController.navigate("home")
@@ -146,30 +113,36 @@ fun AppNavigation() {
         }
 
         composable("home") {
-            Log.d("AppNavigation", "Accediendo a home userId: $efectiveUserId, token: $efectiveToken")
-            if (efectiveUserId != null && efectiveToken != null) {
-                Log.d("AppNavigation", "Navegando a Home con userId: $efectiveUserId y token: $efectiveToken")
-                HomeScreenWrapper(
-                    userId = efectiveUserId,
-                    token = efectiveToken,
-                    vehiculos = vehiculosDisponibles,
-                    onVehiculoClick = { vehiculoId ->
-                        navController.navigate("vehiculo_detalle/$vehiculoId")
-                    },
-                    onAddVehiculoClick = { navController.navigate("add_vehiculo") },
-                    onMapaClick = { navController.navigate("mapa") },
-                    onCalendarioClick = { navController.navigate("reservas") },
-                    onIncidenciasClick = { navController.navigate("incidencias") },
-                    selectedTab = 0,
-                    onTabSelected = { /* lógica */ }
-                )
-            }
+            HomeScreen(
+                userName = usuarioEjemplo.nombre, // Usamos el nombre del usuario de ejemplo
+                vehiculos = vehiculosDisponibles, // Pasamos la lista de vehículos
+
+                // Callbacks de navegación de la pantalla:
+                onVehiculoClick = { vehiculoId ->
+                    navController.navigate("vehiculo_detalle/$vehiculoId")
+                },
+                onAddVehiculoClick = {
+                    navController.navigate("add_vehiculo")
+                },
+                onMapaClick = {
+                    navController.navigate("mapa")
+                },
+                onCalendarioClick = {
+                    navController.navigate("reservas")
+                },
+                onIncidenciasClick = {
+                    navController.navigate("incidencias")
+                },
+                navController = navController
+            )
         }
 
         composable("mapa") {
             UbicacionVehiculoScreen(
                 onBackClick = { navController.popBackStack() },
+                navController = navController
             )
+
         }
 
         // ----------------------------------------------------------
@@ -229,9 +202,7 @@ fun AppNavigation() {
                     println("Ver incidencia: $incidenciaId")
                 },
                 onAddIncidenciaClick = { navController.navigate("add_incidencia") },
-                selectedTab = 0,
-                onTabSelected = { navController.navigate("reservas") }
-                    // Lógica para cambiar de pestaña si es necesario en el ViewModel
+                navController = navController
             )
         }
         // ------------------------------------
@@ -265,8 +236,7 @@ fun AppNavigation() {
                 onAddReservaClick = {
                     navController.navigate("nueva_reserva")
                 },
-                selectedTab = 2, // Índice de la pestaña 'Reservas'
-                onTabSelected = {  } // Usar la función de navegación
+                navController = navController
             )
         }
 
