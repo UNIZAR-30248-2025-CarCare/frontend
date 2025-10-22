@@ -40,6 +40,21 @@ fun hashPassword(password: String): String {
     return bytes.joinToString("") { "%02x".format(it) }
 }
 
+/**
+ * Pantalla de registro de nuevos usuarios.
+ *
+ * - Permite introducir nombre, email, contraseña y fecha de nacimiento.
+ * - Incluye checkbox para aceptar los términos y condiciones.
+ * - Muestra un `DatePickerDialog` para seleccionar la fecha de nacimiento.
+ *
+ * Estados controlados con `remember` para cada campo.
+ * Valida que todos los campos estén completos antes de enviar el formulario.
+ *
+ * Callbacks:
+ * - `onBackClick()` → Regresa a la pantalla anterior.
+ * - `onRegisterClick()` → Envía los datos de registro.
+ * - `onLoginClick()` → Navega a la pantalla de inicio de sesión.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistroUsuarioScreen(

@@ -31,6 +31,25 @@ import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.models.toVehiculoDetalle
 import eina.unizar.frontend.viewmodels.HomeViewModel
 
+
+/**
+ * Composable principal que gestiona la navegación entre pantallas.
+ *
+ * - Usa NavController para manejar el flujo de pantallas principales.
+ * - Obtiene el userId y token desde AuthViewModel o SharedPreferences.
+ * - Mantiene la sesión activa mientras se navega entre secciones.
+ *
+ * También define la clase `NavTab`, que representa las pestañas principales
+ * de la barra de navegación inferior:
+ * - Inicio
+ * - Mapa
+ * - Incidencias
+ * - Reservas
+ *
+ * La función `BottomNavigationBar()` dibuja la barra inferior con sus íconos
+ * y etiquetas, destacando la pestaña activa.
+ */
+
 @SuppressLint("ContextCastToActivity")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

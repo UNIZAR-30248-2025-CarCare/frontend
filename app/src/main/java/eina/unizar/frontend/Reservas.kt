@@ -51,6 +51,23 @@ enum class EstadoReserva {
     COMPLETADA
 }
 
+/**
+ * Pantalla de calendario que muestra las reservas de vehículos por día.
+ *
+ * - Muestra las reservas asociadas al vehículo seleccionado.
+ * - Permite navegar entre meses y seleccionar días específicos.
+ * - Usa `BottomNavigationBar` para moverse entre secciones principales.
+ *
+ * Elementos destacados:
+ * - Navegación mensual (`onMesAnterior`, `onMesSiguiente`).
+ * - Visualización de reservas del día (`reservasDelDia`).
+ * - Acción para añadir una nueva reserva (`onAddReservaClick`).
+ *
+ * Parámetros:
+ * - `vehiculoSeleccionado`: vehículo actualmente filtrado.
+ * - `reservas`: lista de reservas disponibles.
+ * - `diaSeleccionado`: fecha activa en el calendario.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

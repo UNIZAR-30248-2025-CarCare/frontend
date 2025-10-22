@@ -28,6 +28,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 
+/**
+ * Pantalla para añadir un nuevo vehículo al sistema.
+ *
+ * - Permite introducir los datos del vehículo: nombre, fabricante, modelo, matrícula,
+ *   año, tipo, combustible, capacidad de depósito y consumo medio.
+ * - Valida los campos mostrando errores si están vacíos o contienen valores incorrectos.
+ * - Usa `VehiculoViewModel` para enviar los datos al backend.
+ *
+ * Interfaz:
+ * - Fondo gris claro con cabecera roja (`Surface`).
+ * - Campos de texto controlados con estado `remember`.
+ * - Selector desplegable para tipo de combustible.
+ *
+ * Callbacks:
+ * - `onBackClick()` → Regresa a la pantalla anterior.
+ * - `onAddClick()` → Envía los datos y crea el nuevo vehículo.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddVehiculoScreen(

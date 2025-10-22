@@ -31,6 +31,21 @@ data class NuevaIncidenciaData(
     val compartirConGrupo: Boolean
 )
 
+
+/**
+ * Pantalla para crear y reportar nuevas incidencias relacionadas con un vehículo.
+ *
+ * Permite al usuario seleccionar:
+ * - Vehículo afectado
+ * - Tipo de incidencia (avería, daño, otro)
+ * - Nivel de prioridad
+ * - Título y descripción
+ * - Opción para compartir con el grupo
+ *
+ * Muestra menús desplegables (`DropdownMenu`) para elegir vehículo, tipo y prioridad.
+ * Los datos se agrupan en el objeto `NuevaIncidenciaData`, enviado al callback
+ * `onReportarIncidencia()` al confirmar.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NuevaIncidenciaScreen(

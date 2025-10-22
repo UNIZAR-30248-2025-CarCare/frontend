@@ -22,6 +22,22 @@ import androidx.compose.ui.unit.sp
 import eina.unizar.frontend.models.VehiculoDetalle
 
 
+/**
+ * Muestra el detalle completo de un vehículo.
+ *
+ * Incluye información como:
+ * - Estado actual
+ * - Datos técnicos
+ * - Usuarios vinculados
+ *
+ * Ofrece acciones:
+ * - Volver atrás (`onBackClick`)
+ * - Ver en mapa (`onVerMapaClick`)
+ * - Añadir usuario (`onAddUsuarioClick`)
+ *
+ * La UI usa `Surface` y `Row` para estructurar encabezado y contenido.
+ */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetalleVehiculoScreen(

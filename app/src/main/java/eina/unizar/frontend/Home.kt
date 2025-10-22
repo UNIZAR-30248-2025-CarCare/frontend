@@ -38,6 +38,22 @@ enum class EstadoVehiculo(val color: Color, val texto: String) {
     EN_REPARACION(Color(0xFFEF4444), "En reparación")
 }
 
+/**
+ * Pantalla principal tras iniciar sesión.
+ *
+ * `HomeScreenWrapper`:
+ * - Inicializa `HomeViewModel` y obtiene vehículos y nombre de usuario.
+ * - Convierte objetos `VehiculoDTO` a `Vehiculo` para la UI.
+ * - Llama a `HomeScreen()` con los datos obtenidos.
+ *
+ * `HomeScreen()`:
+ * - Muestra el saludo al usuario y la lista de vehículos.
+ * - Incluye navegación inferior mediante `BottomNavigationBar`.
+ * - Ofrece accesos directos a otras secciones (Mapa, Incidencias, Calendario).
+ *
+ * El enum `EstadoVehiculo` define estados visuales con colores y texto.
+ */
+
 @Composable
 fun HomeScreenWrapper(
     userId: String,

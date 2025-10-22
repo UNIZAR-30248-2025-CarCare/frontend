@@ -27,6 +27,24 @@ import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapView
 
+
+/**
+ * Pantalla que muestra la ubicación actual de un vehículo en un mapa interactivo.
+ *
+ * - Usa MapLibre con MapTiler como proveedor de mapas.
+ * - Posiciona el mapa en las coordenadas del vehículo.
+ * - Gestiona el ciclo de vida del mapa con el `LifecycleOwner`.
+ *
+ * Elementos principales:
+ * - `TopAppBar` con botón de retroceso.
+ * - `BottomNavigationBar` para moverse entre secciones (Inicio, Mapa, Reservas).
+ * - `FloatingActionButton` para centrar el mapa.
+ * - `Card` inferior con información del vehículo (modelo, matrícula, acción “IR”).
+ *
+ * Callbacks:
+ * - `onBackClick()` → Vuelve a la pantalla anterior.
+ * - `onInicioClick()`, `onMapaClick()`, `onReservasClick()` → Navegación inferior.
+ */
 @Composable
 fun UbicacionVehiculoScreen(
     onBackClick: () -> Unit = {},

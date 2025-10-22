@@ -44,6 +44,17 @@ import androidx.compose.ui.res.painterResource
 import java.time.format.DateTimeFormatter
 
 
+/**
+ * Pantalla para registrar una nueva reserva de vehículo.
+ *
+ * - Muestra un formulario con selección de vehículo, fecha, hora y tipo de reserva.
+ * - Usa `DatePickerDialog` para seleccionar las fechas.
+ * - Gestiona estados locales (`remember`) para controlar campos y errores.
+ * - Envía los datos como `NuevaReservaData` al callback `onCrearReserva()`.
+ *
+ * Incluye control de carga (`isLoading`) y mensajes de error (`errorMessage`).
+ */
+
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

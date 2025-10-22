@@ -74,7 +74,24 @@ enum class EstadoIncidencia {
     RESUELTA
 }
 
-
+/**
+ * Pantalla de gestión y visualización de incidencias de los vehículos.
+ *
+ * - Muestra dos pestañas: “Activas” y “Resueltas”.
+ * - Cada incidencia contiene título, descripción, tipo, prioridad y estado.
+ * - Permite seleccionar vehículo y navegar al detalle de la incidencia.
+ *
+ * Elementos destacados:
+ * - `Scaffold` con barra superior y navegación inferior.
+ * - Uso de `TabRow` o control similar para cambiar entre incidencias activas/resueltas.
+ * - Botón flotante (`onAddIncidenciaClick`) para crear nuevas incidencias.
+ *
+ * Callbacks:
+ * - `onBackClick()` → Regresa a la vista anterior.
+ * - `onVehiculoClick()` → Abre selector de vehículo.
+ * - `onIncidenciaClick(id)` → Navega al detalle de la incidencia.
+ * - `onAddIncidenciaClick()` → Crea una nueva incidencia.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IncidenciasScreen(

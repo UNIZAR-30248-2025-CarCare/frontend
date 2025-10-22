@@ -50,6 +50,18 @@ class EleccionInicioActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Pantalla inicial de la aplicación donde el usuario elige entre:
+ * - Iniciar sesión
+ * - Registrarse
+ * - Recuperar contraseña
+ *
+ * Contiene campos controlados (`email`, `password`) y callbacks
+ * para manejar cada acción de navegación.
+ *
+ * Interactúa con `AuthViewModel` para validar las credenciales.
+ */
+
 @SuppressLint("ContextCastToActivity")
 @Composable
 fun PantallaEleccionInicio(
