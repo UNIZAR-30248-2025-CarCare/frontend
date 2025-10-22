@@ -15,24 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eina.unizar.frontend.models.VehiculoDetalle
 
-data class VehiculoDetalle(
-    val id: String,
-    val nombre: String,
-    val matricula: String,
-    val fabricante: String,
-    val modelo: String,
-    val anio: Int,
-    val combustible: String,
-    val capacidadDeposito: Int,
-    val consumoMedio: Double,
-    val tipo: TipoVehiculo,
-    val estado: EstadoVehiculo,
-    val usuariosVinculados: List<Usuario>
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +103,7 @@ fun DetalleVehiculoScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = vehiculo.tipo.icon,
+                            painter = painterResource(id = vehiculo.tipo.iconRes),
                             contentDescription = vehiculo.tipo.name,
                             tint = vehiculo.tipo.color,
                             modifier = Modifier.size(70.dp)
@@ -273,7 +261,7 @@ fun DetalleVehiculoScreen(
                     Spacer(modifier = Modifier.height(15.dp))
 
                     // Lista de usuarios
-                    vehiculo.usuariosVinculados.forEach { usuario ->
+                    vehiculo.usuariosVinculados.forEach { nombre ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -287,7 +275,10 @@ fun DetalleVehiculoScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = usuario.iniciales,
+                                    text = nombre.split(" ")
+                                        .filter { it.isNotEmpty() }
+                                        .map { it.first().uppercaseChar() }
+                                        .joinToString(""),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -295,7 +286,7 @@ fun DetalleVehiculoScreen(
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = usuario.nombre,
+                                text = nombre,
                                 fontSize = 15.sp,
                                 color = Color(0xFF1F2937)
                             )
