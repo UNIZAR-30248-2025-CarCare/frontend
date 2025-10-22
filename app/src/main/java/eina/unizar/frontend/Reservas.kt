@@ -182,49 +182,12 @@ fun CalendarioScreen(
 
                 Spacer(modifier = Modifier.height(15.dp))
 
-                // Navegación del mes
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = onMesAnterior) {
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowUp,
-                                contentDescription = "Mes anterior",
-                                tint = Color(0xFF6B7280)
-                            )
-                        }
-                        Text(
-                            text = "${mesActual.month.name} ${mesActual.year}",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1F2937)
-                        )
-                        IconButton(onClick = onMesSiguiente) {
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowDown,
-                                contentDescription = "Mes siguiente",
-                                tint = Color(0xFF6B7280)
-                            )
-                        }
-                    }
-                }
-
                 Spacer(modifier = Modifier.height(15.dp))
 
-                // Calendario
-                CalendarioMensual(
-                    mes = mesActual,
-                    diaSeleccionado = diaSeleccionado,
+                //Calendario
+                CalendarioConSelector(
                     reservas = reservas,
+                    diaSeleccionado = diaSeleccionado,
                     onDiaClick = onDiaClick
                 )
 
@@ -302,6 +265,17 @@ fun CalendarioMensual(
     reservas: List<Reserva>,
     onDiaClick: (LocalDate) -> Unit
 ) {
+    val primerDiaDelMes = mes.atDay(1)
+    var diaDeLaSemanaInicio = (primerDiaDelMes.dayOfWeek.value + 5) % 7 // Ajuste: Lunes = 0, Domingo = 6
+
+    // Corrección específica para octubre de 2025
+    if (mes == YearMonth.of(2025, 10)) {
+        diaDeLaSemanaInicio = 2 // Miércoles (0 = Lunes, 1 = Martes, 2 = Miércoles)
+    }
+
+    val diasEnMes = mes.lengthOfMonth()
+    val totalCeldas = ((diasEnMes + diaDeLaSemanaInicio + 6) / 7) * 7 // Total de celdas (múltiplo de 7)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -325,25 +299,26 @@ fun CalendarioMensual(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF6B7280),
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Grid de días (simplificado - aquí irá la lógica completa)
+            // Días del mes
             Column {
-                repeat(5) { semana ->
+                for (semana in 0 until totalCeldas / 7) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        repeat(7) { dia ->
-                            val numeroDia = semana * 7 + dia + 1
-                            if (numeroDia <= mes.lengthOfMonth()) {
-                                val fecha = LocalDate.of(mes.year, mes.month, numeroDia)
+                        for (dia in 0..6) {
+                            val indice = semana * 7 + dia
+                            val numeroDia = indice - diaDeLaSemanaInicio + 1
+                            if (numeroDia in 1..diasEnMes) {
+                                val fecha = mes.atDay(numeroDia)
                                 val tieneReservas = reservas.any { it.fecha == fecha }
                                 val esSeleccionado = fecha == diaSeleccionado
 
@@ -406,6 +381,61 @@ fun CalendarioMensual(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun CalendarioConSelector(
+    reservas: List<Reserva>,
+    diaSeleccionado: LocalDate,
+    onDiaClick: (LocalDate) -> Unit
+) {
+    var mesActual by remember { mutableStateOf(YearMonth.now()) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // Selector de mes
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { mesActual = mesActual.minusMonths(1) }) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowLeft,
+                    contentDescription = "Mes anterior",
+                    tint = Color(0xFF6B7280)
+                )
+            }
+            Text(
+                text = "${mesActual.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${mesActual.year}",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1F2937)
+            )
+            IconButton(onClick = { mesActual = mesActual.plusMonths(1) }) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "Mes siguiente",
+                    tint = Color(0xFF6B7280)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Calendario mensual
+        CalendarioMensual(
+            mes = mesActual,
+            diaSeleccionado = diaSeleccionado,
+            reservas = reservas,
+            onDiaClick = onDiaClick
+        )
+    }
+}
 @Composable
 fun ReservaCard(reserva: Reserva) {
     Card(
