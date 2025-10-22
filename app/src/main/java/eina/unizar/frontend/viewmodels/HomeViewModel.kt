@@ -21,13 +21,48 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * ViewModel para la pantalla principal (Home) de la aplicación.
+ * 
+ * Gestiona la obtención y almacenamiento de:
+ * - Nombre del usuario autenticado
+ * - Lista de vehículos disponibles para el usuario
+ * 
+ * Utiliza coroutines para operaciones asíncronas y StateFlow/State
+ * para exponer datos reactivos a la UI.
+ */
 class HomeViewModel : ViewModel() {
+
+    /**
+     * Nombre del usuario actual.
+     * 
+     * Utiliza mutableStateOf para que los cambios sean observables
+     * por la UI de Compose. Inicializado con texto de carga.
+     */
     var userName by mutableStateOf("Cargando...")
         private set
 
+    /**
+     * Flow privado mutable para la lista de vehículos.
+     */
     private val _vehiculos = MutableStateFlow<List<VehiculoDTO>>(emptyList())
+
+    /**
+     * StateFlow público con la lista de vehículos del usuario.
+     * La UI puede colectar este flow para actualizar la lista de vehículos.
+     */
     val vehiculos: StateFlow<List<VehiculoDTO>> = _vehiculos
 
+    /**
+     * Obtiene el nombre del usuario desde el backend.
+     * 
+     * Realiza una petición asíncrona para recuperar el nombre del usuario
+     * utilizando su ID y token de autenticación. Actualiza userName con
+     * el resultado o con un mensaje de error si falla.
+     * 
+     * @param userId Identificador del usuario
+     * @param token Token JWT de autenticación (sin el prefijo "Bearer")
+     */
     fun fetchUserName(userId: String, token: String) {
         viewModelScope.launch {
             try {
@@ -50,6 +85,19 @@ class HomeViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Obtiene la lista de vehículos asociados al usuario.
+     * 
+     * Realiza una petición al backend para recuperar todos los vehículos
+     * vinculados al usuario. Actualiza el StateFlow de vehículos con los
+     * resultados o registra un error si falla la petición.
+     * 
+     * Utiliza callbacks de Retrofit en lugar de coroutines para manejar
+     * la respuesta de forma asíncrona.
+     * 
+     * @param userId Identificador del usuario
+     * @param token Token JWT de autenticación (sin el prefijo "Bearer")
+     */
     fun fetchVehiculos(userId: String, token: String) {
         Log.d("HomeViewModel", "Iniciando fetchVehiculos para userId: $userId")
         RetrofitClient.instance.obtenerVehiculos(userId, "Bearer $token")
