@@ -20,7 +20,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import eina.unizar.frontend.models.Vehiculo
+import eina.unizar.frontend.models.VehiculoDTO
 import eina.unizar.frontend.viewmodels.HomeViewModel
+import androidx.compose.ui.res.painterResource
+import eina.unizar.frontend.models.toVehiculo
+import eina.unizar.frontend.models.toVehiculoDTO
 
 
 enum class EstadoVehiculo(val color: Color, val texto: String) {
@@ -44,9 +49,11 @@ fun HomeScreenWrapper(
     navController: NavHostController
 ) {
     val viewModel = remember { HomeViewModel() }
+    val vehiculosDTO by viewModel.vehiculos.collectAsState()
+    val vehiculos = vehiculosDTO.map { it.toVehiculo() }
 
-    // Llama a la API al cargar la pantalla
     LaunchedEffect(Unit) {
+        viewModel.fetchVehiculos(userId, token)
         viewModel.fetchUserName(userId, token)
     }
 
@@ -182,8 +189,8 @@ fun HomeScreen(
             // Lista de vehículos
             items(vehiculos) { vehiculo ->
                 VehiculoCard(
-                    vehiculo = vehiculo,
-                    onClick = { onVehiculoClick(vehiculo.id) }
+                    vehiculo = vehiculo.toVehiculoDTO(),
+                    onClick = { onVehiculoClick(vehiculo.id.toString()) }
                 )
                 Spacer(modifier = Modifier.height(15.dp))
             }
@@ -241,9 +248,18 @@ fun HomeScreen(
 
 @Composable
 fun VehiculoCard(
-    vehiculo: Vehiculo,
+    vehiculo: VehiculoDTO,
     onClick: () -> Unit
 ) {
+    // Asigna color, icono y nombre según el string tipo
+    val (color, iconRes, name) = when (vehiculo.tipo.trim().lowercase()) {
+        "coche" -> Triple(Color(0xFF3B82F6), R.drawable.ic_coche, "Coche")
+        "moto" -> Triple(Color(0xFFF59E0B), R.drawable.ic_moto, "Moto")
+        "furgoneta" -> Triple(Color(0xFF10B981), R.drawable.ic_furgoneta, "Furgoneta")
+        "camion" -> Triple(Color(0xFFEF4444), R.drawable.ic_camion, "Camión")
+        else -> Triple(Color(0xFF6B7280), R.drawable.ic_otro, "Otro")
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -259,27 +275,22 @@ fun VehiculoCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icono del vehículo
             Box(
                 modifier = Modifier
                     .size(60.dp)
-                    .background(
-                        vehiculo.tipo.color.copy(alpha = 0.1f),
-                        CircleShape
-                    ),
+                    .background(color.copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = vehiculo.tipo.icon,
-                    contentDescription = vehiculo.tipo.name,
-                    tint = vehiculo.tipo.color,
+                    painter = painterResource(id = iconRes),
+                    contentDescription = name,
+                    tint = color,
                     modifier = Modifier.size(32.dp)
                 )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Información
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = vehiculo.nombre,
@@ -297,17 +308,26 @@ fun VehiculoCard(
                     Text(
                         text = "● ",
                         fontSize = 13.sp,
-                        color = vehiculo.estado.color
+                        color = when (vehiculo.estado) {
+                            "Activo" -> Color(0xFF10B981)
+                            "En uso" -> Color(0xFFF59E0B)
+                            "En reparación" -> Color(0xFFEF4444)
+                            else -> Color(0xFF10B981)
+                        }
                     )
                     Text(
-                        text = vehiculo.estado.texto,
+                        text = vehiculo.estado,
                         fontSize = 13.sp,
-                        color = vehiculo.estado.color
+                        color = when (vehiculo.estado) {
+                            "Activo" -> Color(0xFF10B981)
+                            "En uso" -> Color(0xFFF59E0B)
+                            "En reparación" -> Color(0xFFEF4444)
+                            else -> Color(0xFF10B981)
+                        }
                     )
                 }
             }
 
-            // Flecha
             Icon(
                 imageVector = Icons.Default.KeyboardArrowDown,
                 contentDescription = "Ver detalles",

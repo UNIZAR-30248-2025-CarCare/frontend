@@ -17,11 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import eina.unizar.frontend.models.Vehiculo
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -156,7 +158,7 @@ fun CalendarioScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = vehiculo.tipo.icon,
+                                    painter = painterResource(id = vehiculo.tipo.iconRes),
                                     contentDescription = vehiculo.tipo.name,
                                     tint = vehiculo.tipo.color,
                                     modifier = Modifier.size(18.dp)

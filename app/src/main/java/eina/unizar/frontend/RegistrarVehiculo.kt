@@ -26,6 +26,7 @@ import eina.unizar.frontend.models.Ubicacion
 import eina.unizar.frontend.viewmodels.VehiculoViewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -501,7 +502,7 @@ fun TipoVehiculoOption(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = tipo.icon,
+                painter = painterResource(id = tipo.iconRes),
                 contentDescription = tipo.name,
                 tint = if (selected) tipo.color else Color(0xFF6B7280),
                 modifier = Modifier.size(24.dp)

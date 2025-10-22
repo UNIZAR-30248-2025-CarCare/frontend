@@ -20,9 +20,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.time.LocalDate
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavHostController
+import eina.unizar.frontend.models.Vehiculo
 
 
 
@@ -34,21 +35,13 @@ data class Usuario(
     val email: String
 )
 
-data class Vehiculo(
-    val id: String,
-    val estado: EstadoVehiculo,
-    val nombre: String,
-    val matricula: String,
-    val tipo: TipoVehiculo
-)
-
 //! HAY QUE PONER ICONOS PERSONALIZADOS
-enum class TipoVehiculo(val icon: ImageVector, val color: Color) {
-    CAMION(Icons.Default.ShoppingCart, Color(0xFF3B82F6)),
-    FURGONETA(Icons.Default.ShoppingCart, Color(0xFFF59E0B)),
-    COCHE(Icons.Default.ShoppingCart, Color(0xFF10B981)),
-    MOTO(Icons.Default.ShoppingCart, Color(0xFFEF4444)),
-    OTRO(Icons.Default.ShoppingCart, Color(0xFF6B7280))
+enum class TipoVehiculo(val iconRes: Int, val color: Color) {
+    CAMION(R.drawable.ic_camion, Color(0xFF3B82F6)),
+    FURGONETA(R.drawable.ic_furgoneta, Color(0xFFF59E0B)),
+    COCHE(R.drawable.ic_coche, Color(0xFF10B981)),
+    MOTO(R.drawable.ic_moto, Color(0xFFEF4444)),
+    OTRO(R.drawable.ic_otro, Color(0xFF6B7280))
 }
 
 data class Incidencia(
@@ -185,7 +178,7 @@ fun IncidenciasScreen(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
-                                            imageVector = vehiculo.tipo.icon,
+                                            painter = painterResource(id = vehiculo.tipo.iconRes),
                                             contentDescription = vehiculo.tipo.name,
                                             tint = vehiculo.tipo.color,
                                             modifier = Modifier.size(18.dp)

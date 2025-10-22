@@ -21,7 +21,15 @@ import eina.unizar.frontend.viewmodels.AuthViewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import androidx.activity.ComponentActivity
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import eina.unizar.frontend.models.Ubicacion
+import eina.unizar.frontend.models.Vehiculo
+import eina.unizar.frontend.models.VehiculoDetalle
+import eina.unizar.frontend.models.toVehiculo
+import eina.unizar.frontend.models.toVehiculoDetalle
+import eina.unizar.frontend.viewmodels.HomeViewModel
 
 @SuppressLint("ContextCastToActivity")
 @RequiresApi(Build.VERSION_CODES.O)
@@ -53,8 +61,37 @@ fun AppNavigation() {
 
     // --- Datos de Ejemplo para Home y otras pantallas ---
     val usuarioEjemplo = Usuario("1", "Juan Pérez", "jp", "juan@eina.com")
-    val vehiculoEjemplo = Vehiculo("V01", EstadoVehiculo.DISPONIBLE,"Furgoneta 1", "Z-1234-AZ", TipoVehiculo.FURGONETA) // Añadido EstadoVehiculo para HomeScreen
-    val vehiculoEjemplo2 = Vehiculo("V02", EstadoVehiculo.EN_USO, "Camión 2", "B-5678-CX", TipoVehiculo.CAMION) // Añadido EstadoVehiculo
+    val vehiculoEjemplo = Vehiculo(
+        id = "V01",
+        estado = EstadoVehiculo.DISPONIBLE,
+        nombre = "Furgoneta 1",
+        matricula = "Z-1234-AZ",
+        tipo = TipoVehiculo.FURGONETA,
+        fabricante = "Peugeot",
+        modelo = "Boxer",
+        antiguedad = 4,
+        tipo_combustible = "Diésel",
+        litros_combustible = 90.0f,
+        consumo_medio = 7.5f,
+        ubicacion_actual = Ubicacion(41.6488, -0.8891),
+        usuariosVinculados = listOf("David Borrel")
+    )
+
+    val vehiculoEjemplo2 = Vehiculo(
+        id = "V02",
+        estado = EstadoVehiculo.EN_USO,
+        nombre = "Camión 2",
+        matricula = "B-5678-CX",
+        tipo = TipoVehiculo.CAMION,
+        fabricante = "Mercedes",
+        modelo = "Actros",
+        antiguedad = 2,
+        tipo_combustible = "Diésel",
+        litros_combustible = 300.0f,
+        consumo_medio = 24.0f,
+        ubicacion_actual = Ubicacion(41.6500, -0.8800),
+        usuariosVinculados = listOf("Ana García")
+    )
     val vehiculosDisponibles = listOf(vehiculoEjemplo, vehiculoEjemplo2)
     val incidenciaActivaEjemplo = Incidencia(
         id = "I01",
@@ -95,7 +132,7 @@ fun AppNavigation() {
             consumoMedio = 7.5,
             tipo = TipoVehiculo.FURGONETA,
             estado = EstadoVehiculo.DISPONIBLE,
-            usuariosVinculados = listOf(usuarioEjemplo, usuarioEjemplo)
+            usuariosVinculados = listOf("David Borrel")
         )
 
     // --- Datos de Ejemplo (Mantenerlos para que las pantallas compilen) ---
@@ -216,23 +253,33 @@ fun AppNavigation() {
             route = "vehiculo_detalle/{vehiculoId}",
             arguments = listOf(navArgument("vehiculoId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val vehiculoId = backStackEntry.arguments?.getString("vehiculoId") ?: "V01" // Default por si acaso
+            val vehiculoId = backStackEntry.arguments?.getString("vehiculoId") ?: ""
+            val viewModel: HomeViewModel = viewModel()
+            val vehiculos by viewModel.vehiculos.collectAsState()
 
-            // Simular obtener los datos del vehículo por ID
-            val vehiculoDetalle = vehiculoDetalleEjemplo
-
-            DetalleVehiculoScreen(
-                vehiculo = vehiculoDetalle,
-                onBackClick = { navController.popBackStack() },
-                onVerMapaClick = {
-                    // Aquí iría la navegación a la pantalla de mapa
-                    println("Navegar a mapa para el vehículo: $vehiculoId")
-                },
-                onAddUsuarioClick = {
-                    // Aquí iría la navegación a la pantalla para vincular usuarios
-                    println("Navegar a vincular usuario para el vehículo: $vehiculoId")
+            if (vehiculos.isEmpty()) {
+                // Lanzar fetch si la lista está vacía
+                LaunchedEffect(Unit) {
+                    if (efectiveUserId != null) {
+                        if (efectiveToken != null) {
+                            viewModel.fetchVehiculos(efectiveUserId, efectiveToken)
+                        }
+                    } // Asegúrate de tener este método en tu ViewModel
                 }
-            )
+                Text("Cargando vehículos...")
+            } else {
+                val vehiculoSeleccionado = vehiculos.map { it.toVehiculo() }.find { it.id == vehiculoId }
+                if (vehiculoSeleccionado != null) {
+                    DetalleVehiculoScreen(
+                        vehiculo = vehiculoSeleccionado.toVehiculoDetalle(),
+                        onBackClick = { navController.popBackStack() },
+                        onVerMapaClick = { /* lógica */ },
+                        onAddUsuarioClick = { /* lógica */ }
+                    )
+                } else {
+                    Text("Vehículo no encontrado")
+                }
+            }
         }
         // ----------------------------------------------------------
 

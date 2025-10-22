@@ -7,6 +7,7 @@ import eina.unizar.frontend.models.UserNameResponse
 import eina.unizar.frontend.models.ReservaRequest
 import eina.unizar.frontend.models.ReservaResponse
 import eina.unizar.frontend.models.RegistrarVehiculoRequest
+import eina.unizar.frontend.models.VehiculoResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -39,4 +40,10 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: RegistrarVehiculoRequest
     ): Response<Void>
+
+    @GET("/vehiculo/obtenerVehiculos/{userId}")
+    fun obtenerVehiculos(
+        @Path("userId") userId: String,
+        @Header("Authorization") token: String
+    ): Call<VehiculoResponse>
 }
