@@ -1,5 +1,6 @@
 package eina.unizar.frontend
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,18 +16,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import eina.unizar.frontend.models.RegistrarVehiculoRequest
+import eina.unizar.frontend.models.Ubicacion
+import eina.unizar.frontend.viewmodels.VehiculoViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddVehiculoScreen(
+    userId: String,
+    token: String,
     onBackClick: () -> Unit,
-    onAddClick: (VehiculoData) -> Unit
+    onAddClick: () -> Unit
 ) {
+    var nombreVehiculo by remember { mutableStateOf("") }
     var tipoSeleccionado by remember { mutableStateOf(TipoVehiculo.COCHE) }
     var fabricante by remember { mutableStateOf("") }
     var modelo by remember { mutableStateOf("") }
@@ -38,6 +47,20 @@ fun AddVehiculoScreen(
     var expandedCombustible by remember { mutableStateOf(false) }
 
     val combustibles = listOf("Gasolina", "Diésel", "Eléctrico", "Híbrido", "GLP")
+
+    val viewModel: VehiculoViewModel = viewModel()
+    val token = token
+    val usuarioId = userId.toInt()
+
+    var nombreError by remember { mutableStateOf(false) }
+    var fabricanteError by remember { mutableStateOf(false) }
+    var modeloError by remember { mutableStateOf(false) }
+    var matriculaError by remember { mutableStateOf(false) }
+    var anioError by remember { mutableStateOf(false) }
+    var capacidadError by remember { mutableStateOf(false) }
+    var consumoError by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -132,6 +155,31 @@ fun AddVehiculoScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            Text(
+                text = "Nombre del vehículo",
+                fontSize = 13.sp,
+                color = Color(0xFF6B7280),
+                modifier = Modifier.padding(bottom = 5.dp)
+            )
+            OutlinedTextField(
+                value = nombreVehiculo,
+                onValueChange = {
+                    nombreVehiculo = it
+                    nombreError = false
+                },
+                isError = nombreError,
+                placeholder = { Text("Ej: Mi coche, Furgoneta de trabajo...") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = if (nombreError) Color.Red else Color(0xFFEF4444),
+                    unfocusedBorderColor = if (nombreError) Color.Red else Color(0xFFE5E7EB)
+                )
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+
             // Fabricante
             Text(
                 text = "Fabricante",
@@ -141,13 +189,15 @@ fun AddVehiculoScreen(
             )
             OutlinedTextField(
                 value = fabricante,
-                onValueChange = { fabricante = it },
+                onValueChange = { fabricante = it
+                                fabricanteError = false },
+                    isError = fabricanteError,
                 placeholder = { Text("Ej: Seat, Toyota, Ford...") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFEF4444),
-                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                    focusedBorderColor = if (fabricanteError) Color.Red else Color(0xFFEF4444),
+                    unfocusedBorderColor = if (fabricanteError) Color.Red else Color(0xFFE5E7EB)
                 )
             )
 
@@ -162,13 +212,15 @@ fun AddVehiculoScreen(
             )
             OutlinedTextField(
                 value = modelo,
-                onValueChange = { modelo = it },
+                onValueChange = { modelo = it
+                                modeloError = false },
+                isError = modeloError,
                 placeholder = { Text("Ej: Ibiza, Corolla...") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFEF4444),
-                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                    focusedBorderColor = if (modeloError) Color.Red else Color(0xFFEF4444),
+                    unfocusedBorderColor = if (modeloError) Color.Red else Color(0xFFE5E7EB)
                 )
             )
 
@@ -188,13 +240,15 @@ fun AddVehiculoScreen(
                     )
                     OutlinedTextField(
                         value = matricula,
-                        onValueChange = { matricula = it },
+                        onValueChange = { matricula = it
+                                        matriculaError = false },
+                        isError = matriculaError,
                         placeholder = { Text("1234 ABC") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFEF4444),
-                            unfocusedBorderColor = Color(0xFFE5E7EB)
+                            focusedBorderColor = if (matriculaError) Color.Red else Color(0xFFEF4444),
+                            unfocusedBorderColor = if (matriculaError) Color.Red else Color(0xFFE5E7EB)
                         )
                     )
                 }
@@ -208,13 +262,15 @@ fun AddVehiculoScreen(
                     )
                     OutlinedTextField(
                         value = anio,
-                        onValueChange = { anio = it },
+                        onValueChange = { anio = it
+                                        anioError = false },
+                        isError = anioError,
                         placeholder = { Text("2020") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFEF4444),
-                            unfocusedBorderColor = Color(0xFFE5E7EB)
+                            focusedBorderColor = if (anioError) Color.Red else Color(0xFFEF4444),
+                            unfocusedBorderColor = if (anioError) Color.Red else Color(0xFFE5E7EB)
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
@@ -281,13 +337,15 @@ fun AddVehiculoScreen(
                     )
                     OutlinedTextField(
                         value = capacidadDeposito,
-                        onValueChange = { capacidadDeposito = it },
-                        placeholder = { Text("45") },
+                        onValueChange = { capacidadDeposito = it
+                                        capacidadError = false },
+                        isError = capacidadError,
+                        placeholder = { Text("45.0") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFEF4444),
-                            unfocusedBorderColor = Color(0xFFE5E7EB)
+                            focusedBorderColor = if (capacidadError) Color.Red else Color(0xFFEF4444),
+                            unfocusedBorderColor = if (capacidadError) Color.Red else Color(0xFFE5E7EB)
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
@@ -305,13 +363,15 @@ fun AddVehiculoScreen(
             )
             OutlinedTextField(
                 value = consumoMedio,
-                onValueChange = { consumoMedio = it },
+                onValueChange = { consumoMedio = it
+                                consumoError = false },
+                isError = consumoError,
                 placeholder = { Text("5.5") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFEF4444),
-                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                    focusedBorderColor = if (consumoError) Color.Red else Color(0xFFEF4444),
+                    unfocusedBorderColor = if (consumoError) Color.Red else Color(0xFFE5E7EB)
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
@@ -352,21 +412,50 @@ fun AddVehiculoScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
+            if (viewModel.errorMessage != null) {
+                Text(
+                    text = viewModel.errorMessage ?: "",
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            LaunchedEffect(viewModel.registroExitoso) {
+                if (viewModel.registroExitoso) {
+                    Toast.makeText(context, "Vehículo añadido correctamente", Toast.LENGTH_SHORT).show()
+                    onAddClick()
+                }
+            }
             // Botón Añadir
             Button(
                 onClick = {
-                    onAddClick(
-                        VehiculoData(
-                            tipo = tipoSeleccionado,
-                            fabricante = fabricante,
-                            modelo = modelo,
-                            matricula = matricula,
-                            anio = anio.toIntOrNull() ?: 0,
-                            combustible = combustible,
-                            capacidadDeposito = capacidadDeposito.toIntOrNull() ?: 0,
-                            consumoMedio = consumoMedio.toDoubleOrNull() ?: 0.0
-                        )
+                    // Validación
+                    nombreError = nombreVehiculo.isBlank()
+                    fabricanteError = fabricante.isBlank()
+                    modeloError = modelo.isBlank()
+                    matriculaError = matricula.isBlank()
+                    anioError = anio.isBlank()
+                    capacidadError = capacidadDeposito.isBlank()
+                    consumoError = consumoMedio.isBlank()
+
+                    val hayError = nombreError || fabricanteError || modeloError || matriculaError || anioError || capacidadError || consumoError
+
+                    if (hayError) return@Button
+
+                    val request = RegistrarVehiculoRequest(
+                        usuarioId = usuarioId,
+                        nombre = nombreVehiculo,
+                        matricula = matricula,
+                        modelo = modelo,
+                        fabricante = fabricante,
+                        antiguedad = if (anio.isNotEmpty()) (2025 - anio.toInt()) else 0,
+                        tipo_combustible = combustible ?: "Gasolina",
+                        litros_combustible = capacidadDeposito.toIntOrNull() ?: 45.0,
+                        consumo_medio = consumoMedio.toDoubleOrNull() ?: 5.5,
+                        ubicacion_actual = Ubicacion(40.4168, -3.7038), // Madrid
+                        estado = "Activo"
                     )
+                    viewModel.registrarVehiculo(token, request)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
