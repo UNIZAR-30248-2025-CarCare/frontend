@@ -49,7 +49,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun clearLoginData() {
+    fun logout() {
         _userId.value = null
         _token.value = null
 

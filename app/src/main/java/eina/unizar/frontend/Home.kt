@@ -26,6 +26,10 @@ import eina.unizar.frontend.viewmodels.HomeViewModel
 import androidx.compose.ui.res.painterResource
 import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.models.toVehiculoDTO
+import eina.unizar.frontend.viewmodels.AuthViewModel
+import android.content.Context
+import android.app.Application
+import androidx.compose.ui.platform.LocalContext
 
 
 enum class EstadoVehiculo(val color: Color, val texto: String) {
@@ -46,7 +50,8 @@ fun HomeScreenWrapper(
     onIncidenciasClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
-    navController: NavHostController
+    navController: NavHostController,
+    authViewModel: AuthViewModel
 ) {
     val viewModel = remember { HomeViewModel() }
     val vehiculosDTO by viewModel.vehiculos.collectAsState()
@@ -67,7 +72,8 @@ fun HomeScreenWrapper(
         onIncidenciasClick = onIncidenciasClick,
         selectedTab = selectedTab,
         onTabSelected = onTabSelected,
-        navController = navController
+        navController = navController,
+        authViewModel = authViewModel
     )
 }
 
@@ -82,7 +88,8 @@ fun HomeScreen(
     onIncidenciasClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
-    navController: NavHostController
+    navController: NavHostController,
+    authViewModel: AuthViewModel
 ) {
 
     val currentRoute = navController.currentBackStackEntry?.destination?.route
@@ -136,19 +143,18 @@ fun HomeScreen(
                     )
                 }
                 // Icono perfil
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .background(Color.White, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Perfil",
-                        tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(30.dp)
-                    )
-                }
+                val context = LocalContext.current
+                PerfilMenu(
+                    onCerrarSesion = {
+                        authViewModel.logout()
+                        // Borra también de SharedPreferences si es necesario
+                        val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+                        prefs.edit().remove("user_id").remove("token").apply()
+                        navController.navigate("eleccion") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
         }
 
@@ -426,5 +432,43 @@ fun BottomNavItem(
             color = if (selected) Color(0xFFEF4444) else Color(0xFF9CA3AF),
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
+    }
+}
+
+@Composable
+fun PerfilMenu(
+    onCerrarSesion: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .size(50.dp)
+            .background(Color.White, CircleShape)
+            .clickable { expanded = true },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = "Perfil",
+            tint = Color(0xFFEF4444),
+            modifier = Modifier.size(30.dp)
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Ver invitaciones") },
+                onClick = { expanded = false /* implementar más tarde */ }
+            )
+            DropdownMenuItem(
+                text = { Text("Cerrar Sesión") },
+                onClick = {
+                    expanded = false
+                    onCerrarSesion()
+                }
+            )
+        }
     }
 }
