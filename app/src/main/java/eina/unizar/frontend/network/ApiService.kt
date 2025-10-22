@@ -4,6 +4,8 @@ import eina.unizar.frontend.models.Usuario
 import eina.unizar.frontend.models.LoginRequest
 import eina.unizar.frontend.models.LoginResponse
 import eina.unizar.frontend.models.UserNameResponse
+import eina.unizar.frontend.models.ReservaRequest
+import eina.unizar.frontend.models.ReservaResponse
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -23,4 +25,10 @@ interface ApiService {
         @Path("id") id: String,
         @Header("Authorization") token: String
     ): Call<UserNameResponse>
+
+    @POST("reserva")
+    fun crearReserva(
+        @Header("Authorization") token: String,
+        @Body reserva: ReservaRequest
+    ): Call<ReservaResponse>
 }

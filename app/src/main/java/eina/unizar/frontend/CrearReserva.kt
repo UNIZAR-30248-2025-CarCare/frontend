@@ -1,9 +1,12 @@
 package eina.unizar.frontend
 
 import android.os.Build
+import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,17 +24,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import eina.unizar.frontend.models.NuevaReservaData
+import eina.unizar.frontend.models.ReservaRequest
+import eina.unizar.frontend.models.ReservaResponse
+import eina.unizar.frontend.network.RetrofitClient
+import eina.unizar.frontend.viewmodels.AuthViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
-data class NuevaReservaData(
-    val vehiculoId: String,
-    val fecha: LocalDate,
-    val horaInicio: LocalTime,
-    val horaFin: LocalTime,
-    val tipo: TipoReserva,
-    val notas: String
-)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,14 +51,57 @@ fun NuevaReservaScreen(
     onCrearReserva: (NuevaReservaData) -> Unit
 ) {
     var vehiculoSeleccionado by remember { mutableStateOf<Vehiculo?>(vehiculos.firstOrNull()) }
-    var fecha by remember { mutableStateOf(LocalDate.now()) }
+    var fechaInicio by remember { mutableStateOf(LocalDate.now()) }
+    var fechaFin by remember { mutableStateOf(LocalDate.now()) }
     var horaInicio by remember { mutableStateOf("09:00") }
     var horaFin by remember { mutableStateOf("14:00") }
     var tipoSeleccionado by remember { mutableStateOf(TipoReserva.TRABAJO) }
     var notas by remember { mutableStateOf("") }
-    var mostrarDatePicker by remember { mutableStateOf(false) }
+    var mostrarDatePickerInicio by remember { mutableStateOf(false) }
+    var mostrarDatePickerFin by remember { mutableStateOf(false) }
     var expandedVehiculo by remember { mutableStateOf(false) }
     var disponible by remember { mutableStateOf(true) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+    val authViewModel: AuthViewModel = viewModel()
+    val scope = rememberCoroutineScope()
+    val token by authViewModel.token.collectAsState()
+
+    // DatePicker para fecha inicio
+    LaunchedEffect(mostrarDatePickerInicio) {
+        if (mostrarDatePickerInicio) {
+            val dialog = android.app.DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    fechaInicio = LocalDate.of(year, month + 1, dayOfMonth)
+                    mostrarDatePickerInicio = false
+                },
+                fechaInicio.year,
+                fechaInicio.monthValue - 1,
+                fechaInicio.dayOfMonth
+            )
+            dialog.show()
+        }
+    }
+
+    // DatePicker para fecha fin
+    LaunchedEffect(mostrarDatePickerFin) {
+        if (mostrarDatePickerFin) {
+            val dialog = android.app.DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    fechaFin = LocalDate.of(year, month + 1, dayOfMonth)
+                    mostrarDatePickerFin = false
+                },
+                fechaFin.year,
+                fechaFin.monthValue - 1,
+                fechaFin.dayOfMonth
+            )
+            dialog.show()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -193,32 +245,60 @@ fun NuevaReservaScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Fecha
+            // Fecha Inicio
             Text(
-                text = "Fecha",
+                text = "Fecha de inicio",
                 fontSize = 13.sp,
                 color = Color(0xFF6B7280),
                 modifier = Modifier.padding(bottom = 5.dp)
             )
             OutlinedTextField(
-                value = fecha.toString(),
+                value = fechaInicio.toString(),
                 onValueChange = {},
                 readOnly = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { mostrarDatePicker = true },
+                    .clickable { mostrarDatePickerInicio = true },
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFEF4444),
                     unfocusedBorderColor = Color(0xFFE5E7EB)
                 ),
                 leadingIcon = {
-                    Icon(Icons.Default.DateRange, contentDescription = "Fecha")
+                    Icon(Icons.Default.DateRange, contentDescription = "Fecha Inicio")
                 },
                 enabled = false
             )
 
             Spacer(modifier = Modifier.height(20.dp))
+
+            // Fecha Fin
+            Text(
+                text = "Fecha de fin",
+                fontSize = 13.sp,
+                color = Color(0xFF6B7280),
+                modifier = Modifier.padding(bottom = 5.dp)
+            )
+            OutlinedTextField(
+                value = fechaFin.toString(),
+                onValueChange = {},
+                readOnly = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { mostrarDatePickerFin = true },
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFEF4444),
+                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                ),
+                leadingIcon = {
+                    Icon(Icons.Default.DateRange, contentDescription = "Fecha Fin")
+                },
+                enabled = false
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
 
             // Hora inicio y fin
             Row(
@@ -322,6 +402,23 @@ fun NuevaReservaScreen(
                 maxLines = 4
             )
 
+            // Mensaje de error
+            errorMessage?.let {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFEE2E2)
+                    )
+                ) {
+                    Text(
+                        text = it,
+                        color = Color(0xFF991B1B),
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+            }
             Spacer(modifier = Modifier.height(20.dp))
 
             // Verificación de disponibilidad
@@ -384,16 +481,72 @@ fun NuevaReservaScreen(
             Button(
                 onClick = {
                     vehiculoSeleccionado?.let { vehiculo ->
-                        onCrearReserva(
-                            NuevaReservaData(
-                                vehiculoId = vehiculo.id,
-                                fecha = fecha,
-                                horaInicio = LocalTime.parse(horaInicio),
-                                horaFin = LocalTime.parse(horaFin),
-                                tipo = tipoSeleccionado,
-                                notas = notas
-                            )
+                        // 1. Validar el token ANTES de poner isLoading = true
+                        if (token.isNullOrBlank()) {
+                            errorMessage = "No se encontró el token de autenticación"
+                            return@Button
+                        }
+
+                        isLoading = true
+                        errorMessage = null
+
+                        val reservaRequest = ReservaRequest(
+                            vehiculoId = vehiculo.id,
+                            fechaInicio = fechaInicio.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                            fechaFinal = fechaFin.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                            horaInicio = horaInicio,
+                            horaFin = horaFin,
+                            tipo = tipoSeleccionado.nombre.uppercase(),
+                            notas = notas.ifBlank { null }
                         )
+
+                        Log.d("CrearReserva", "Enviando reserva: $reservaRequest")
+                        Log.d("CrearReserva", "Token: Bearer $token")
+
+                        // 2. Eliminar scope.launch(Dispatchers.IO) - Retrofit ya maneja el threading
+                        RetrofitClient.instance.crearReserva("Bearer $token", reservaRequest)
+                            .enqueue(object : Callback<ReservaResponse> {
+                                override fun onResponse(
+                                    call: Call<ReservaResponse>,
+                                    response: Response<ReservaResponse>
+                                ) {
+                                    isLoading = false
+                                    if (response.isSuccessful) {
+                                        scope.launch(Dispatchers.Main) {
+                                            Toast.makeText(
+                                                context,
+                                                "Reserva creada exitosamente",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            onCrearReserva(
+                                                NuevaReservaData(
+                                                    vehiculoId = vehiculo.id,
+                                                    fechaInicio = fechaInicio,
+                                                    fechaFinal = fechaFin,
+                                                    horaInicio = LocalTime.parse(horaInicio),
+                                                    horaFin = LocalTime.parse(horaFin),
+                                                    tipo = tipoSeleccionado,
+                                                    notas = notas
+                                                )
+                                            )
+                                        }
+                                    } else {
+                                        val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                                        Log.e("CrearReserva", "Error: $errorBody")
+                                        scope.launch(Dispatchers.Main) {
+                                            errorMessage = extractErrorMessage(errorBody)
+                                        }
+                                    }
+                                }
+
+                                override fun onFailure(call: Call<ReservaResponse>, t: Throwable) {
+                                    isLoading = false
+                                    Log.e("CrearReserva", "Error de conexión", t)
+                                    scope.launch(Dispatchers.Main) {
+                                        errorMessage = "Error de conexión: ${t.message}"
+                                    }
+                                }
+                            })
                     }
                 },
                 modifier = Modifier
@@ -403,18 +556,31 @@ fun NuevaReservaScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFEF4444)
                 ),
-                enabled = disponible && vehiculoSeleccionado != null
+                enabled = !isLoading && disponible && vehiculoSeleccionado != null
             ) {
-                Text(
-                    text = "Crear Reserva",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Crear Reserva",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(30.dp))
         }
     }
+}
+
+private fun extractErrorMessage(errorBody: String): String {
+    val regex = "\"error\":\"(.*?)\"".toRegex()
+    val matchResult = regex.find(errorBody)
+    return matchResult?.groupValues?.getOrNull(1) ?: "Error al crear la reserva"
 }
 
 @Composable
