@@ -4,6 +4,27 @@ import eina.unizar.frontend.EstadoVehiculo
 import eina.unizar.frontend.TipoVehiculo
 import kotlinx.serialization.Serializable
 
+
+/**
+ * Data Transfer Object para vehículos.
+ * 
+ * Versión serializable del modelo Vehiculo para comunicación con el backend.
+ * Utiliza tipos primitivos y strings para facilitar la serialización JSON.
+ *
+ * @property id Identificador único del vehículo
+ * @property nombre Nombre del vehículo
+ * @property matricula Matrícula
+ * @property modelo Modelo del vehículo
+ * @property fabricante Fabricante
+ * @property antiguedad Antigüedad en años
+ * @property tipo_combustible Tipo de combustible
+ * @property litros_combustible Capacidad del depósito
+ * @property consumo_medio Consumo medio
+ * @property ubicacion_actual Ubicación como DTO (puede ser null)
+ * @property estado Estado como string
+ * @property tipo Tipo de vehículo como string
+ * @property usuariosVinculados Lista de IDs de usuarios
+ */
 @Serializable
 data class VehiculoDTO(
     val id: String,
@@ -21,6 +42,15 @@ data class VehiculoDTO(
     val usuariosVinculados: List<String> = emptyList()
 )
 
+/**
+ * Convierte un VehiculoDTO a Vehiculo.
+ * 
+ * Transforma la representación DTO (con strings) al modelo de dominio
+ * (con enums y tipos específicos). Mapea los valores string de estado
+ * y tipo a sus correspondientes enums.
+ *
+ * @return Vehiculo con los datos convertidos al modelo de dominio
+ */
 fun VehiculoDTO.toVehiculo(): Vehiculo {
     return Vehiculo(
         id = id.toString(),
@@ -50,6 +80,15 @@ fun VehiculoDTO.toVehiculo(): Vehiculo {
     )
 }
 
+
+/**
+ * Convierte un Vehiculo a VehiculoDTO.
+ * 
+ * Transforma el modelo de dominio al formato DTO para enviarlo al backend.
+ * Convierte los enums a strings y la ubicación a su versión DTO.
+ *
+ * @return VehiculoDTO listo para serialización y envío al backend
+ */
 fun Vehiculo.toVehiculoDTO(): VehiculoDTO {
     return VehiculoDTO(
         id = this.id,
