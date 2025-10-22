@@ -21,8 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eina.unizar.frontend.models.Vehiculo
 import java.time.LocalDate
 import java.time.LocalTime
+import androidx.compose.ui.res.painterResource
 
 data class NuevaReservaData(
     val vehiculoId: String,
@@ -132,19 +134,24 @@ fun NuevaReservaScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         vehiculoSeleccionado?.let { vehiculo ->
+                            val (color, iconRes, name) = when (vehiculo.tipo.toString()) {
+                                "Coche" -> Triple(Color(0xFF3B82F6), R.drawable.ic_coche, "Coche")
+                                "Moto" -> Triple(Color(0xFFF59E0B), R.drawable.ic_moto, "Moto")
+                                "Furgoneta" -> Triple(Color(0xFF10B981), R.drawable.ic_furgoneta, "Furgoneta")
+                                "Camion" -> Triple(Color(0xFFEF4444), R.drawable.ic_camion, "Camión")
+                                else -> Triple(Color(0xFF6B7280), R.drawable.ic_otro, "Otro")
+                            }
+
                             Box(
                                 modifier = Modifier
                                     .size(30.dp)
-                                    .background(
-                                        vehiculo.tipo.color.copy(alpha = 0.1f),
-                                        CircleShape
-                                    ),
+                                    .background(color.copy(alpha = 0.1f), androidx.compose.foundation.shape.CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = vehiculo.tipo.icon,
-                                    contentDescription = vehiculo.tipo.name,
-                                    tint = vehiculo.tipo.color,
+                                    painter = painterResource(id = iconRes),
+                                    contentDescription = name,
+                                    tint = color,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -172,8 +179,15 @@ fun NuevaReservaScreen(
                         DropdownMenuItem(
                             text = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
+                                    val (color, iconRes, name) = when (vehiculo.tipo.toString()) {
+                                        "Coche" -> Triple(Color(0xFF3B82F6), R.drawable.ic_coche, "Coche")
+                                        "Moto" -> Triple(Color(0xFFF59E0B), R.drawable.ic_moto, "Moto")
+                                        "Furgoneta" -> Triple(Color(0xFF10B981), R.drawable.ic_furgoneta, "Furgoneta")
+                                        "Camion" -> Triple(Color(0xFFEF4444), R.drawable.ic_camion, "Camión")
+                                        else -> Triple(Color(0xFF6B7280), R.drawable.ic_otro, "Otro")
+                                    }
                                     Icon(
-                                        imageVector = vehiculo.tipo.icon,
+                                        painter = painterResource(id = iconRes),
                                         contentDescription = null,
                                         tint = vehiculo.tipo.color,
                                         modifier = Modifier.size(20.dp)
