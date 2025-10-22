@@ -214,7 +214,8 @@ fun AppNavigation() {
                     },
                     selectedTab = 0,
                     onTabSelected = { /* lógica */ },
-                    navController = navController
+                    navController = navController,
+                    authViewModel = authViewModel
                 )
             }
         }
