@@ -3,7 +3,10 @@
 package com.example.carcare.ui
 
 import android.os.Bundle
+import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,42 +24,50 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
+import eina.unizar.frontend.R
+import eina.unizar.frontend.models.toVehiculo
+import eina.unizar.frontend.viewmodels.HomeViewModel
 import org.maplibre.android.MapLibre
 import org.maplibre.android.WellKnownTileServer
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapView
 
-
-/**
- * Pantalla que muestra la ubicación actual de un vehículo en un mapa interactivo.
- *
- * - Usa MapLibre con MapTiler como proveedor de mapas.
- * - Posiciona el mapa en las coordenadas del vehículo.
- * - Gestiona el ciclo de vida del mapa con el `LifecycleOwner`.
- *
- * Elementos principales:
- * - `TopAppBar` con botón de retroceso.
- * - `BottomNavigationBar` para moverse entre secciones (Inicio, Mapa, Reservas).
- * - `FloatingActionButton` para centrar el mapa.
- * - `Card` inferior con información del vehículo (modelo, matrícula, acción “IR”).
- *
- * Callbacks:
- * - `onBackClick()` → Vuelve a la pantalla anterior.
- * - `onInicioClick()`, `onMapaClick()`, `onReservasClick()` → Navegación inferior.
- */
 @Composable
 fun UbicacionVehiculoScreen(
     onBackClick: () -> Unit = {},
     onInicioClick: () -> Unit = {},
     onMapaClick: () -> Unit = {},
     onReservasClick: () -> Unit = {},
-    navController: NavHostController
+    navController: NavHostController,
+    efectiveUserId: String?,
+    efectiveToken: String?
 ) {
-    val vehiclePosition = LatLng(41.6833, -0.8880)
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+    // 1. Obtén los vehículos (ejemplo usando ViewModel)
+    val viewModel = remember { HomeViewModel() }
+    val vehiculosDTO by viewModel.vehiculos.collectAsState()
+    val vehiculos = vehiculosDTO.map { it.toVehiculo() }
+
+    LaunchedEffect(Unit) {
+        if (efectiveUserId != null) {
+            if (efectiveToken != null) {
+                viewModel.fetchVehiculos(efectiveUserId, efectiveToken)
+            }
+        } // Asegúrate de tener este método en tu ViewModel
+    }
+
+    Log.d("Mapa", "Vehículos obtenidos: ${vehiculos.size}")
+
+    // 2. Estado para el vehículo seleccionado
+    var selectedIndex by remember { mutableStateOf(0) }
+    val selectedVehiculo = vehiculos.getOrNull(selectedIndex)
+
+    // 3. Muestra los marcadores en el mapa y centra en el seleccionado
+    // (en el factory y update del MapView, recorre vehiculos y añade marcadores)
 
     Scaffold(
         topBar = {
@@ -93,30 +104,33 @@ fun UbicacionVehiculoScreen(
                     val mapView = MapView(factoryContext).apply {
                         onCreate(Bundle())
                         getMapAsync { map ->
-                            map.setStyle("https://api.maptiler.com/maps/streets/style.json?key=vzU3m7mUFKYAvOtFHKIq") { _ ->
-                                map.cameraPosition = CameraPosition.Builder()
-                                    .target(vehiclePosition)
-                                    .zoom(14.0)
-                                    .build()
+                            map.setStyle("https://api.maptiler.com/maps/streets/style.json?key=vzU3m7mUFKYAvOtFHKIq") {
+                                vehiculos.forEach { vehiculo ->
+                                    vehiculo.ubicacion_actual?.let { ubicacion ->
+                                        map.addMarker(
+                                            org.maplibre.android.annotations.MarkerOptions()
+                                                .position(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                                .title(vehiculo.nombre)
+                                                .icon(org.maplibre.android.annotations.IconFactory.getInstance(context)
+                                                    .fromResource(R.drawable.ic_marker))
+                                        )
+                                    }
+                                }
                             }
                         }
-
                     }
                     mapView
                 },
                 update = { mapView ->
-                    lifecycleOwner.lifecycle.addObserver(
-                        androidx.lifecycle.LifecycleEventObserver { _, event ->
-                            when (event) {
-                                androidx.lifecycle.Lifecycle.Event.ON_START -> mapView.onStart()
-                                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> mapView.onResume()
-                                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> mapView.onPause()
-                                androidx.lifecycle.Lifecycle.Event.ON_STOP -> mapView.onStop()
-                                androidx.lifecycle.Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
-                                else -> {}
-                            }
+                    selectedVehiculo?.let {
+                        mapView.getMapAsync { map ->
+                            val pos = it.ubicacion_actual?.let { it1 -> LatLng(it1.latitud, it1.longitud) }
+                            map.cameraPosition = CameraPosition.Builder()
+                                .target(pos)
+                                .zoom(14.0)
+                                .build()
                         }
-                    )
+                    }
                 }
             )
 
@@ -132,38 +146,50 @@ fun UbicacionVehiculoScreen(
                 Icon(Icons.Default.Place, contentDescription = "Centrar mapa", tint = Color(0xFFE53935))
             }
 
-            Card(
+            val pagerState = rememberPagerState(pageCount = { vehiculos.size })
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .padding(16.dp),
-                shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                contentPadding = PaddingValues(horizontal = 32.dp),
+                key = { it }
+            ) { page ->
+                val vehiculo = vehiculos[page]
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Place,
-                        contentDescription = "Vehículo",
-                        tint = Color(0xFFE53935),
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Seat Ibiza", color = Color.Black, fontSize = 18.sp)
-                        Text("1234 ABC", color = Color.Gray, fontSize = 14.sp)
-                    }
-                    Button(
-                        onClick = { /* open external maps app */ },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
-                        shape = RoundedCornerShape(50)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("IR", color = Color.White)
+                        Icon(
+                            imageVector = Icons.Default.Place,
+                            contentDescription = "Vehículo",
+                            tint = Color(0xFFE53935),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(vehiculo.nombre, color = Color.Black, fontSize = 18.sp)
+                            Text(vehiculo.matricula, color = Color.Gray, fontSize = 14.sp)
+                        }
+                        Button(
+                            onClick = { /* abrir en maps */ },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
+                            shape = RoundedCornerShape(50)
+                        ) {
+                            Text("IR", color = Color.White)
+                        }
                     }
+                }
+                // Al cambiar de página, centra el mapa en la ubicación del vehículo
+                LaunchedEffect(page) {
+                    // Centra el mapa en vehiculo.ubicacion_actual
                 }
             }
         }
