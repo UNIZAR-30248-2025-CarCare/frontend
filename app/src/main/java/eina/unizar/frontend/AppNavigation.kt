@@ -23,6 +23,7 @@ import java.time.YearMonth
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eina.unizar.frontend.models.Ubicacion
 import eina.unizar.frontend.models.Vehiculo
@@ -242,7 +243,9 @@ fun AppNavigation() {
         composable("mapa") {
             UbicacionVehiculoScreen(
                 onBackClick = { navController.popBackStack() },
-                navController = navController
+                navController = navController,
+                efectiveUserId = efectiveUserId,
+                efectiveToken = efectiveToken
             )
 
         }
@@ -294,7 +297,9 @@ fun AppNavigation() {
                         vehiculo = vehiculoSeleccionado.toVehiculoDetalle(),
                         onBackClick = { navController.popBackStack() },
                         onVerMapaClick = { /* lógica */ },
-                        onAddUsuarioClick = { /* lógica */ }
+                        onAddUsuarioClick = { /* lógica */ },
+                        efectiveUserId = efectiveUserId,
+                        efectiveToken = efectiveToken
                     )
                 } else {
                     Text("Vehículo no encontrado")
@@ -302,6 +307,17 @@ fun AppNavigation() {
             }
         }
         // ----------------------------------------------------------
+
+        // --- NUEVA RUTA DE INVITACIONES
+        composable("invitaciones") {
+            InvitacionesScreen(
+                usuarioId = efectiveUserId ?: "",
+                token = efectiveToken ?: "",
+                navController = navController,
+                currentRoute = "invitaciones",
+                onBackClick = { navController.popBackStack() }
+            )
+        }
 
 
         // --- NUEVA RUTA DE INCIDENCIAS ---

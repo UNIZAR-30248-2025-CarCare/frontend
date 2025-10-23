@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eina.unizar.frontend.models.VehiculoDetalle
+import eina.unizar.frontend.viewmodels.InvitacionViewModel
 
 
 /**
@@ -44,8 +45,13 @@ fun DetalleVehiculoScreen(
     vehiculo: VehiculoDetalle,
     onBackClick: () -> Unit,
     onVerMapaClick: () -> Unit,
-    onAddUsuarioClick: () -> Unit
+    onAddUsuarioClick: () -> Unit,
+    efectiveUserId: String?,
+    efectiveToken: String?
 ) {
+    var showDialog by remember { mutableStateOf(false) }
+    val invitacionViewModel = remember { InvitacionViewModel() }
+    var email by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -264,7 +270,7 @@ fun DetalleVehiculoScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1F2937)
                         )
-                        IconButton(onClick = onAddUsuarioClick) {
+                        IconButton(onClick = { showDialog = true}) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Añadir usuario",
@@ -338,6 +344,51 @@ fun DetalleVehiculoScreen(
             }
 
             Spacer(modifier = Modifier.height(30.dp))
+        }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false; email = ""; invitacionViewModel.mensaje = null },
+                title = { Text("Invitar usuario") },
+                text = {
+                    Column {
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text("Email del invitado") }
+                        )
+                        val esExito = invitacionViewModel.mensaje == "Invitación generada exitosamente"
+                        val colorMensaje = if (esExito) Color(0xFF22C55E) else Color(0xFFEF4444)
+
+                        invitacionViewModel.mensaje?.let {
+                            Spacer(Modifier.height(8.dp))
+                            Text(it, color = colorMensaje)
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (efectiveUserId != null && efectiveToken != null) {
+                                invitacionViewModel.enviarInvitacion(
+                                    vehiculo.id,
+                                    efectiveUserId,
+                                    email,
+                                    efectiveToken
+                                )
+                            }
+                        },
+                        enabled = email.isNotBlank() && !invitacionViewModel.loading
+                    ) {
+                        Text(if (invitacionViewModel.loading) "Enviando..." else "Enviar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false; email = ""; invitacionViewModel.mensaje = null }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }
