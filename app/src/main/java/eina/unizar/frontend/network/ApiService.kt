@@ -8,6 +8,9 @@ import eina.unizar.frontend.models.ReservaRequest
 import eina.unizar.frontend.models.ReservaResponse
 import eina.unizar.frontend.models.RegistrarVehiculoRequest
 import eina.unizar.frontend.models.VehiculoResponse
+import eina.unizar.frontend.models.InvitacionBody
+import eina.unizar.frontend.models.InvitacionResponse
+import eina.unizar.frontend.models.InvitacionesRecibidasResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -113,4 +116,29 @@ interface ApiService {
         @Path("userId") userId: String,
         @Header("Authorization") token: String
     ): Call<VehiculoResponse>
+
+    @POST("invitacion/generarInvitacion/{vehiculoId}")
+    suspend fun generarInvitacion(
+        @Path("vehiculoId") vehiculoId: String,
+        @Header("Authorization") token: String,
+        @Body body: InvitacionBody
+    ): Response<InvitacionResponse>
+
+    @GET("invitacion/invitacionesRecibidas/{usuarioId}")
+    suspend fun getInvitacionesRecibidas(
+        @Path("usuarioId") usuarioId: String,
+        @Header("Authorization") token: String
+    ): Response<InvitacionesRecibidasResponse>
+
+    @POST("invitacion/aceptarInvitacion")
+    suspend fun aceptarInvitacion(
+        @Header("Authorization") token: String,
+        @Body body: Map<String, String>
+    ): Response<InvitacionResponse>
+
+    @POST("invitacion/rechazarInvitacion")
+    suspend fun rechazarInvitacion(
+        @Header("Authorization") token: String,
+        @Body body: Map<String, Int>
+    ): Response<InvitacionResponse>
 }
