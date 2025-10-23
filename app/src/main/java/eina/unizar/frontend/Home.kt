@@ -169,7 +169,8 @@ fun HomeScreen(
                         navController.navigate("eleccion") {
                             popUpTo(0) { inclusive = true }
                         }
-                    }
+                    },
+                    navController = navController
                 )
             }
         }
@@ -453,7 +454,8 @@ fun BottomNavItem(
 
 @Composable
 fun PerfilMenu(
-    onCerrarSesion: () -> Unit
+    onCerrarSesion: () -> Unit,
+    navController: NavHostController
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -476,7 +478,10 @@ fun PerfilMenu(
         ) {
             DropdownMenuItem(
                 text = { Text("Ver invitaciones") },
-                onClick = { expanded = false /* implementar más tarde */ }
+                onClick = {
+                    expanded = false
+                    navController.navigate("invitaciones")
+                }
             )
             DropdownMenuItem(
                 text = { Text("Cerrar Sesión") },
