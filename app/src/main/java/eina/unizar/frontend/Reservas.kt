@@ -23,15 +23,45 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import eina.unizar.frontend.viewmodels.ReservaViewModel
+import eina.unizar.frontend.models.ReservaDTO
 import eina.unizar.frontend.models.Vehiculo
+import eina.unizar.frontend.BottomNavigationBar
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import kotlin.math.absoluteValue
 
+// Agregar función para generar colores por vehículo
+fun getColorForVehiculo(vehiculoId: String): Color {
+    val colors = listOf(
+        Color(0xFF3B82F6), // Azul
+        Color(0xFFEF4444), // Rojo
+        Color(0xFF10B981), // Verde
+        Color(0xFF8B5CF6), // Púrpura
+        Color(0xFFF59E0B), // Naranja
+        Color(0xFFEC4899), // Rosa
+        Color(0xFF06B6D4), // Cian
+        Color(0xFFF97316), // Naranja oscuro
+        Color(0xFF14B8A6), // Teal
+        Color(0xFFA855F7)  // Violeta
+    )
+
+    // Usar el hashCode del ID para seleccionar un color consistente
+    val index = vehiculoId.hashCode().absoluteValue % colors.size
+    return colors[index]
+}
+
+// Modificar el modelo Reserva
 data class Reserva(
     val id: String,
-    val usuario: Usuario,
-    val vehiculo: Vehiculo,
+    val usuario: String,
+    val vehiculo: String,
+    val vehiculoId: String,
+    val vehiculoTipo: TipoVehiculo,
     val fecha: LocalDate,
+    val fechaFin: LocalDate,
     val horaInicio: String,
     val horaFin: String,
     val tipo: TipoReserva,
@@ -51,41 +81,109 @@ enum class EstadoReserva {
     COMPLETADA
 }
 
-/**
- * Pantalla de calendario que muestra las reservas de vehículos por día.
- *
- * - Muestra las reservas asociadas al vehículo seleccionado.
- * - Permite navegar entre meses y seleccionar días específicos.
- * - Usa `BottomNavigationBar` para moverse entre secciones principales.
- *
- * Elementos destacados:
- * - Navegación mensual (`onMesAnterior`, `onMesSiguiente`).
- * - Visualización de reservas del día (`reservasDelDia`).
- * - Acción para añadir una nueva reserva (`onAddReservaClick`).
- *
- * Parámetros:
- * - `vehiculoSeleccionado`: vehículo actualmente filtrado.
- * - `reservas`: lista de reservas disponibles.
- * - `diaSeleccionado`: fecha activa en el calendario.
- */
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun CalendarioScreenWrapper(
+    userId: String,
+    token: String,
+    vehiculoSeleccionado: eina.unizar.frontend.models.Vehiculo?,
+    onBackClick: () -> Unit,
+    onVehiculoClick: (eina.unizar.frontend.models.Vehiculo) -> Unit,
+    onAddReservaClick: () -> Unit,
+    navController: NavHostController
+) {
+    val reservaViewModel: ReservaViewModel = viewModel()
+    val reservasDTO by reservaViewModel.reservas.collectAsState()
+    val isLoading by reservaViewModel.isLoading.collectAsState()
+    val error by reservaViewModel.error.collectAsState()
+
+    LaunchedEffect(token) {
+        reservaViewModel.fetchReservas(token)
+    }
+
+    // Convertir ReservaDTO a Reserva temporal para el calendario
+    val reservasCalendario = reservasDTO.map { dto ->
+        val fechaInicio = dto.fechaInicio.split("T")[0]
+        val fechaFinal = dto.fechaFin.split("T")[0]
+        
+        // Convertir el string del tipo a TipoVehiculo enum
+        val tipoVehiculo = when (dto.Vehiculo.tipo.uppercase()) {
+            "COCHE" -> TipoVehiculo.COCHE
+            "MOTO" -> TipoVehiculo.MOTO
+            "FURGONETA" -> TipoVehiculo.FURGONETA
+            "CAMION" -> TipoVehiculo.CAMION
+            else -> TipoVehiculo.COCHE
+        }
+        
+        Reserva(
+            id = dto.id.toString(),
+            usuario = dto.Usuario.nombre,
+            vehiculo = "${dto.Vehiculo.nombre} - ${dto.Vehiculo.matricula}",
+            vehiculoId = dto.Vehiculo.id,
+            vehiculoTipo = tipoVehiculo,
+            fecha = LocalDate.parse(fechaInicio),
+            fechaFin = LocalDate.parse(fechaFinal),
+            horaInicio = dto.horaInicio.substring(0, 5),
+            horaFin = dto.horaFin.substring(0, 5),
+            tipo = when (dto.motivo.uppercase()) {
+                "TRABAJO" -> TipoReserva.TRABAJO
+                "PERSONAL" -> TipoReserva.PERSONAL
+                "URGENTE" -> TipoReserva.URGENTE
+                else -> TipoReserva.OTRO
+            },
+            estado = EstadoReserva.CONFIRMADA
+        )
+    }
+
+    var diaSeleccionado by remember { mutableStateOf(LocalDate.now()) }
+
+    CalendarioScreen(
+        vehiculoSeleccionado = null, // CAMBIADO: ya no pasamos vehículo seleccionado
+        reservasCalendario = reservasCalendario,
+        reservasDTO = reservasDTO,
+        isLoading = isLoading,
+        error = error,
+        mesActual = YearMonth.now(),
+        diaSeleccionado = diaSeleccionado,
+        onBackClick = onBackClick,
+        onVehiculoClick = onVehiculoClick,
+        onMesAnterior = { /* TODO: implementar */ },
+        onMesSiguiente = { /* TODO: implementar */ },
+        onDiaClick = { diaSeleccionado = it },
+        onAddReservaClick = onAddReservaClick,
+        navController = navController
+    )
+}
+
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarioScreen(
-    vehiculoSeleccionado: Vehiculo?,
-    reservas: List<Reserva>,
+    vehiculoSeleccionado: eina.unizar.frontend.models.Vehiculo?,
+    reservasCalendario: List<Reserva>,
+    reservasDTO: List<ReservaDTO>,
+    isLoading: Boolean,
+    error: String?,
     mesActual: YearMonth,
     diaSeleccionado: LocalDate,
     onBackClick: () -> Unit,
-    onVehiculoClick: () -> Unit,
+    onVehiculoClick: (eina.unizar.frontend.models.Vehiculo) -> Unit,
     onMesAnterior: () -> Unit,
     onMesSiguiente: () -> Unit,
     onDiaClick: (LocalDate) -> Unit,
     onAddReservaClick: () -> Unit,
     navController: NavHostController
 ) {
-    val reservasDelDia = reservas.filter { it.fecha == diaSeleccionado }
-
+    val reservasDelDia = reservasCalendario.filter { reserva ->
+        // Obtener todas las fechas del rango de la reserva
+        val dias = mutableListOf<LocalDate>()
+        var fecha = reserva.fecha
+        while (!fecha.isAfter(reserva.fechaFin)) {
+            dias.add(fecha)
+            fecha = fecha.plusDays(1)
+        }
+        dias.contains(diaSeleccionado)
+    }
     val currentRoute = navController.currentBackStackEntry?.destination?.route
 
     Scaffold(
@@ -109,170 +207,187 @@ fun CalendarioScreen(
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
         ) {
-        // Header
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFEF4444)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // Header
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFFEF4444)
             ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
+                    Text(
+                        text = "Calendario",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.width(48.dp))
                 }
-                Text(
-                    text = "Calendario",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.width(48.dp))
             }
-        }
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 20.dp)
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(15.dp))
-
-                // Selector de vehículo
-                vehiculoSeleccionado?.let { vehiculo ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .shadow(2.dp, RoundedCornerShape(25.dp))
-                            .clickable(onClick = onVehiculoClick),
-                        shape = RoundedCornerShape(25.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        CircularProgressIndicator(color = Color(0xFFEF4444))
+                    }
+                }
+                error != null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(16.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .background(
-                                        vehiculo.tipo.color.copy(alpha = 0.1f),
-                                        CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = vehiculo.tipo.iconRes),
-                                    contentDescription = vehiculo.tipo.name,
-                                    tint = vehiculo.tipo.color,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "${vehiculo.nombre} - ${vehiculo.matricula}",
-                                fontSize = 15.sp,
-                                color = Color(0xFF1F2937),
-                                modifier = Modifier.weight(1f)
-                            )
                             Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Cambiar vehículo",
-                                tint = Color(0xFF6B7280)
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Error",
+                                tint = Color(0xFFEF4444),
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = error,
+                                fontSize = 16.sp,
+                                color = Color(0xFF6B7280),
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
                 }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        item {
+                            Spacer(modifier = Modifier.height(15.dp))
 
-                Spacer(modifier = Modifier.height(15.dp))
+                            // ELIMINADO: Selector de vehículo
 
-                Spacer(modifier = Modifier.height(15.dp))
+                            // Calendario
+                            CalendarioConSelector(
+                                reservas = reservasCalendario,
+                                diaSeleccionado = diaSeleccionado,
+                                onDiaClick = onDiaClick
+                            )
 
-                //Calendario
-                CalendarioConSelector(
-                    reservas = reservas,
-                    diaSeleccionado = diaSeleccionado,
-                    onDiaClick = onDiaClick
-                )
+                            Spacer(modifier = Modifier.height(20.dp))
 
-                Spacer(modifier = Modifier.height(20.dp))
+                            Text(
+                                text = "Reservas de hoy",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1F2937)
+                            )
 
-                // Título de reservas del día
-                Text(
-                    text = "Reservas de hoy",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937)
-                )
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
 
-                Spacer(modifier = Modifier.height(10.dp))
-            }
+                        if (reservasDelDia.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(100.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No hay reservas para este día",
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF9CA3AF)
+                                    )
+                                }
+                            }
+                        } else {
+                            items(reservasDelDia) { reserva ->
+                                ReservaCard(reserva = reserva)
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
 
-            // Lista de reservas
-            if (reservasDelDia.isEmpty()) {
-                item {
+                        item {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            
+                            Text(
+                                text = "Todas mis reservas (${reservasDTO.size})",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1F2937)
+                            )
+                            
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+
+                        if (reservasDTO.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(100.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No tienes reservas",
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF9CA3AF)
+                                    )
+                                }
+                            }
+                        } else {
+                            items(reservasDTO) { reserva ->
+                                ReservaItemCard(reserva = reserva)
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
+                        }
+                    }
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(end = 20.dp, bottom = 10.dp),
+                        contentAlignment = Alignment.BottomEnd
                     ) {
-                        Text(
-                            text = "No hay reservas para este día",
-                            fontSize = 14.sp,
-                            color = Color(0xFF9CA3AF)
-                        )
+                        FloatingActionButton(
+                            onClick = onAddReservaClick,
+                            containerColor = Color(0xFFEF4444),
+                            modifier = Modifier.size(56.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Añadir reserva",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
                 }
-            } else {
-                items(reservasDelDia) { reserva ->
-                    ReservaCard(reserva = reserva)
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(100.dp))
-            }
-        }
-
-        // Botón flotante añadir reserva
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 20.dp, bottom = 10.dp),
-            contentAlignment = Alignment.BottomEnd
-        ) {
-            FloatingActionButton(
-                onClick = onAddReservaClick,
-                containerColor = Color(0xFFEF4444),
-                modifier = Modifier.size(56.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Añadir reserva",
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
             }
         }
     }
 }
-        }
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -283,15 +398,25 @@ fun CalendarioMensual(
     onDiaClick: (LocalDate) -> Unit
 ) {
     val primerDiaDelMes = mes.atDay(1)
-    var diaDeLaSemanaInicio = (primerDiaDelMes.dayOfWeek.value + 5) % 7 // Ajuste: Lunes = 0, Domingo = 6
+    var diaDeLaSemanaInicio = (primerDiaDelMes.dayOfWeek.value + 5) % 7
 
-    // Corrección específica para octubre de 2025
     if (mes == YearMonth.of(2025, 10)) {
-        diaDeLaSemanaInicio = 2 // Miércoles (0 = Lunes, 1 = Martes, 2 = Miércoles)
+        diaDeLaSemanaInicio = 2
     }
 
     val diasEnMes = mes.lengthOfMonth()
-    val totalCeldas = ((diasEnMes + diaDeLaSemanaInicio + 6) / 7) * 7 // Total de celdas (múltiplo de 7)
+    val totalCeldas = ((diasEnMes + diaDeLaSemanaInicio + 6) / 7) * 7
+
+    // Función auxiliar para obtener todas las fechas de una reserva
+    fun obtenerRangoReserva(reserva: Reserva): List<LocalDate> {
+        val dias = mutableListOf<LocalDate>()
+        var fecha = reserva.fecha
+        while (!fecha.isAfter(reserva.fechaFin)) {
+            dias.add(fecha)
+            fecha = fecha.plusDays(1)
+        }
+        return dias
+    }
 
     Card(
         modifier = Modifier
@@ -305,7 +430,6 @@ fun CalendarioMensual(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Días de la semana
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -324,7 +448,6 @@ fun CalendarioMensual(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Días del mes
             Column {
                 for (semana in 0 until totalCeldas / 7) {
                     Row(
@@ -336,8 +459,29 @@ fun CalendarioMensual(
                             val numeroDia = indice - diaDeLaSemanaInicio + 1
                             if (numeroDia in 1..diasEnMes) {
                                 val fecha = mes.atDay(numeroDia)
-                                val tieneReservas = reservas.any { it.fecha == fecha }
+                                val reservasDelDia = reservas.filter { reserva ->
+                                    obtenerRangoReserva(reserva).contains(fecha)
+                                }
+                                val tieneReservas = reservasDelDia.isNotEmpty()
                                 val esSeleccionado = fecha == diaSeleccionado
+                                val esHoy = fecha == LocalDate.now()
+
+                                // Obtener color del primer vehículo si hay reservas
+                                val colorVehiculo = if (reservasDelDia.isNotEmpty()) {
+                                    getColorForVehiculo(reservasDelDia.first().vehiculoId)
+                                } else {
+                                    Color(0xFF3B82F6) // Color por defecto
+                                }
+
+                                // Verificar si es parte de una reserva de varios días
+                                val reservasMultiDia = reservas.filter { reserva ->
+                                    val rango = obtenerRangoReserva(reserva)
+                                    rango.size > 1 && rango.contains(fecha)
+                                }
+                                val esMultiDia = reservasMultiDia.isNotEmpty()
+
+                                // Si hay múltiples vehículos el mismo día
+                                val multipleVehiculos = reservasDelDia.map { it.vehiculoId }.distinct().size > 1
 
                                 Box(
                                     modifier = Modifier
@@ -346,44 +490,141 @@ fun CalendarioMensual(
                                         .padding(2.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    if (esSeleccionado) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(36.dp)
-                                                .background(
-                                                    Color(0xFFEF4444),
-                                                    CircleShape
-                                                )
-                                                .clickable { onDiaClick(fecha) },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = numeroDia.toString(),
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.White
-                                            )
-                                        }
-                                    } else {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.clickable { onDiaClick(fecha) }
-                                        ) {
-                                            if (tieneReservas) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(4.dp)
-                                                        .background(
-                                                            Color(0xFF3B82F6),
-                                                            CircleShape
+                                    when {
+                                        // Día seleccionado
+                                        esSeleccionado -> {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(Color(0xFFEF4444), CircleShape)
+                                                    .clickable { onDiaClick(fecha) },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Column(
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    if (tieneReservas) {
+                                                        if (multipleVehiculos) {
+                                                            // Mostrar indicador multicolor
+                                                            Row(
+                                                                horizontalArrangement = Arrangement.Center,
+                                                                modifier = Modifier.width(12.dp)
+                                                            ) {
+                                                                reservasDelDia.map { it.vehiculoId }.distinct().take(3).forEach { vId ->
+                                                                    Box(
+                                                                        modifier = Modifier
+                                                                            .size(3.dp)
+                                                                            .background(getColorForVehiculo(vId), CircleShape)
+                                                                    )
+                                                                    if (reservasDelDia.map { it.vehiculoId }.distinct().indexOf(vId) <
+                                                                        minOf(2, reservasDelDia.map { it.vehiculoId }.distinct().size - 1)) {
+                                                                        Spacer(modifier = Modifier.width(1.dp))
+                                                                    }
+                                                                }
+                                                            }
+                                                        } else {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .size(4.dp)
+                                                                    .background(Color.White, CircleShape)
+                                                            )
+                                                        }
+                                                        Spacer(modifier = Modifier.height(2.dp))
+                                                    }
+                                                    Text(
+                                                        text = numeroDia.toString(),
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color.White
+                                                    )
+                                                    // Subrayado si es multi-día
+                                                    if (esMultiDia) {
+                                                        Spacer(modifier = Modifier.height(2.dp))
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .width(20.dp)
+                                                                .height(2.dp)
+                                                                .background(Color.White)
                                                         )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        // Día con reservas (pero no seleccionado)
+                                        tieneReservas -> {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(
+                                                        colorVehiculo.copy(alpha = 0.15f),
+                                                        CircleShape
+                                                    )
+                                                    .clickable { onDiaClick(fecha) },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Column(
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    if (multipleVehiculos) {
+                                                        // Mostrar indicador multicolor
+                                                        Row(
+                                                            horizontalArrangement = Arrangement.Center,
+                                                            modifier = Modifier.width(12.dp)
+                                                        ) {
+                                                            reservasDelDia.map { it.vehiculoId }.distinct().take(3).forEach { vId ->
+                                                                Box(
+                                                                    modifier = Modifier
+                                                                        .size(3.dp)
+                                                                        .background(getColorForVehiculo(vId), CircleShape)
+                                                                )
+                                                                if (reservasDelDia.map { it.vehiculoId }.distinct().indexOf(vId) <
+                                                                    minOf(2, reservasDelDia.map { it.vehiculoId }.distinct().size - 1)) {
+                                                                    Spacer(modifier = Modifier.width(1.dp))
+                                                                }
+                                                            }
+                                                        }
+                                                    } else {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(4.dp)
+                                                                .background(colorVehiculo, CircleShape)
+                                                        )
+                                                    }
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = numeroDia.toString(),
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = colorVehiculo
+                                                    )
+                                                    // Subrayado si es multi-día
+                                                    if (esMultiDia) {
+                                                        Spacer(modifier = Modifier.height(2.dp))
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .width(20.dp)
+                                                                .height(2.dp)
+                                                                .background(colorVehiculo)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        // Día normal
+                                        else -> {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .clickable { onDiaClick(fecha) },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = numeroDia.toString(),
+                                                    fontSize = 14.sp,
+                                                    fontWeight = if (esHoy) FontWeight.Bold else FontWeight.Normal,
+                                                    color = if (esHoy) Color(0xFFEF4444) else Color(0xFF1F2937)
                                                 )
                                             }
-                                            Text(
-                                                text = numeroDia.toString(),
-                                                fontSize = 14.sp,
-                                                color = Color(0xFF1F2937)
-                                            )
                                         }
                                     }
                                 }
@@ -409,10 +650,9 @@ fun CalendarioConSelector(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp)
     ) {
-        // Selector de mes
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -444,7 +684,6 @@ fun CalendarioConSelector(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Calendario mensual
         CalendarioMensual(
             mes = mesActual,
             diaSeleccionado = diaSeleccionado,
@@ -453,8 +692,11 @@ fun CalendarioConSelector(
         )
     }
 }
+
 @Composable
 fun ReservaCard(reserva: Reserva) {
+    val colorVehiculo = getColorForVehiculo(reserva.vehiculoId)
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -466,12 +708,11 @@ fun ReservaCard(reserva: Reserva) {
         Row(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Barra de color
             Box(
                 modifier = Modifier
                     .width(5.dp)
                     .fillMaxHeight()
-                    .background(reserva.tipo.color)
+                    .background(colorVehiculo)
             )
 
             Row(
@@ -480,27 +721,25 @@ fun ReservaCard(reserva: Reserva) {
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Avatar usuario
                 Box(
                     modifier = Modifier
                         .size(30.dp)
-                        .background(Color.Blue.copy(alpha = 0.1f), CircleShape),
+                        .background(colorVehiculo.copy(alpha = 0.1f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = reserva.usuario.nombre.first().toString(),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Cyan
+                    Icon(
+                        painter = painterResource(id = reserva.vehiculoTipo.iconRes),
+                        contentDescription = reserva.vehiculoTipo.name,
+                        tint = colorVehiculo,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Información
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = reserva.usuario.nombre,
+                        text = reserva.vehiculo,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF1F2937)
@@ -517,7 +756,6 @@ fun ReservaCard(reserva: Reserva) {
                     )
                 }
 
-                // Icono de estado
                 when (reserva.estado) {
                     EstadoReserva.CONFIRMADA -> {
                         Box(
@@ -564,6 +802,141 @@ fun ReservaCard(reserva: Reserva) {
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReservaItemCard(reserva: ReservaDTO) {
+    // Convertir el string del tipo a TipoVehiculo enum
+    val tipoVehiculo = when (reserva.Vehiculo.tipo.uppercase()) {
+        "COCHE" -> TipoVehiculo.COCHE
+        "MOTO" -> TipoVehiculo.MOTO
+        "FURGONETA" -> TipoVehiculo.FURGONETA
+        "CAMION" -> TipoVehiculo.CAMION
+        else -> TipoVehiculo.COCHE
+    }
+    
+    val colorVehiculo = getColorForVehiculo(reserva.Vehiculo.id)
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = reserva.motivo.uppercase(),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = when (reserva.motivo.uppercase()) {
+                        "TRABAJO" -> Color(0xFF3B82F6)
+                        "PERSONAL" -> Color(0xFF8B5CF6)
+                        else -> Color(0xFF10B981)
+                    }
+                )
+                Text(
+                    text = "ID: ${reserva.id}",
+                    fontSize = 12.sp,
+                    color = Color(0xFF9CA3AF)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(colorVehiculo.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = tipoVehiculo.iconRes),
+                        contentDescription = "Vehículo",
+                        tint = colorVehiculo,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = reserva.Vehiculo.nombre,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1F2937)
+                    )
+                    Text(
+                        text = reserva.Vehiculo.matricula,
+                        fontSize = 14.sp,
+                        color = Color(0xFF6B7280)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Fecha",
+                            tint = Color(0xFF6B7280),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${reserva.fechaInicio.split("T")[0]} → ${reserva.fechaFin.split("T")[0]}",
+                            fontSize = 13.sp,
+                            color = Color(0xFF6B7280)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Hora",
+                            tint = Color(0xFF6B7280),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${reserva.horaInicio.substring(0, 5)} - ${reserva.horaFin.substring(0, 5)}",
+                            fontSize = 13.sp,
+                            color = Color(0xFF6B7280)
+                        )
+                    }
+                }
+            }
+
+            reserva.descripcion?.let { desc ->
+                if (desc.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Divider(color = Color(0xFFE5E7EB))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Notas: $desc",
+                        fontSize = 12.sp,
+                        color = Color(0xFF6B7280),
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    )
                 }
             }
         }
