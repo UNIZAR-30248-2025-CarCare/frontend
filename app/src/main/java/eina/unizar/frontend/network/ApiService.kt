@@ -6,6 +6,7 @@ import eina.unizar.frontend.models.LoginResponse
 import eina.unizar.frontend.models.UserNameResponse
 import eina.unizar.frontend.models.ReservaRequest
 import eina.unizar.frontend.models.ReservaResponse
+import eina.unizar.frontend.models.ReservasListResponse
 import eina.unizar.frontend.models.RegistrarVehiculoRequest
 import eina.unizar.frontend.models.VehiculoResponse
 import retrofit2.Call
@@ -80,6 +81,11 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body reserva: ReservaRequest
     ): Call<ReservaResponse>
+
+    @GET("reserva")
+    fun obtenerReservas(
+        @Header("Authorization") token: String
+    ): Call<ReservasListResponse>
 
     /**
      * Registra un nuevo vehículo en el sistema.

@@ -23,6 +23,7 @@ import java.time.YearMonth
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import eina.unizar.frontend.models.Ubicacion
 import eina.unizar.frontend.models.Vehiculo
@@ -76,6 +77,8 @@ fun AppNavigation() {
     // Usa los valores de SharedPreferences si los valores del ViewModel son nulos
     val efectiveUserId = userId ?: storedUserId
     val efectiveToken = token ?: storedToken
+    val selectedVehiculo = remember { mutableStateOf<Vehiculo?>(null) }
+
 
 
     // --- Datos de Ejemplo para Home y otras pantallas ---
@@ -154,19 +157,6 @@ fun AppNavigation() {
             usuariosVinculados = listOf("David Borrel")
         )
 
-    // --- Datos de Ejemplo (Mantenerlos para que las pantallas compilen) ---
-    val reservasEjemplo = listOf(
-        Reserva(
-            id = "R01",
-            usuario = usuarioEjemplo,
-            vehiculo = vehiculoEjemplo,
-            fecha = LocalDate.now(), // Para que aparezca en el día actual
-            horaInicio = "09:00",
-            horaFin = "11:00",
-            tipo = TipoReserva.TRABAJO,
-            estado = EstadoReserva.CONFIRMADA
-        )
-    )
     // ---------------------------------------------------------------------
 
 
@@ -217,6 +207,7 @@ fun AppNavigation() {
 
                     // Callbacks de navegación de la pantalla:
                     onVehiculoClick = { vehiculoId: String ->
+                        selectedVehiculo.value = vehiculosDisponibles.find { it.id == vehiculoId }
                         navController.navigate("vehiculo_detalle/$vehiculoId")
                     },
                     onAddVehiculoClick = {
@@ -336,35 +327,40 @@ fun AppNavigation() {
         }
         // ===========================================
 
-        // --- RUTA DE RESERVAS/CALENDARIO  ---
-        composable("reservas") { // "reservas"
-            CalendarioScreen(
-                vehiculoSeleccionado = vehiculoEjemplo,
-                reservas = reservasEjemplo,
-                mesActual = YearMonth.now(),
-                diaSeleccionado = LocalDate.now(),
+        composable("reservas") {
+            val userId = authViewModel.userId.collectAsState().value ?: ""
+            val token = authViewModel.token.collectAsState().value ?: ""
+
+            CalendarioScreenWrapper(
+                userId = userId,
+                token = token,
+                vehiculoSeleccionado = selectedVehiculo.value ?: vehiculoEjemplo, // fallback
                 onBackClick = { navController.popBackStack() },
-                onVehiculoClick = { /* Lógica */ },
-                onMesAnterior = { /* Lógica */ },
-                onMesSiguiente = { /* Lógica */ },
-                onDiaClick = { /* Lógica */ },
-                onAddReservaClick = {
-                    navController.navigate("nueva_reserva")
+                onVehiculoClick = { nuevoVehiculo ->
+                    selectedVehiculo.value = nuevoVehiculo
                 },
+                onAddReservaClick = { navController.navigate("nueva_reserva") },
                 navController = navController
             )
         }
 
+
         // --- NUEVA RUTA DE RESERVA ---
         composable("nueva_reserva") {
-            // Asegúrate de usar @RequiresApi si es necesario
-            NuevaReservaScreen(
-                vehiculos = vehiculosDisponibles, // Pasar los vehículos disponibles
-                onBackClick = { navController.popBackStack() },
+            val userId = authViewModel.userId.collectAsState().value ?: ""
+            val token = authViewModel.token.collectAsState().value ?: ""
+
+            Log.d("AppNavigation", "Nueva Reserva - userId: $userId, token: $token")
+
+            CrearReservaWrapper(
+                userId = userId,
+                token = token,
+                onBackClick = {
+                    navController.popBackStack()
+                },
                 onCrearReserva = { nuevaReservaData ->
-                    // Aquí iría la lógica para enviar los datos al backend
-                    println("Reserva creada: $nuevaReservaData")
-                    navController.popBackStack() // Volver al calendario tras crear
+                    Log.d("NuevaReserva", "Reserva creada: $nuevaReservaData")
+                    navController.popBackStack()
                 }
             )
         }
