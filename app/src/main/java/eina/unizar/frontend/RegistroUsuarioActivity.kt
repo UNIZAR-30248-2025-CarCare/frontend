@@ -40,6 +40,32 @@ fun hashPassword(password: String): String {
     return bytes.joinToString("") { "%02x".format(it) }
 }
 
+// Función para validar el email
+fun esEmailValido(email: String): Boolean {
+    val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
+    return regex.matches(email)
+}
+
+// Función para validar la fecha y calcular la edad
+fun obtenerEdad(fechaNacimiento: String): Int? {
+    return try {
+        val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        formato.isLenient = false // Solo acepta el formato exacto
+        val fecha = formato.parse(fechaNacimiento)
+        val hoy = Calendar.getInstance()
+        val nacimiento = Calendar.getInstance()
+        nacimiento.time = fecha!!
+        var edad = hoy.get(Calendar.YEAR) - nacimiento.get(Calendar.YEAR)
+        if (hoy.get(Calendar.DAY_OF_YEAR) < nacimiento.get(Calendar.DAY_OF_YEAR)) {
+            edad--
+        }
+        edad
+    } catch (e: Exception) {
+        null
+    }
+}
+
+
 /**
  * Pantalla de registro de nuevos usuarios.
  *
@@ -193,7 +219,9 @@ fun RegistroUsuarioScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { aceptoTerminos = !aceptoTerminos },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
@@ -242,10 +270,40 @@ fun RegistroUsuarioScreen(
 
             Button(
                 onClick = {
+                    errorMessage = null
+
+                    if (nombre.isBlank() || email.isBlank() || password.isBlank() || fechaNacimiento.isBlank()) {
+                        errorMessage = "Todos los campos son obligatorios"
+                        return@Button
+                    }
+                    if (!esEmailValido(email)) {
+                        errorMessage = "Formato de email incorrecto"
+                        return@Button
+                    }
+                    if (password.length < 5) {
+                        errorMessage = "La contraseña debe tener al menos 5 caracteres"
+                        return@Button
+                    }
+                    val edad = obtenerEdad(fechaNacimiento)
+                    if (edad == null) {
+                        errorMessage = "Formato de fecha incorrecto (DD/MM/AAAA)"
+                        return@Button
+                    }
+                    if (edad < 16) {
+                        errorMessage = "Debes ser mayor de 16 años"
+                        return@Button
+                    }
+                    if (!aceptoTerminos) {
+                        errorMessage = "Debes aceptar los términos y condiciones"
+                        return@Button
+                    }
                     if (aceptoTerminos) {
                         val hashedPassword = hashPassword(password) // Hashear la contraseña
                         Log.d("RegistroUsuario", "Hashed Password: $hashedPassword") // Depuración
-                        Log.d("RegistroUsuario", "Fecha de Nacimiento: $fechaNacimiento") // Depuración
+                        Log.d(
+                            "RegistroUsuario",
+                            "Fecha de Nacimiento: $fechaNacimiento"
+                        ) // Depuración
                         val usuario = Usuario(
                             nombre = nombre,
                             email = email,
@@ -256,14 +314,22 @@ fun RegistroUsuarioScreen(
                         scope.launch(Dispatchers.IO) {
                             RetrofitClient.instance.registrarUsuario(usuario)
                                 .enqueue(object : Callback<Void> {
-                                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                    override fun onResponse(
+                                        call: Call<Void>,
+                                        response: Response<Void>
+                                    ) {
                                         if (response.isSuccessful) {
                                             scope.launch(Dispatchers.Main) {
-                                                Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Registro exitoso",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                                 onRegisterClick()
                                             }
                                         } else {
-                                            val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                                            val errorBody = response.errorBody()?.string()
+                                                ?: "Error desconocido"
                                             scope.launch(Dispatchers.Main) {
                                                 errorMessage = extractErrorMessage(errorBody)
                                             }
@@ -319,3 +385,4 @@ fun RegistroUsuarioScreen(
         }
     }
 }
+
