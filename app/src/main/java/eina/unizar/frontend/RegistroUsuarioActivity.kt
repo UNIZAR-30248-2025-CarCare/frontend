@@ -37,6 +37,7 @@ import java.util.*
 
 fun hashPassword(password: String): String {
     val bytes = MessageDigest.getInstance("SHA-256").digest(password.toByteArray())
+    Log.d("HashPassword", "Password hashed to: ${bytes.joinToString("") { "%02x".format(it) }}")
     return bytes.joinToString("") { "%02x".format(it) }
 }
 

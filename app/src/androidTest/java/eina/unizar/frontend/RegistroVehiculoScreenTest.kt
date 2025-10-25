@@ -256,4 +256,10 @@ class RegistroVehiculoScreenTest {
             }
         }
     }
+
+    /*
+     * No se han hecho tests para comprobar el tipo de vehículo o el tipo de combustible
+     * porque esos campos son desplegables con opciones fijas, por lo que no hay
+     * margen de error en la entrada del usuario.
+     */
 }

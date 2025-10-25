@@ -262,7 +262,7 @@ fun AddVehiculoScreen(
                         onValueChange = { matricula = it
                                         matriculaError = false },
                         isError = matriculaError,
-                        placeholder = { Text("1234 ABC") },
+                        placeholder = { Text("1234 BBC") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
