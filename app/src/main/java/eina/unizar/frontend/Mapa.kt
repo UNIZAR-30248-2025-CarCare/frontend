@@ -19,10 +19,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import eina.unizar.frontend.R
 import eina.unizar.frontend.models.toVehiculo
@@ -30,7 +30,9 @@ import eina.unizar.frontend.viewmodels.HomeViewModel
 import org.maplibre.android.MapLibre
 import org.maplibre.android.WellKnownTileServer
 import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 
 @Composable
@@ -47,27 +49,48 @@ fun UbicacionVehiculoScreen(
 
     val currentRoute = navController.currentBackStackEntry?.destination?.route
 
-    // 1. Obtén los vehículos (ejemplo usando ViewModel)
+    // ViewModel y vehículos
     val viewModel = remember { HomeViewModel() }
     val vehiculosDTO by viewModel.vehiculos.collectAsState()
     val vehiculos = vehiculosDTO.map { it.toVehiculo() }
 
     LaunchedEffect(Unit) {
-        if (efectiveUserId != null) {
-            if (efectiveToken != null) {
-                viewModel.fetchVehiculos(efectiveUserId, efectiveToken)
-            }
-        } // Asegúrate de tener este método en tu ViewModel
+        if (efectiveUserId != null && efectiveToken != null) {
+            viewModel.fetchVehiculos(efectiveUserId, efectiveToken)
+        }
     }
 
     Log.d("Mapa", "Vehículos obtenidos: ${vehiculos.size}")
 
-    // 2. Estado para el vehículo seleccionado
+    // Estado para el vehículo seleccionado y referencia al mapa
     var selectedIndex by remember { mutableStateOf(0) }
     val selectedVehiculo = vehiculos.getOrNull(selectedIndex)
+    var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
+    var shouldCenterMap by remember { mutableStateOf(false) }
 
-    // 3. Muestra los marcadores en el mapa y centra en el seleccionado
-    // (en el factory y update del MapView, recorre vehiculos y añade marcadores)
+    // Función para centrar el mapa en el vehículo seleccionado
+    fun centerMapOnVehicle() {
+        selectedVehiculo?.ubicacion_actual?.let { ubicacion ->
+            mapLibreMap?.let { map ->
+                val position = CameraPosition.Builder()
+                    .target(LatLng(ubicacion.latitud, ubicacion.longitud))
+                    .zoom(16.0)
+                    .build()
+
+                map.animateCamera(
+                    CameraUpdateFactory.newCameraPosition(position),
+                    1000 // Duración de la animación en ms
+                )
+            }
+        }
+    }
+
+    // Efecto para centrar cuando cambia el vehículo seleccionado
+    LaunchedEffect(selectedIndex) {
+        if (vehiculos.isNotEmpty()) {
+            centerMapOnVehicle()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -99,21 +122,46 @@ fun UbicacionVehiculoScreen(
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { factoryContext ->
-                    // Initialize MapView normally
                     MapLibre.getInstance(factoryContext, "vzU3m7mUFKYAvOtFHKIq", WellKnownTileServer.MapTiler)
                     val mapView = MapView(factoryContext).apply {
                         onCreate(Bundle())
                         getMapAsync { map ->
+                            mapLibreMap = map
                             map.setStyle("https://api.maptiler.com/maps/streets/style.json?key=vzU3m7mUFKYAvOtFHKIq") {
+                                // Crear el icono del marcador con tamaño apropiado
+                                val iconFactory = org.maplibre.android.annotations.IconFactory.getInstance(context)
+                                val markerIcon = iconFactory.fromResource(R.drawable.ic_marker)
+
+                                // Escalar el icono a un tamaño razonable (en píxeles)
+                                val scaledIcon = iconFactory.fromBitmap(
+                                    android.graphics.Bitmap.createScaledBitmap(
+                                        markerIcon.bitmap,
+                                        60, // ancho en píxeles
+                                        80, // alto en píxeles
+                                        false
+                                    )
+                                )
+
+                                // Añadir marcadores para todos los vehículos
                                 vehiculos.forEach { vehiculo ->
                                     vehiculo.ubicacion_actual?.let { ubicacion ->
                                         map.addMarker(
                                             org.maplibre.android.annotations.MarkerOptions()
                                                 .position(LatLng(ubicacion.latitud, ubicacion.longitud))
                                                 .title(vehiculo.nombre)
-                                                .icon(org.maplibre.android.annotations.IconFactory.getInstance(context)
-                                                    .fromResource(R.drawable.ic_marker))
+                                                .snippet(vehiculo.matricula)
+                                                .icon(scaledIcon) // Usa el icono escalado
                                         )
+                                    }
+                                }
+
+                                // Centrar en el primer vehículo al iniciar
+                                if (vehiculos.isNotEmpty()) {
+                                    selectedVehiculo?.ubicacion_actual?.let { ubicacion ->
+                                        map.cameraPosition = CameraPosition.Builder()
+                                            .target(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                            .zoom(14.0)
+                                            .build()
                                     }
                                 }
                             }
@@ -122,31 +170,97 @@ fun UbicacionVehiculoScreen(
                     mapView
                 },
                 update = { mapView ->
-                    selectedVehiculo?.let {
-                        mapView.getMapAsync { map ->
-                            val pos = it.ubicacion_actual?.let { it1 -> LatLng(it1.latitud, it1.longitud) }
-                            map.cameraPosition = CameraPosition.Builder()
-                                .target(pos)
-                                .zoom(14.0)
-                                .build()
+                    // Esta función se llama cuando el composable se recompone
+                    // Este bloque se ejecuta cada vez que vehiculos cambia
+                    mapView.getMapAsync { map ->
+                        if (vehiculos.isNotEmpty()) {
+                            Log.d("Mapa", "Actualizando marcadores. Vehículos: ${vehiculos.size}")
+
+                            // Limpiar marcadores anteriores
+                            map.clear()
+
+                            try {
+                                // Crear el icono del marcador con tamaño apropiado
+                                val iconFactory = org.maplibre.android.annotations.IconFactory.getInstance(mapView.context)
+                                val markerIcon = iconFactory.fromResource(R.drawable.ic_marker)
+
+                                // Escalar el icono a un tamaño razonable (en píxeles)
+                                val scaledIcon = iconFactory.fromBitmap(
+                                    android.graphics.Bitmap.createScaledBitmap(
+                                        markerIcon.bitmap,
+                                        30, // ancho en píxeles
+                                        40, // alto en píxeles
+                                        false
+                                    )
+                                )
+
+                                // Añadir marcadores para todos los vehículos
+                                vehiculos.forEach { vehiculo ->
+                                    vehiculo.ubicacion_actual?.let { ubicacion ->
+                                        Log.d("Mapa", "Añadiendo marcador para ${vehiculo.nombre} en (${ubicacion.latitud}, ${ubicacion.longitud})")
+                                        map.addMarker(
+                                            org.maplibre.android.annotations.MarkerOptions()
+                                                .position(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                                .title(vehiculo.nombre)
+                                                .snippet(vehiculo.matricula)
+                                                .icon(scaledIcon)
+                                        )
+                                    }
+                                }
+
+                                // Centrar en el primer vehículo solo la primera vez
+                                if (selectedIndex == 0 && selectedVehiculo?.ubicacion_actual != null) {
+                                    selectedVehiculo?.ubicacion_actual?.let { ubicacion ->
+                                        map.cameraPosition = CameraPosition.Builder()
+                                            .target(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                            .zoom(14.0)
+                                            .build()
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e("Mapa", "Error al añadir marcadores: ${e.message}", e)
+
+                                // Fallback: usar marcador por defecto si hay error con el drawable
+                                vehiculos.forEach { vehiculo ->
+                                    vehiculo.ubicacion_actual?.let { ubicacion ->
+                                        map.addMarker(
+                                            org.maplibre.android.annotations.MarkerOptions()
+                                                .position(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                                .title(vehiculo.nombre)
+                                                .snippet(vehiculo.matricula)
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            Log.d("Mapa", "No hay vehículos para mostrar")
                         }
                     }
                 }
             )
-
-
+/*
+            // Botón flotante para centrar el mapa en el vehículo actual
             FloatingActionButton(
-                onClick = { /* center map in future versions */ },
+                onClick = { centerMapOnVehicle() },
                 containerColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 24.dp, bottom = 120.dp)
             ) {
-                Icon(Icons.Default.Place, contentDescription = "Centrar mapa", tint = Color(0xFFE53935))
+
+            }
+            */
+
+
+            // Pager con las tarjetas de vehículos
+            val pagerState = rememberPagerState(pageCount = { vehiculos.size })
+
+            // Sincronizar el índice seleccionado con el pager
+            LaunchedEffect(pagerState.currentPage) {
+                selectedIndex = pagerState.currentPage
             }
 
-            val pagerState = rememberPagerState(pageCount = { vehiculos.size })
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
@@ -159,7 +273,8 @@ fun UbicacionVehiculoScreen(
                 val vehiculo = vehiculos[page]
                 Card(
                     shape = RoundedCornerShape(24.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Row(
                         modifier = Modifier
@@ -175,21 +290,35 @@ fun UbicacionVehiculoScreen(
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(vehiculo.nombre, color = Color.Black, fontSize = 18.sp)
-                            Text(vehiculo.matricula, color = Color.Gray, fontSize = 14.sp)
+                            Text(
+                                vehiculo.nombre,
+                                color = Color.Black,
+                                fontSize = 18.sp,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                vehiculo.matricula,
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            vehiculo.ubicacion_actual?.let { ubicacion ->
+                                Text(
+                                    "Lat: ${String.format("%.4f", ubicacion.latitud)}, Lon: ${String.format("%.4f", ubicacion.longitud)}",
+                                    color = Color.Gray,
+                                    fontSize = 12.sp,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
                         }
                         Button(
-                            onClick = { /* abrir en maps */ },
+                            onClick = { centerMapOnVehicle() },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
                             shape = RoundedCornerShape(50)
                         ) {
                             Text("IR", color = Color.White)
                         }
                     }
-                }
-                // Al cambiar de página, centra el mapa en la ubicación del vehículo
-                LaunchedEffect(page) {
-                    // Centra el mapa en vehiculo.ubicacion_actual
                 }
             }
         }
