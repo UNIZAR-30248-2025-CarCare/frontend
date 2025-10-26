@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
@@ -67,6 +68,15 @@ fun UbicacionVehiculoScreen(
     val selectedVehiculo = vehiculos.getOrNull(selectedIndex)
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
     var shouldCenterMap by remember { mutableStateOf(false) }
+    var showTutorialSnackbar by remember { mutableStateOf(true) }
+
+// Ocultar el snackbar después de 5 segundos
+    LaunchedEffect(showTutorialSnackbar) {
+        if (showTutorialSnackbar && vehiculos.size > 1) {
+            kotlinx.coroutines.delay(5000)
+            showTutorialSnackbar = false
+        }
+    }
 
     // Función para centrar el mapa en el vehículo seleccionado
     fun centerMapOnVehicle() {
@@ -180,47 +190,60 @@ fun UbicacionVehiculoScreen(
                             map.clear()
 
                             try {
-                                // Crear el icono del marcador con tamaño apropiado
                                 val iconFactory = org.maplibre.android.annotations.IconFactory.getInstance(mapView.context)
-                                val markerIcon = iconFactory.fromResource(R.drawable.ic_marker)
 
-                                // Escalar el icono a un tamaño razonable (en píxeles)
-                                val scaledIcon = iconFactory.fromBitmap(
-                                    android.graphics.Bitmap.createScaledBitmap(
-                                        markerIcon.bitmap,
-                                        30, // ancho en píxeles
-                                        40, // alto en píxeles
-                                        false
-                                    )
-                                )
-
-                                // Añadir marcadores para todos los vehículos
+                                // Añadir marcadores para TODOS los vehículos
                                 vehiculos.forEach { vehiculo ->
                                     vehiculo.ubicacion_actual?.let { ubicacion ->
-                                        Log.d("Mapa", "Añadiendo marcador para ${vehiculo.nombre} en (${ubicacion.latitud}, ${ubicacion.longitud})")
+                                        Log.d("Mapa", "Añadiendo marcador para ${vehiculo.nombre} tipo: ${vehiculo.tipo}")
+
+                                        // AQUÍ ESTÁ LA MAGIA: selecciona el icono según el tipo
+                                        val iconResId = when (vehiculo.tipo) {
+                                            eina.unizar.frontend.TipoVehiculo.COCHE -> R.drawable.ic_coche
+                                            eina.unizar.frontend.TipoVehiculo.MOTO -> R.drawable.ic_moto
+                                            eina.unizar.frontend.TipoVehiculo.FURGONETA -> R.drawable.ic_furgoneta
+                                            eina.unizar.frontend.TipoVehiculo.CAMION -> R.drawable.ic_camion
+                                            eina.unizar.frontend.TipoVehiculo.OTRO -> R.drawable.ic_marker
+                                        }
+
+                                        // Cargar y escalar el icono
+                                        val markerIcon = iconFactory.fromResource(iconResId)
+                                        val scaledIcon = iconFactory.fromBitmap(
+                                            android.graphics.Bitmap.createScaledBitmap(
+                                                markerIcon.bitmap,
+                                                30, // ancho
+                                                32, // alto
+                                                false
+                                            )
+                                        )
+
+                                        // Añadir el marcador al mapa
                                         map.addMarker(
                                             org.maplibre.android.annotations.MarkerOptions()
                                                 .position(LatLng(ubicacion.latitud, ubicacion.longitud))
                                                 .title(vehiculo.nombre)
-                                                .snippet(vehiculo.matricula)
+                                                .snippet("${vehiculo.matricula} - ${vehiculo.tipo}")
                                                 .icon(scaledIcon)
                                         )
                                     }
                                 }
 
-                                // Centrar en el primer vehículo solo la primera vez
-                                if (selectedIndex == 0 && selectedVehiculo?.ubicacion_actual != null) {
-                                    selectedVehiculo?.ubicacion_actual?.let { ubicacion ->
-                                        map.cameraPosition = CameraPosition.Builder()
-                                            .target(LatLng(ubicacion.latitud, ubicacion.longitud))
-                                            .zoom(14.0)
-                                            .build()
-                                    }
+                                // Centrar SOLO en el vehículo seleccionado
+                                selectedVehiculo?.ubicacion_actual?.let { ubicacion ->
+                                    map.animateCamera(
+                                        CameraUpdateFactory.newCameraPosition(
+                                            CameraPosition.Builder()
+                                                .target(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                                .zoom(15.0)
+                                                .build()
+                                        ),
+                                        500
+                                    )
                                 }
                             } catch (e: Exception) {
                                 Log.e("Mapa", "Error al añadir marcadores: ${e.message}", e)
 
-                                // Fallback: usar marcador por defecto si hay error con el drawable
+                                // Si hay error, usar marcadores por defecto
                                 vehiculos.forEach { vehiculo ->
                                     vehiculo.ubicacion_actual?.let { ubicacion ->
                                         map.addMarker(
@@ -238,19 +261,6 @@ fun UbicacionVehiculoScreen(
                     }
                 }
             )
-/*
-            // Botón flotante para centrar el mapa en el vehículo actual
-            FloatingActionButton(
-                onClick = { centerMapOnVehicle() },
-                containerColor = Color.White,
-                shape = CircleShape,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 24.dp, bottom = 120.dp)
-            ) {
-
-            }
-            */
 
 
             // Pager con las tarjetas de vehículos
@@ -267,7 +277,8 @@ fun UbicacionVehiculoScreen(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .padding(16.dp),
-                contentPadding = PaddingValues(horizontal = 32.dp),
+                contentPadding = PaddingValues(horizontal = 48.dp),
+                pageSpacing = 80.dp,
                 key = { it }
             ) { page ->
                 val vehiculo = vehiculos[page]
@@ -318,6 +329,38 @@ fun UbicacionVehiculoScreen(
                         ) {
                             Text("IR", color = Color.White)
                         }
+                    }
+                }
+            }
+
+            // Snackbar tutorial (aparece solo si hay más de 1 vehículo)
+            if (showTutorialSnackbar && vehiculos.size > 1) {
+                Snackbar(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp),
+                    containerColor = Color(0xFF2D2D2D),
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp),
+                    action = {
+                        TextButton(onClick = { showTutorialSnackbar = false }) {
+                            Text("OK", color = Color(0xFFE53935))
+                        }
+                    }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.carcare_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            "Desliza para ver el resto de vehículos",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }

@@ -515,8 +515,15 @@ fun AddVehiculoScreen(
                         tipo_combustible = combustible ?: "Gasolina",
                         litros_combustible = capacidadDeposito.toIntOrNull() ?: 45.0,
                         consumo_medio = consumoMedio.toDoubleOrNull() ?: 5.5,
-                        ubicacion_actual = Ubicacion(40.4168, -3.7038), // Madrid
-                        estado = "Activo"
+                        ubicacion_actual = Ubicacion(40.4168, -4.7038), // Madrid
+                        estado = "Activo",
+                        tipo = when (tipoSeleccionado) {
+                            TipoVehiculo.COCHE -> "Coche"
+                            TipoVehiculo.MOTO -> "Moto"
+                            TipoVehiculo.FURGONETA -> "Furgoneta"
+                            TipoVehiculo.CAMION -> "Camion"
+                            TipoVehiculo.OTRO -> "Otro"
+                        }
                     )
                     viewModel.registrarVehiculo(token, request)
                 },
