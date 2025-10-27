@@ -296,7 +296,7 @@ fun AppNavigation() {
                     DetalleVehiculoScreen(
                         vehiculo = vehiculoSeleccionado.toVehiculoDetalle(),
                         onBackClick = { navController.popBackStack() },
-                        onVerMapaClick = { /* lógica */ },
+                        onVerMapaClick = { navController.navigate("mapa") },
                         onAddUsuarioClick = { /* lógica */ },
                         efectiveUserId = efectiveUserId,
                         efectiveToken = efectiveToken

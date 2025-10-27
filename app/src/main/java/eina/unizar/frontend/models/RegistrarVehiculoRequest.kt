@@ -30,5 +30,6 @@ data class RegistrarVehiculoRequest(
     val litros_combustible: Number,
     val consumo_medio: Double,
     val ubicacion_actual: Ubicacion,
-    val estado: String
+    val estado: String,
+    val tipo: String
 )
