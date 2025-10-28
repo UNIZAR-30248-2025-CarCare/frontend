@@ -11,6 +11,8 @@ import eina.unizar.frontend.models.VehiculoResponse
 import eina.unizar.frontend.models.InvitacionBody
 import eina.unizar.frontend.models.InvitacionResponse
 import eina.unizar.frontend.models.InvitacionesRecibidasResponse
+import eina.unizar.frontend.models.NuevoViajeData
+import eina.unizar.frontend.models.ViajesResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -141,4 +143,17 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body body: Map<String, Int>
     ): Response<InvitacionResponse>
+
+    @GET("viaje/obtenerViajes/{vehiculoId}")
+    suspend fun obtenerViajes(
+        @Header("Authorization") authHeader: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ViajesResponse>
+
+    @POST("viaje/crearViaje")
+    suspend fun crearViaje(
+        @Header("Authorization") token: String,
+        @Body nuevoViaje: NuevoViajeData
+    ): Response<Unit>
+
 }

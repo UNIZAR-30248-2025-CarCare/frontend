@@ -235,7 +235,11 @@ fun AppNavigation() {
                     selectedTab = 0,
                     onTabSelected = { /* lógica */ },
                     navController = navController,
-                    authViewModel = authViewModel
+                    authViewModel = authViewModel,
+                    onViajesClick = {
+                        navController.navigate("viajes")
+                    },
+                    onRepostajesClick = {/* lógica */ }
                 )
             }
         }
@@ -291,7 +295,8 @@ fun AppNavigation() {
                 }
                 Text("Cargando vehículos...")
             } else {
-                val vehiculoSeleccionado = vehiculos.map { it.toVehiculo() }.find { it.id == vehiculoId }
+                val vehiculoSeleccionado =
+                    vehiculos.map { it.toVehiculo() }.find { it.id == vehiculoId }
                 if (vehiculoSeleccionado != null) {
                     DetalleVehiculoScreen(
                         vehiculo = vehiculoSeleccionado.toVehiculoDetalle(),
@@ -385,5 +390,34 @@ fun AppNavigation() {
             )
         }
 
+        // Ruta para viajes
+        composable("viajes") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                ViajesScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onViajeClick = { /* lógica */ },
+                    onAddViajeClick = { navController.navigate("add_viaje") },
+                    navController = navController,
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para crear viajes
+        composable("add_viaje") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                CrearViajeScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onCrearViaje = { nuevoViajeData ->
+                        // Lógica para enviar los datos al backend
+                        println("Viaje creado: $nuevoViajeData")
+                        navController.popBackStack() // Volver a la pantalla anterior
+                    },
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
     }
 }
