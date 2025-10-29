@@ -239,7 +239,7 @@ fun AppNavigation() {
                     onViajesClick = {
                         navController.navigate("viajes")
                     },
-                    onRepostajesClick = {/* lógica */ }
+                    onRepostajesClick = { navController.navigate("repostajes") }
                 )
             }
         }
@@ -412,6 +412,35 @@ fun AppNavigation() {
                     onCrearViaje = { nuevoViajeData ->
                         // Lógica para enviar los datos al backend
                         println("Viaje creado: $nuevoViajeData")
+                        navController.popBackStack() // Volver a la pantalla anterior
+                    },
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para repostajes
+        composable("repostajes") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                RepostajesScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onAddRepostajeClick = { navController.navigate("add_repostaje") },
+                    navController = navController,
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para crear repostajes
+        composable("add_repostaje") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                CrearRepostajeScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onCrearRepostaje = { nuevoRepostajeData ->
+                        // Lógica para enviar los datos al backend
+                        println("Repostaje creado: $nuevoRepostajeData")
                         navController.popBackStack() // Volver a la pantalla anterior
                     },
                     efectiveUserId = efectiveUserId,

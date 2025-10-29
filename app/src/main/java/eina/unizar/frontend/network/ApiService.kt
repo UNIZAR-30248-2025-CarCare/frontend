@@ -11,8 +11,11 @@ import eina.unizar.frontend.models.VehiculoResponse
 import eina.unizar.frontend.models.InvitacionBody
 import eina.unizar.frontend.models.InvitacionResponse
 import eina.unizar.frontend.models.InvitacionesRecibidasResponse
+import eina.unizar.frontend.models.NuevoRepostajeData
 import eina.unizar.frontend.models.NuevoViajeData
+import eina.unizar.frontend.models.ProximoRepostajeResponse
 import eina.unizar.frontend.models.ViajesResponse
+import eina.unizar.frontend.models.ResumenRepostajesResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -156,4 +159,21 @@ interface ApiService {
         @Body nuevoViaje: NuevoViajeData
     ): Response<Unit>
 
+    @GET("repostaje/obtenerRepostajesVehiculo/{vehiculoId}")
+    suspend fun obtenerRepostajesVehiculo(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ResumenRepostajesResponse>
+
+    @GET("repostaje/calcularProximoRepostaje/{vehiculoId}")
+    suspend fun calcularProximoRepostaje(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ProximoRepostajeResponse>
+
+    @POST("repostaje/crearRepostaje")
+    suspend fun crearRepostaje(
+        @Header("Authorization") token: String,
+        @Body nuevoRepostaje: NuevoRepostajeData
+    ): Response<Unit>
 }
