@@ -1,4 +1,3 @@
-// En `eina/unizar/frontend/CrearViaje.kt`
 package eina.unizar.frontend
 
 import android.util.Log
@@ -38,7 +37,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import eina.unizar.frontend.viewmodels.ViajesViewModel
+import androidx.compose.foundation.gestures.detectTapGestures
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,9 +72,9 @@ fun CrearViajeScreen(
     var descripcion by remember { mutableStateOf("") }
     var kmRealizados by remember { mutableStateOf("") }
     var consumoCombustible by remember { mutableStateOf("") }
-    var latitud by remember { mutableStateOf("") }
-    var longitud by remember { mutableStateOf("") }
-    var ubicacionDestino by remember { mutableStateOf("") }
+    var latitud by remember { mutableStateOf("40.4168") }
+    var longitud by remember { mutableStateOf("-3.7038") }
+    var ubicacionDestino by remember { mutableStateOf("(40.4168, -3.7038)") }
     var expandedVehiculo by remember { mutableStateOf(false) }
 
     var mostrarSelectorMapa by remember { mutableStateOf(false) }
@@ -300,7 +302,7 @@ fun CrearViajeScreen(
 
             OutlinedTextField(
                 value = kmRealizados,
-                onValueChange = { kmRealizados = it.filter { c -> c.isDigit() } },
+                onValueChange = { kmRealizados = it },
                 label = { Text("Km realizados") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
@@ -310,7 +312,7 @@ fun CrearViajeScreen(
 
             OutlinedTextField(
                 value = consumoCombustible,
-                onValueChange = { consumoCombustible = it.filter { c -> c.isDigit() } },
+                onValueChange = { consumoCombustible = it },
                 label = { Text("Consumo combustible (L)") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
@@ -321,13 +323,19 @@ fun CrearViajeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { mostrarSelectorMapa = true }
+                    .testTag("UbicacionDestinoBox")
             ) {
                 OutlinedTextField(
                     value = ubicacionDestino,
                     onValueChange = {},
                     label = { Text("Ubicación destino") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .pointerInput(Unit) {
+                            detectTapGestures {
+                                mostrarSelectorMapa = true
+                            }
+                        },
                     readOnly = true,
                     enabled = false,
                     shape = RoundedCornerShape(8.dp),
@@ -382,6 +390,7 @@ fun CrearViajeScreen(
                         ){ resultMsg ->
                             if (resultMsg == null) {
                                 errorMsg = null
+                                Toast.makeText(context, "Viaje creado correctamente", Toast.LENGTH_SHORT).show()
                                 onBackClick()
                             } else {
                                 errorMsg = resultMsg
