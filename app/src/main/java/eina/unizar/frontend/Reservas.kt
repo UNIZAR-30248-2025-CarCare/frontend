@@ -32,6 +32,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
+import kotlinx.coroutines.launch
 
 // Agregar función para generar colores por vehículo
 fun getColorForVehiculo(vehiculoId: String): Color {
@@ -97,10 +98,21 @@ fun CalendarioScreenWrapper(
     val isLoading by reservaViewModel.isLoading.collectAsState()
     val error by reservaViewModel.error.collectAsState()
 
+    // ✅ Fetch inicial cuando se carga la pantalla
     LaunchedEffect(token) {
         reservaViewModel.fetchReservas(token)
     }
-
+    
+    // ✅ AÑADIR: Refresh cuando navegas de vuelta a esta pantalla
+    LaunchedEffect(navController.currentBackStackEntry) {
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        if (currentRoute == "reservas") {
+            // Pequeño delay para asegurar que la BD se actualizó
+            kotlinx.coroutines.delay(300)
+            reservaViewModel.fetchReservas(token)
+        }
+    }
+    
     // Convertir ReservaDTO a Reserva temporal para el calendario
     val reservasCalendario = reservasDTO.map { dto ->
         val fechaInicio = dto.fechaInicio.split("T")[0]
@@ -151,7 +163,9 @@ fun CalendarioScreenWrapper(
         onMesSiguiente = { /* TODO: implementar */ },
         onDiaClick = { diaSeleccionado = it },
         onAddReservaClick = onAddReservaClick,
-        navController = navController
+        navController = navController,
+        viewModel = reservaViewModel,
+        token = token
     )
 }
 
@@ -172,7 +186,9 @@ fun CalendarioScreen(
     onMesSiguiente: () -> Unit,
     onDiaClick: (LocalDate) -> Unit,
     onAddReservaClick: () -> Unit,
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: ReservaViewModel,
+    token: String
 ) {
     val reservasDelDia = reservasCalendario.filter { reserva ->
         // Obtener todas las fechas del rango de la reserva
@@ -354,7 +370,12 @@ fun CalendarioScreen(
                             }
                         } else {
                             items(reservasDTO) { reserva ->
-                                ReservaItemCard(reserva = reserva)
+                                ReservaItemCard(
+                                    reserva = reserva,
+                                    navController = navController,
+                                    viewModel = viewModel,
+                                    token = token
+                                )
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
@@ -809,7 +830,12 @@ fun ReservaCard(reserva: Reserva) {
 }
 
 @Composable
-fun ReservaItemCard(reserva: ReservaDTO) {
+fun ReservaItemCard(
+    reserva: ReservaDTO,
+    navController: NavHostController,
+    viewModel: ReservaViewModel,
+    token: String
+) {
     // Convertir el string del tipo a TipoVehiculo enum
     val tipoVehiculo = when (reserva.Vehiculo.tipo.uppercase()) {
         "COCHE" -> TipoVehiculo.COCHE
@@ -820,6 +846,11 @@ fun ReservaItemCard(reserva: ReservaDTO) {
     }
     
     val colorVehiculo = getColorForVehiculo(reserva.Vehiculo.id)
+    
+    // ✅ Estado para controlar el menú desplegable
+    var expandedMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
     
     Card(
         modifier = Modifier
@@ -848,11 +879,74 @@ fun ReservaItemCard(reserva: ReservaDTO) {
                         else -> Color(0xFF10B981)
                     }
                 )
-                Text(
-                    text = "ID: ${reserva.id}",
-                    fontSize = 12.sp,
-                    color = Color(0xFF9CA3AF)
-                )
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "ID: ${reserva.id}",
+                        fontSize = 12.sp,
+                        color = Color(0xFF9CA3AF)
+                    )
+                    
+                    // ✅ Botón de menú de 3 puntos
+                    Box {
+                        IconButton(
+                            onClick = { expandedMenu = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Más opciones",
+                                tint = Color(0xFF6B7280),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        
+                        // ✅ Menú desplegable
+                        DropdownMenu(
+                            expanded = expandedMenu,
+                            onDismissRequest = { expandedMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Editar",
+                                            tint = Color(0xFF3B82F6),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Editar", color = Color(0xFF3B82F6))
+                                    }
+                                },
+                                onClick = {
+                                    expandedMenu = false
+                                    navController.navigate("editarReserva/${reserva.Vehiculo.id}/${reserva.id}")
+
+                                }
+                            )
+                            
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Eliminar",
+                                            tint = Color(0xFFEF4444),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Eliminar", color = Color(0xFFEF4444))
+                                    }
+                                },
+                                onClick = {
+                                    expandedMenu = false
+                                    showDeleteDialog = true
+                                }
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -940,5 +1034,57 @@ fun ReservaItemCard(reserva: ReservaDTO) {
                 }
             }
         }
+    }
+    
+    // ✅ Diálogo de confirmación para eliminar
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = Color(0xFFEF4444),
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "Eliminar reserva",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "¿Estás seguro de que quieres eliminar esta reserva?\n\n" +
+                           "Vehículo: ${reserva.Vehiculo.nombre}\n" +
+                           "Fecha: ${reserva.fechaInicio.split("T")[0]}",
+                    fontSize = 14.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        coroutineScope.launch {
+                            val success = viewModel.eliminarReserva(token, reserva.id.toString())
+                            if (!success) {
+                                android.util.Log.e("ReservaItemCard", "Error al eliminar reserva ${reserva.id}")
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFEF4444)
+                    )
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar", color = Color(0xFF6B7280))
+                }
+            }
+        )
     }
 }

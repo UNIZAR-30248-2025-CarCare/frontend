@@ -60,8 +60,15 @@ fun AppNavigation() {
     val context = LocalContext.current
     val activity = context as ComponentActivity
 
+    LaunchedEffect(Unit) {
+        val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        sharedPrefs.edit().clear().apply()
+        Log.d("AppNavigation", "✅ SharedPreferences limpiadas - ID 6 eliminado")
+    }
+    
     val authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = activity)
-
+    
+    
     // Asegúrate de que los valores se recolectan correctamente
     val userId by authViewModel.userId.collectAsState()
     val token by authViewModel.token.collectAsState()
@@ -380,6 +387,35 @@ fun AppNavigation() {
                 }
             )
         }
-
+        // ------------------------------------
+        // --- NUEVA RUTA DE EDICIÓN DE RESERVA ---
+        composable(
+            route = "editarReserva/{vehiculoId}/{reservaId}",
+            arguments = listOf(
+                navArgument("vehiculoId") { type = NavType.StringType },
+                navArgument("reservaId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val vehiculoId = backStackEntry.arguments?.getString("vehiculoId") ?: ""
+            val reservaId = backStackEntry.arguments?.getString("reservaId") ?: ""
+            
+            Log.d("AppNavigation", "Editar Reserva - vehiculoId: $vehiculoId, reservaId: $reservaId, token: $efectiveToken")
+            
+            if (efectiveToken != null) {
+                EditarReservaScreen(
+                    navController = navController,
+                    vehiculoId = vehiculoId,
+                    reservaId = reservaId,
+                    token = efectiveToken
+                )
+            } else {
+                // Redirigir al login si no hay token
+                LaunchedEffect(Unit) {
+                    navController.navigate("eleccion") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            }
+        }
     }
 }

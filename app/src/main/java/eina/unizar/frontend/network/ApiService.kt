@@ -15,6 +15,7 @@ import eina.unizar.frontend.models.InvitacionesRecibidasResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -89,6 +90,22 @@ interface ApiService {
     fun obtenerReservas(
         @Header("Authorization") token: String
     ): Call<ReservasListResponse>
+
+    /**
+     * Elimina una reserva por su ID.
+     * 
+     * Endpoint: DELETE /reserva/{id}
+     * Requiere autenticación.
+     * 
+     * @param id Identificador de la reserva
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Call<Void> Respuesta sin contenido en caso de éxito
+     */
+    @DELETE("reserva/{id}")
+    fun eliminarReserva(
+        @Path("id") id: String,
+        @Header("Authorization") token: String
+    ): Call<Void>
 
     /**
      * Registra un nuevo vehículo en el sistema.
