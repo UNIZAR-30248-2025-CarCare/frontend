@@ -6,6 +6,7 @@ import eina.unizar.frontend.models.LoginResponse
 import eina.unizar.frontend.models.UserNameResponse
 import eina.unizar.frontend.models.ReservaRequest
 import eina.unizar.frontend.models.ReservaResponse
+import eina.unizar.frontend.models.ReservasListResponse
 import eina.unizar.frontend.models.RegistrarVehiculoRequest
 import eina.unizar.frontend.models.VehiculoResponse
 import eina.unizar.frontend.models.InvitacionBody
@@ -19,6 +20,7 @@ import eina.unizar.frontend.models.ResumenRepostajesResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -88,6 +90,27 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body reserva: ReservaRequest
     ): Call<ReservaResponse>
+
+    @GET("reserva")
+    fun obtenerReservas(
+        @Header("Authorization") token: String
+    ): Call<ReservasListResponse>
+
+    /**
+     * Elimina una reserva por su ID.
+     * 
+     * Endpoint: DELETE /reserva/{id}
+     * Requiere autenticación.
+     * 
+     * @param id Identificador de la reserva
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Call<Void> Respuesta sin contenido en caso de éxito
+     */
+    @DELETE("reserva/{id}")
+    fun eliminarReserva(
+        @Path("id") id: String,
+        @Header("Authorization") token: String
+    ): Call<Void>
 
     /**
      * Registra un nuevo vehículo en el sistema.
