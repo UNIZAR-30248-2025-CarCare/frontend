@@ -1,6 +1,8 @@
 package eina.unizar.frontend
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,55 +24,56 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavHostController
+import eina.unizar.frontend.models.Repostaje
 import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.viewmodels.HomeViewModel
 import eina.unizar.frontend.models.Viaje
+import eina.unizar.frontend.viewmodels.RepostajesViewModel
 import eina.unizar.frontend.viewmodels.ViajesViewModel
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ViajesScreen(
+fun RepostajesScreen(
     onBackClick: () -> Unit,
-    onViajeClick: (String) -> Unit,
-    onAddViajeClick: () -> Unit,
+    onAddRepostajeClick: () -> Unit,
     navController: NavHostController,
     efectiveUserId: String,
     efectiveToken: String
 ) {
-    val currentRoute = navController.currentBackStackEntry?.destination?.route
-
-    // ViewModel y vehículos
     val homeViewModel = remember { HomeViewModel() }
+    val repostajesViewModel = remember { RepostajesViewModel() }
     val vehiculosDTO by homeViewModel.vehiculos.collectAsState()
     val vehiculos = vehiculosDTO.map { it.toVehiculo() }
-
-    val viajesViewModel = remember { ViajesViewModel() }
-    val viajes by viajesViewModel.viajes.collectAsState()
-
-    LaunchedEffect(Unit) {
-        homeViewModel.fetchVehiculos(efectiveUserId, efectiveToken)
-    }
-
-    Log.d("Viaje", "Vehículos obtenidos: ${vehiculos.size}")
-
-    // Estado para el vehículo seleccionado y referencia al mapa
     var selectedIndex by remember { mutableIntStateOf(0) }
     val vehiculoSeleccionado = vehiculos.getOrNull(selectedIndex)
     var vehiculoMenuExpanded by remember { mutableStateOf(false) }
 
-    var viajeSeleccionado by remember { mutableStateOf<Viaje?>(null) }
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+    LaunchedEffect(Unit) {
+        homeViewModel.fetchVehiculos(efectiveUserId, efectiveToken)
+    }
+    LaunchedEffect(vehiculoSeleccionado?.id) {
+        vehiculoSeleccionado?.let {
+            repostajesViewModel.fetchRepostajes(efectiveToken, it.id)
+        }
+    }
 
     LaunchedEffect(vehiculoSeleccionado?.id) {
         vehiculoSeleccionado?.let {
-            viajesViewModel.fetchViajes(it.id, efectiveToken)
+            repostajesViewModel.fetchRepostajes(efectiveToken, it.id)
+            repostajesViewModel.fetchProximoRepostaje(efectiveToken, it.id)
         }
     }
+
+    // Datos de resumen y lista de repostajes
+    val resumen by repostajesViewModel.resumen.collectAsState()
+    val proximo by repostajesViewModel.proximo.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -113,7 +116,7 @@ fun ViajesScreen(
                         )
                     }
                     Text(
-                        text = "Viajes",
+                        text = "Repostajes",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -139,7 +142,7 @@ fun ViajesScreen(
                                 .fillMaxWidth()
                                 .height(50.dp)
                                 .shadow(2.dp, RoundedCornerShape(25.dp))
-                                .clickable{vehiculoMenuExpanded = true},
+                                .clickable { vehiculoMenuExpanded = true },
                             shape = RoundedCornerShape(25.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
@@ -194,81 +197,107 @@ fun ViajesScreen(
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Text(
-                        text = "Historial de Viajes",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
-                    )
-
-                    Spacer(modifier = Modifier.height(15.dp))
                 }
 
-                // Lista de viajes
-                if (viajes.isEmpty()) {
-                    item {
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+
+                item {
+                    resumen?.let {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
+                                .background(Color.White, RoundedCornerShape(12.dp))
+                                .shadow(2.dp, RoundedCornerShape(12.dp))
+                                .padding(16.dp)
                         ) {
-                            Text(
-                                text = "No hay viajes registrados",
-                                fontSize = 14.sp,
-                                color = Color(0xFF9CA3AF)
-                            )
-                        }
-                    }
-                } else {
-                    items(viajes) { viaje ->
-                        ViajeCard(
-                            viaje = viaje,
-                            onClick = {
-                                viajeSeleccionado = viaje
-                                scope.launch { sheetState.show() }
+                            Column {
+                                Text(
+                                    text = "Resumen",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = Color(0xFF1F2937)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Total gastado:",
+                                        fontSize = 15.sp,
+                                        color = Color(0xFF6B7280)
+                                    )
+                                    Text(
+                                        text = "Total litros",
+                                        fontSize = 15.sp,
+                                        color = Color(0xFF6B7280)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "${it.totalPrecio} €",
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFEF4444)
+                                    )
+                                    Text(
+                                        text = "${it.totalLitros} L",
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF3B82F6)
+                                    )
+                                }
                             }
-                        )
-                        Spacer(modifier = Modifier.height(15.dp))
+                        }
                     }
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(120.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
-            }
 
-            // Banner de detalles
-            if (viajeSeleccionado != null) {
-                ModalBottomSheet(
-                    onDismissRequest = { viajeSeleccionado = null },
-                    sheetState = sheetState
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Text(
-                            text = viajeSeleccionado!!.nombre,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Descripción: ${viajeSeleccionado!!.descripcion}")
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Usuario: ${viajeSeleccionado!!.usuario}")
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Fecha inicio: ${viajeSeleccionado!!.fechaHoraInicio.replace("T", " ")}")
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Fecha fin: ${viajeSeleccionado!!.fechaHoraFin.replace("T", " ")}")
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Km realizados: ${viajeSeleccionado!!.kmRealizados}")
-                        Text("Consumo combustible: ${viajeSeleccionado!!.consumoCombustible} L")
+                item {
+                    // Caja azul próximo repostaje
+                    proximo?.let {
+                        val nombreUsuario = it.proximoUsuario?.nombre ?: "Desconocido"
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF3B82F6), RoundedCornerShape(12.dp))
+                                .padding(16.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Próximo en repostar: $nombreUsuario",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Importe: ${it.importeEstimado} €",
+                                    color = Color.White
+                                )
+                            }
+                        }
                     }
                 }
+
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+
+                items(resumen?.repostajes ?: emptyList()) { repostaje ->
+                    RepostajeCard(repostaje)
+                }
+
             }
 
-            // Botón flotante añadir viaje
+            // Botón flotante añadir repostaje
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -276,13 +305,13 @@ fun ViajesScreen(
                 contentAlignment = Alignment.BottomEnd
             ) {
                 FloatingActionButton(
-                    onClick = onAddViajeClick,
+                    onClick = onAddRepostajeClick,
                     containerColor = Color(0xFFEF4444),
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Añadir viaje",
+                        contentDescription = "Añadir repostaje",
                         tint = Color.White,
                         modifier = Modifier.size(28.dp)
                     )
@@ -292,71 +321,80 @@ fun ViajesScreen(
     }
 }
 
+// Genera un color único a partir del nombre del usuario
+fun colorPorUsuario(nombre: String): Color {
+    val hash = abs(nombre.hashCode())
+    val r = 100 + (hash % 156)
+    val g = 100 + ((hash / 100) % 156)
+    val b = 100 + ((hash / 10000) % 156)
+    return Color(r, g, b)
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ViajeCard(
-    viaje: Viaje,
-    onClick: () -> Unit
-) {
+fun RepostajeCard(repostaje: Repostaje) {
+    val colorUsuario = colorPorUsuario(repostaje.usuarioNombre)
+    val fechaFormateada = try {
+        OffsetDateTime.parse(repostaje.fecha)
+            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy · HH:mm"))
+    } catch (e: Exception) {
+        repostaje.fecha
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icono de viaje
+            // Icono de perfil
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        Color(0xFF8B5CF6).copy(alpha = 0.1f),
-                        CircleShape
-                    ),
+                    .size(48.dp)
+                    .background(colorUsuario, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Place,
-                    contentDescription = "Viaje",
-                    tint = Color(0xFF8B5CF6),
-                    modifier = Modifier.size(22.dp)
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Usuario",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
                 )
             }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Información del viaje
+            Spacer(modifier = Modifier.width(16.dp))
+            // Info principal
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = viaje.nombre,
-                    fontSize = 16.sp,
+                    text = repostaje.usuarioNombre,
                     fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
                     color = Color(0xFF1F2937)
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Realizado por ${viaje.usuario}",
+                    text = fechaFormateada,
                     fontSize = 13.sp,
                     color = Color(0xFF6B7280)
                 )
                 Text(
-                    text = viaje.fechaHoraFin.replace("T", " "),
-                    fontSize = 12.sp,
-                    color = Color(0xFF9CA3AF)
+                    text = "${repostaje.litros} L",
+                    fontSize = 13.sp,
+                    color = Color(0xFF6B7280)
                 )
             }
-
-            // Flecha
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Ver detalles",
-                tint = Color(0xFF9CA3AF)
+            // Precio a la derecha
+            Text(
+                text = "${repostaje.precioTotal} €",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = Color(0xFFEF4444)
             )
         }
     }
 }
+
+

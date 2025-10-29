@@ -1,3 +1,4 @@
+
 package eina.unizar.frontend
 
 import android.util.Log
@@ -19,9 +20,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import eina.unizar.frontend.models.NuevoViajeData
-import eina.unizar.frontend.models.Ubicacion
-import eina.unizar.frontend.models.Vehiculo
 import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.viewmodels.HomeViewModel
 import java.util.Locale
@@ -37,22 +35,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.testTag
-import eina.unizar.frontend.viewmodels.ViajesViewModel
-import androidx.compose.foundation.gestures.detectTapGestures
+import eina.unizar.frontend.models.NuevoRepostajeData
+import eina.unizar.frontend.viewmodels.RepostajesViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CrearViajeScreen(
+fun CrearRepostajeScreen(
     onBackClick: () -> Unit,
-    onCrearViaje: (NuevoViajeData) -> Unit,
+    onCrearRepostaje: (NuevoRepostajeData) -> Unit,
     efectiveUserId: String,
     efectiveToken: String
 ) {
     val context = LocalContext.current
-    val viajeViewModel = remember { ViajesViewModel() }
+    val repostajeViewModel = remember { RepostajesViewModel() }
     // ViewModel y vehículos
     val homeViewModel = remember { HomeViewModel() }
     val vehiculosDTO by homeViewModel.vehiculos.collectAsState()
@@ -68,20 +64,14 @@ fun CrearViajeScreen(
     var selectedIndex by remember { mutableIntStateOf(0) }
     var vehiculoSeleccionado = vehiculos.getOrNull(selectedIndex)
 
-    var nombre by remember { mutableStateOf("") }
-    var descripcion by remember { mutableStateOf("") }
-    var kmRealizados by remember { mutableStateOf("") }
-    var consumoCombustible by remember { mutableStateOf("") }
-    var latitud by remember { mutableStateOf("40.4168") }
-    var longitud by remember { mutableStateOf("-3.7038") }
-    var ubicacionDestino by remember { mutableStateOf("(40.4168, -3.7038)") }
+    var litros by remember { mutableStateOf("") }
+    var precioPorLitro by remember { mutableStateOf("") }
+    var precioTotal by remember { mutableStateOf("") }
+
     var expandedVehiculo by remember { mutableStateOf(false) }
 
-    var mostrarSelectorMapa by remember { mutableStateOf(false) }
-
     // Estados para fecha/hora inicio y fin
-    var fechaHoraInicio by remember { mutableStateOf<LocalDateTime?>(null) }
-    var fechaHoraFin by remember { mutableStateOf<LocalDateTime?>(null) }
+    var fechaHora by remember { mutableStateOf<LocalDateTime?>(null) }
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
 
     // Función para mostrar Date y TimePicker
@@ -120,7 +110,7 @@ fun CrearViajeScreen(
                     )
                 }
                 Text(
-                    text = "Crear Viaje",
+                    text = "Crear Repostaje",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -140,7 +130,7 @@ fun CrearViajeScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "Detalles del viaje",
+                text = "Detalles del repostaje",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1F2937)
@@ -176,7 +166,7 @@ fun CrearViajeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         vehiculoSeleccionado?.let { vehiculo ->
-                            Log.d("CrearViajeScreen", "Vehículo seleccionado: $vehiculo")
+                            Log.d("CrearRepostajeScreen", "Vehículo seleccionado: $vehiculo")
                             val (color, iconRes, name) = when (vehiculo.tipo.toString().uppercase(
                                 Locale.ROOT
                             )) {
@@ -235,9 +225,9 @@ fun CrearViajeScreen(
             Spacer(modifier = Modifier.height(15.dp))
 
             OutlinedTextField(
-                value = nombre,
-                onValueChange = { nombre = it },
-                label = { Text("Nombre del viaje") },
+                value = litros,
+                onValueChange = { litros = it },
+                label = { Text("Litros repostados") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
             )
@@ -245,9 +235,19 @@ fun CrearViajeScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
-                value = descripcion,
-                onValueChange = { descripcion = it },
-                label = { Text("Descripción") },
+                value = precioPorLitro,
+                onValueChange = { precioPorLitro = it },
+                label = { Text("Precio por litro") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedTextField(
+                value = precioTotal,
+                onValueChange = { precioTotal = it },
+                label = { Text("Precio total") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
             )
@@ -257,12 +257,12 @@ fun CrearViajeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showDateTimePicker { fechaHoraInicio = it } }
+                    .clickable { showDateTimePicker { fechaHora = it } }
             ) {
                 OutlinedTextField(
-                    value = fechaHoraInicio?.format(formatter) ?: "",
+                    value = fechaHora?.format(formatter) ?: "",
                     onValueChange = {},
-                    label = { Text("Fecha y hora inicio") },
+                    label = { Text("Fecha y hora del repostaje") },
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
                     enabled = false,
@@ -272,97 +272,6 @@ fun CrearViajeScreen(
                         disabledBorderColor = MaterialTheme.colorScheme.outline,
                         disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showDateTimePicker { fechaHoraFin = it } }
-            ) {
-                OutlinedTextField(
-                    value = fechaHoraFin?.format(formatter) ?: "",
-                    onValueChange = {},
-                    label = { Text("Fecha y hora fin") },
-                    modifier = Modifier.fillMaxWidth(),
-                    readOnly = true,
-                    enabled = false,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            OutlinedTextField(
-                value = kmRealizados,
-                onValueChange = { kmRealizados = it },
-                label = { Text("Km realizados") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            OutlinedTextField(
-                value = consumoCombustible,
-                onValueChange = { consumoCombustible = it },
-                label = { Text("Consumo combustible (L)") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("UbicacionDestinoBox")
-            ) {
-                OutlinedTextField(
-                    value = ubicacionDestino,
-                    onValueChange = {},
-                    label = { Text("Ubicación destino") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .pointerInput(Unit) {
-                            detectTapGestures {
-                                mostrarSelectorMapa = true
-                            }
-                        },
-                    readOnly = true,
-                    enabled = false,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledTrailingIconColor = Color(0xFF9CA3AF)
-                    ),
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = "Seleccionar ubicación"
-                        )
-                    }
-                )
-            }
-
-            if (mostrarSelectorMapa) {
-                SelectorUbicacionMapLibreDialog(
-                    onDismiss = { mostrarSelectorMapa = false },
-                    onUbicacionSeleccionada = { lat, lng ->
-                        latitud = lat.toString()
-                        longitud = lng.toString()
-                        ubicacionDestino = "($lat, $lng)"
-                        mostrarSelectorMapa = false
-                    }
                 )
             }
 
@@ -371,26 +280,20 @@ fun CrearViajeScreen(
             Button(
                 onClick = {
                     vehiculoSeleccionado?.let { vehiculo ->
-                        viajeViewModel.crearViaje(
-                            viaje = NuevoViajeData(
+                        repostajeViewModel.crearRepostaje(
+                            repostaje = NuevoRepostajeData(
                                 usuarioId = efectiveUserId,
                                 vehiculoId = vehiculo.id,
-                                nombre = nombre,
-                                descripcion = descripcion,
-                                fechaHoraInicio = fechaHoraInicio?.format(DateTimeFormatter.ISO_DATE_TIME) ?: "",
-                                fechaHoraFin = fechaHoraFin?.format(DateTimeFormatter.ISO_DATE_TIME) ?: "",
-                                kmRealizados = kmRealizados.toIntOrNull() ?: 0,
-                                consumoCombustible = consumoCombustible.toIntOrNull() ?: 0,
-                                ubicacionFinal = Ubicacion(
-                                    latitud = latitud.toDoubleOrNull() ?: 0.0,
-                                    longitud = longitud.toDoubleOrNull() ?: 0.0
-                                )
+                                litros = litros.toDouble(),
+                                precioPorLitro = precioPorLitro.toDouble(),
+                                precioTotal = precioTotal.toDouble(),
+                                fecha = fechaHora?.format(DateTimeFormatter.ISO_DATE_TIME) ?: "",
                             ),
                             token = efectiveToken
                         ){ resultMsg ->
                             if (resultMsg == null) {
                                 errorMsg = null
-                                Toast.makeText(context, "Viaje creado correctamente", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Repostaje creado correctamente", Toast.LENGTH_SHORT).show()
                                 onBackClick()
                             } else {
                                 errorMsg = resultMsg
@@ -405,11 +308,10 @@ fun CrearViajeScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFEF4444)
                 ),
-                enabled = nombre.isNotBlank() && descripcion.isNotBlank() && fechaHoraInicio != null && fechaHoraFin != null
-                        && kmRealizados.isNotBlank() && consumoCombustible.isNotBlank() && latitud.isNotBlank() && longitud.isNotBlank()
+                enabled = litros.isNotBlank() &&  fechaHora != null && precioPorLitro.isNotBlank() && precioTotal.isNotBlank()
             ) {
                 Text(
-                    text = "Crear Viaje",
+                    text = "Crear Repostaje",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
