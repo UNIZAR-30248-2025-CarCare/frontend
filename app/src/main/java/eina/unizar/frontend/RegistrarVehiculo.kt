@@ -27,6 +27,7 @@ import eina.unizar.frontend.viewmodels.VehiculoViewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import java.util.Calendar
 
 /**
  * Pantalla para añadir un nuevo vehículo al sistema.
@@ -261,7 +262,7 @@ fun AddVehiculoScreen(
                         onValueChange = { matricula = it
                                         matriculaError = false },
                         isError = matriculaError,
-                        placeholder = { Text("1234 ABC") },
+                        placeholder = { Text("1234 BBC") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -269,6 +270,14 @@ fun AddVehiculoScreen(
                             unfocusedBorderColor = if (matriculaError) Color.Red else Color(0xFFE5E7EB)
                         )
                     )
+                    if (matriculaError) {
+                        Text(
+                            text = "Matrícula inválida",
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
@@ -292,6 +301,14 @@ fun AddVehiculoScreen(
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
+                    if (anioError) {
+                        Text(
+                            text = "Año inválido",
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
                 }
             }
 
@@ -367,6 +384,14 @@ fun AddVehiculoScreen(
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
+                    if (capacidadError) {
+                        Text(
+                            text = "Formato numérico incorrecto",
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
                 }
             }
 
@@ -393,6 +418,14 @@ fun AddVehiculoScreen(
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
+            if (consumoError) {
+                Text(
+                    text = "Formato numérico incorrecto",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -456,8 +489,20 @@ fun AddVehiculoScreen(
                     capacidadError = capacidadDeposito.isBlank()
                     consumoError = consumoMedio.isBlank()
 
-                    val hayError = nombreError || fabricanteError || modeloError || matriculaError || anioError || capacidadError || consumoError
+                    val matriculaRegex = Regex("""^\d{4} [BCDFGHJKLMNPRSTVWXYZ]{3}$""")
+                    matriculaError = !matriculaRegex.matches(matricula)
 
+                    val anioActual = Calendar.getInstance().get(Calendar.YEAR)
+                    val anioInt = anio.toIntOrNull()
+                    anioError = anioInt == null || anioInt < 1900 || anioInt > anioActual
+
+                    val capacidadRegex = Regex("""^\d+\.\d$""")
+                    capacidadError = !capacidadRegex.matches(capacidadDeposito)
+
+                    val consumoRegex = Regex("""^\d+\.\d$""")
+                    consumoError = !consumoRegex.matches(consumoMedio)
+
+                    val hayError = nombreError || fabricanteError || modeloError || matriculaError || anioError || capacidadError || consumoError
                     if (hayError) return@Button
 
                     val request = RegistrarVehiculoRequest(
@@ -470,8 +515,15 @@ fun AddVehiculoScreen(
                         tipo_combustible = combustible ?: "Gasolina",
                         litros_combustible = capacidadDeposito.toIntOrNull() ?: 45.0,
                         consumo_medio = consumoMedio.toDoubleOrNull() ?: 5.5,
-                        ubicacion_actual = Ubicacion(40.4168, -3.7038), // Madrid
-                        estado = "Activo"
+                        ubicacion_actual = Ubicacion(40.4168, -4.7038), // Madrid
+                        estado = "Activo",
+                        tipo = when (tipoSeleccionado) {
+                            TipoVehiculo.COCHE -> "Coche"
+                            TipoVehiculo.MOTO -> "Moto"
+                            TipoVehiculo.FURGONETA -> "Furgoneta"
+                            TipoVehiculo.CAMION -> "Camion"
+                            TipoVehiculo.OTRO -> "Otro"
+                        }
                     )
                     viewModel.registrarVehiculo(token, request)
                 },

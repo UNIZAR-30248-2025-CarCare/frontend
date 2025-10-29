@@ -233,7 +233,11 @@ fun AppNavigation() {
                     selectedTab = 0,
                     onTabSelected = { /* lógica */ },
                     navController = navController,
-                    authViewModel = authViewModel
+                    authViewModel = authViewModel,
+                    onViajesClick = {
+                        navController.navigate("viajes")
+                    },
+                    onRepostajesClick = { navController.navigate("repostajes") }
                 )
             }
         }
@@ -289,12 +293,13 @@ fun AppNavigation() {
                 }
                 Text("Cargando vehículos...")
             } else {
-                val vehiculoSeleccionado = vehiculos.map { it.toVehiculo() }.find { it.id == vehiculoId }
+                val vehiculoSeleccionado =
+                    vehiculos.map { it.toVehiculo() }.find { it.id == vehiculoId }
                 if (vehiculoSeleccionado != null) {
                     DetalleVehiculoScreen(
                         vehiculo = vehiculoSeleccionado.toVehiculoDetalle(),
                         onBackClick = { navController.popBackStack() },
-                        onVerMapaClick = { /* lógica */ },
+                        onVerMapaClick = { navController.navigate("mapa") },
                         onAddUsuarioClick = { /* lógica */ },
                         efectiveUserId = efectiveUserId,
                         efectiveToken = efectiveToken
@@ -415,6 +420,63 @@ fun AppNavigation() {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+
+        // Ruta para viajes
+        composable("viajes") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                ViajesScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onViajeClick = { /* lógica */ },
+                    onAddViajeClick = { navController.navigate("add_viaje") },
+                    navController = navController,
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para crear viajes
+        composable("add_viaje") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                CrearViajeScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onCrearViaje = { nuevoViajeData ->
+                        // Lógica para enviar los datos al backend
+                        println("Viaje creado: $nuevoViajeData")
+                        navController.popBackStack() // Volver a la pantalla anterior
+                    },
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para repostajes
+        composable("repostajes") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                RepostajesScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onAddRepostajeClick = { navController.navigate("add_repostaje") },
+                    navController = navController,
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para crear repostajes
+        composable("add_repostaje") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                CrearRepostajeScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onCrearRepostaje = { nuevoRepostajeData ->
+                        // Lógica para enviar los datos al backend
+                        println("Repostaje creado: $nuevoRepostajeData")
+                        navController.popBackStack() // Volver a la pantalla anterior
+                    },
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
             }
         }
     }

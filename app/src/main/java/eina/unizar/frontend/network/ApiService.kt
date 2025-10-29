@@ -12,6 +12,11 @@ import eina.unizar.frontend.models.VehiculoResponse
 import eina.unizar.frontend.models.InvitacionBody
 import eina.unizar.frontend.models.InvitacionResponse
 import eina.unizar.frontend.models.InvitacionesRecibidasResponse
+import eina.unizar.frontend.models.NuevoRepostajeData
+import eina.unizar.frontend.models.NuevoViajeData
+import eina.unizar.frontend.models.ProximoRepostajeResponse
+import eina.unizar.frontend.models.ViajesResponse
+import eina.unizar.frontend.models.ResumenRepostajesResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -164,4 +169,34 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body body: Map<String, Int>
     ): Response<InvitacionResponse>
+
+    @GET("viaje/obtenerViajes/{vehiculoId}")
+    suspend fun obtenerViajes(
+        @Header("Authorization") authHeader: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ViajesResponse>
+
+    @POST("viaje/crearViaje")
+    suspend fun crearViaje(
+        @Header("Authorization") token: String,
+        @Body nuevoViaje: NuevoViajeData
+    ): Response<Unit>
+
+    @GET("repostaje/obtenerRepostajesVehiculo/{vehiculoId}")
+    suspend fun obtenerRepostajesVehiculo(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ResumenRepostajesResponse>
+
+    @GET("repostaje/calcularProximoRepostaje/{vehiculoId}")
+    suspend fun calcularProximoRepostaje(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ProximoRepostajeResponse>
+
+    @POST("repostaje/crearRepostaje")
+    suspend fun crearRepostaje(
+        @Header("Authorization") token: String,
+        @Body nuevoRepostaje: NuevoRepostajeData
+    ): Response<Unit>
 }
