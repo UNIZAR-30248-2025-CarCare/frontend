@@ -26,6 +26,10 @@ import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.viewmodels.HomeViewModel
 import eina.unizar.frontend.models.Viaje
 import eina.unizar.frontend.viewmodels.ViajesViewModel
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +61,10 @@ fun ViajesScreen(
     var selectedIndex by remember { mutableIntStateOf(0) }
     val vehiculoSeleccionado = vehiculos.getOrNull(selectedIndex)
     var vehiculoMenuExpanded by remember { mutableStateOf(false) }
+
+    var viajeSeleccionado by remember { mutableStateOf<Viaje?>(null) }
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(vehiculoSeleccionado?.id) {
         vehiculoSeleccionado?.let {
@@ -219,7 +227,10 @@ fun ViajesScreen(
                     items(viajes) { viaje ->
                         ViajeCard(
                             viaje = viaje,
-                            onClick = { onViajeClick(viaje.id) }
+                            onClick = {
+                                viajeSeleccionado = viaje
+                                scope.launch { sheetState.show() }
+                            }
                         )
                         Spacer(modifier = Modifier.height(15.dp))
                     }
@@ -227,6 +238,33 @@ fun ViajesScreen(
 
                 item {
                     Spacer(modifier = Modifier.height(120.dp))
+                }
+            }
+
+            // Banner de detalles
+            if (viajeSeleccionado != null) {
+                ModalBottomSheet(
+                    onDismissRequest = { viajeSeleccionado = null },
+                    sheetState = sheetState
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = viajeSeleccionado!!.nombre,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Descripción: ${viajeSeleccionado!!.descripcion}")
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Usuario: ${viajeSeleccionado!!.usuario}")
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Fecha inicio: ${viajeSeleccionado!!.fechaHoraInicio.replace("T", " ")}")
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Fecha fin: ${viajeSeleccionado!!.fechaHoraFin.replace("T", " ")}")
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Km realizados: ${viajeSeleccionado!!.kmRealizados}")
+                        Text("Consumo combustible: ${viajeSeleccionado!!.consumoCombustible} L")
+                    }
                 }
             }
 
