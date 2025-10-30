@@ -420,6 +420,8 @@ fun AppNavigation() {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            }
+        }
 
         // Ruta para viajes
         composable("viajes") {
