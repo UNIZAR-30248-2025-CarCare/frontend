@@ -32,7 +32,6 @@ import eina.unizar.frontend.models.ReservaRequest
 import eina.unizar.frontend.models.ReservaResponse
 import eina.unizar.frontend.network.RetrofitClient
 import eina.unizar.frontend.viewmodels.AuthViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Call
@@ -42,18 +41,39 @@ import java.time.LocalDate
 import java.time.LocalTime
 import androidx.compose.ui.res.painterResource
 import java.time.format.DateTimeFormatter
+import eina.unizar.frontend.viewmodels.HomeViewModel
+import eina.unizar.frontend.models.toVehiculo
 
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun CrearReservaWrapper(
+    userId: String,
+    token: String,
+    onBackClick: () -> Unit,
+    onCrearReserva: (NuevaReservaData) -> Unit
+) {
+    val viewModel = remember { HomeViewModel() }
+    val vehiculosDTO by viewModel.vehiculos.collectAsState()
+    val vehiculos = vehiculosDTO.map { it.toVehiculo() }
 
-/**
- * Pantalla para registrar una nueva reserva de vehículo.
- *
- * - Muestra un formulario con selección de vehículo, fecha, hora y tipo de reserva.
- * - Usa `DatePickerDialog` para seleccionar las fechas.
- * - Gestiona estados locales (`remember`) para controlar campos y errores.
- * - Envía los datos como `NuevaReservaData` al callback `onCrearReserva()`.
- *
- * Incluye control de carga (`isLoading`) y mensajes de error (`errorMessage`).
- */
+    LaunchedEffect(userId, token) {
+        Log.d("CrearReservaWrapper", "Cargando vehículos para userId: $userId")
+        viewModel.fetchVehiculos(userId, token)
+    }
+
+    LaunchedEffect(vehiculos.size) {
+        Log.d("CrearReservaWrapper", "Vehículos cargados: ${vehiculos.size}")
+        vehiculos.forEach { vehiculo ->
+            Log.d("CrearReservaWrapper", "Vehículo: ${vehiculo.nombre} - ${vehiculo.matricula}")
+        }
+    }
+
+    NuevaReservaScreen(
+        vehiculos = vehiculos,
+        onBackClick = onBackClick,
+        onCrearReserva = onCrearReserva
+    )
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,6 +101,13 @@ fun NuevaReservaScreen(
     val authViewModel: AuthViewModel = viewModel()
     val scope = rememberCoroutineScope()
     val token by authViewModel.token.collectAsState()
+
+    // Actualizar vehículo seleccionado cuando cambie la lista
+    LaunchedEffect(vehiculos) {
+        if (vehiculoSeleccionado == null && vehiculos.isNotEmpty()) {
+            vehiculoSeleccionado = vehiculos.firstOrNull()
+        }
+    }
 
     // DatePicker para fecha inicio
     LaunchedEffect(mostrarDatePickerInicio) {
@@ -177,16 +204,11 @@ fun NuevaReservaScreen(
                 modifier = Modifier.padding(bottom = 5.dp)
             )
 
-            ExposedDropdownMenuBox(
-                expanded = expandedVehiculo,
-                onExpandedChange = { expandedVehiculo = it }
-            ) {
+            if (vehiculos.isEmpty()) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(55.dp)
-                        .menuAnchor()
-                        .clickable { expandedVehiculo = true },
+                        .height(55.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
@@ -196,74 +218,130 @@ fun NuevaReservaScreen(
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        vehiculoSeleccionado?.let { vehiculo ->
-                            val (color, iconRes, name) = when (vehiculo.tipo.toString()) {
-                                "Coche" -> Triple(Color(0xFF3B82F6), R.drawable.ic_coche, "Coche")
-                                "Moto" -> Triple(Color(0xFFF59E0B), R.drawable.ic_moto, "Moto")
-                                "Furgoneta" -> Triple(Color(0xFF10B981), R.drawable.ic_furgoneta, "Furgoneta")
-                                "Camion" -> Triple(Color(0xFFEF4444), R.drawable.ic_camion, "Camión")
-                                else -> Triple(Color(0xFF6B7280), R.drawable.ic_otro, "Otro")
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .background(color.copy(alpha = 0.1f), androidx.compose.foundation.shape.CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = iconRes),
-                                    contentDescription = name,
-                                    tint = color,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "${vehiculo.nombre} - ${vehiculo.matricula}",
-                                fontSize = 15.sp,
-                                color = Color(0xFF1F2937),
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = "Expandir",
-                            tint = Color(0xFF9CA3AF)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color(0xFFEF4444),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Cargando vehículos...",
+                            fontSize = 15.sp,
+                            color = Color(0xFF9CA3AF),
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
-
-                ExposedDropdownMenu(
+            } else {
+                ExposedDropdownMenuBox(
                     expanded = expandedVehiculo,
-                    onDismissRequest = { expandedVehiculo = false }
+                    onExpandedChange = { expandedVehiculo = it }
                 ) {
-                    vehiculos.forEach { vehiculo ->
-                        DropdownMenuItem(
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    val (color, iconRes, name) = when (vehiculo.tipo.toString()) {
-                                        "Coche" -> Triple(Color(0xFF3B82F6), R.drawable.ic_coche, "Coche")
-                                        "Moto" -> Triple(Color(0xFFF59E0B), R.drawable.ic_moto, "Moto")
-                                        "Furgoneta" -> Triple(Color(0xFF10B981), R.drawable.ic_furgoneta, "Furgoneta")
-                                        "Camion" -> Triple(Color(0xFFEF4444), R.drawable.ic_camion, "Camión")
-                                        else -> Triple(Color(0xFF6B7280), R.drawable.ic_otro, "Otro")
-                                    }
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(55.dp)
+                            .menuAnchor()
+                            .clickable { expandedVehiculo = true },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            vehiculoSeleccionado?.let { vehiculo ->
+                                val tipoString = vehiculo.tipo.toString().trim().lowercase()
+                                val (color, iconRes) = when (tipoString) {
+                                    "coche" -> Pair(Color(0xFF3B82F6), R.drawable.ic_coche)
+                                    "moto" -> Pair(Color(0xFFF59E0B), R.drawable.ic_moto)
+                                    "furgoneta" -> Pair(Color(0xFF10B981), R.drawable.ic_furgoneta)
+                                    "camion" -> Pair(Color(0xFFEF4444), R.drawable.ic_camion)
+                                    else -> Pair(Color(0xFF6B7280), R.drawable.ic_otro)
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .background(color.copy(alpha = 0.1f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     Icon(
                                         painter = painterResource(id = iconRes),
-                                        contentDescription = null,
-                                        tint = vehiculo.tipo.color,
-                                        modifier = Modifier.size(20.dp)
+                                        contentDescription = vehiculo.tipo.toString(),
+                                        modifier = Modifier.size(18.dp),
+                                        tint = color
                                     )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text("${vehiculo.nombre} - ${vehiculo.matricula}")
                                 }
-                            },
-                            onClick = {
-                                vehiculoSeleccionado = vehiculo
-                                expandedVehiculo = false
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "${vehiculo.nombre} - ${vehiculo.matricula}",
+                                    fontSize = 15.sp,
+                                    color = Color(0xFF1F2937),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            } ?: run {
+                                Text(
+                                    text = "Selecciona un vehículo",
+                                    fontSize = 15.sp,
+                                    color = Color(0xFF9CA3AF),
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
-                        )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Expandir",
+                                tint = Color(0xFF9CA3AF)
+                            )
+                        }
+                    }
+
+                    ExposedDropdownMenu(
+                        expanded = expandedVehiculo,
+                        onDismissRequest = { expandedVehiculo = false }
+                    ) {
+                        vehiculos.forEach { vehiculo ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        val tipoString = vehiculo.tipo.toString().trim().lowercase()
+                                        val (color, iconRes) = when (tipoString) {
+                                            "coche" -> Pair(Color(0xFF3B82F6), R.drawable.ic_coche)
+                                            "moto" -> Pair(Color(0xFFF59E0B), R.drawable.ic_moto)
+                                            "furgoneta" -> Pair(Color(0xFF10B981), R.drawable.ic_furgoneta)
+                                            "camion" -> Pair(Color(0xFFEF4444), R.drawable.ic_camion)
+                                            else -> Pair(Color(0xFF6B7280), R.drawable.ic_otro)
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .background(color.copy(alpha = 0.1f), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = iconRes),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(14.dp),
+                                                tint = color
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = "${vehiculo.nombre} - ${vehiculo.matricula}",
+                                            fontSize = 14.sp,
+                                            color = Color(0xFF1F2937)
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    vehiculoSeleccionado = vehiculo
+                                    expandedVehiculo = false
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -323,7 +401,6 @@ fun NuevaReservaScreen(
             )
 
             Spacer(modifier = Modifier.height(20.dp))
-
 
             // Hora inicio y fin
             Row(
@@ -427,6 +504,8 @@ fun NuevaReservaScreen(
                 maxLines = 4
             )
 
+            Spacer(modifier = Modifier.height(20.dp))
+
             // Mensaje de error
             errorMessage?.let {
                 Card(
@@ -444,7 +523,6 @@ fun NuevaReservaScreen(
                 }
                 Spacer(modifier = Modifier.height(20.dp))
             }
-            Spacer(modifier = Modifier.height(20.dp))
 
             // Verificación de disponibilidad
             Card(
@@ -506,7 +584,6 @@ fun NuevaReservaScreen(
             Button(
                 onClick = {
                     vehiculoSeleccionado?.let { vehiculo ->
-                        // 1. Validar el token ANTES de poner isLoading = true
                         if (token.isNullOrBlank()) {
                             errorMessage = "No se encontró el token de autenticación"
                             return@Button
@@ -524,11 +601,11 @@ fun NuevaReservaScreen(
                             tipo = tipoSeleccionado.nombre.uppercase(),
                             notas = notas.ifBlank { null }
                         )
-
+                        Log.d("CrearReserva", "VehiculoId enviado: ${vehiculo.id}") // <-- AÑADE ESTO
+                        Log.d("CrearReserva", "Vehiculo completo: $vehiculo")      // <-- Y ESTO
                         Log.d("CrearReserva", "Enviando reserva: $reservaRequest")
                         Log.d("CrearReserva", "Token: Bearer $token")
 
-                        // 2. Eliminar scope.launch(Dispatchers.IO) - Retrofit ya maneja el threading
                         RetrofitClient.instance.crearReserva("Bearer $token", reservaRequest)
                             .enqueue(object : Callback<ReservaResponse> {
                                 override fun onResponse(
@@ -602,7 +679,7 @@ fun NuevaReservaScreen(
     }
 }
 
-private fun extractErrorMessage(errorBody: String): String {
+fun extractErrorMessage(errorBody: String): String {
     val regex = "\"error\":\"(.*?)\"".toRegex()
     val matchResult = regex.find(errorBody)
     return matchResult?.groupValues?.getOrNull(1) ?: "Error al crear la reserva"
