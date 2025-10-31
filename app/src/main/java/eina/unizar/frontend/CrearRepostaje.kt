@@ -36,7 +36,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import eina.unizar.frontend.models.NuevoRepostajeData
+import eina.unizar.frontend.models.Vehiculo
 import eina.unizar.frontend.viewmodels.RepostajesViewModel
+import org.json.JSONObject
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,14 +47,15 @@ fun CrearRepostajeScreen(
     onBackClick: () -> Unit,
     onCrearRepostaje: (NuevoRepostajeData) -> Unit,
     efectiveUserId: String,
-    efectiveToken: String
+    efectiveToken: String,
+    vehiculos: List<Vehiculo>? = null
 ) {
     val context = LocalContext.current
     val repostajeViewModel = remember { RepostajesViewModel() }
     // ViewModel y vehículos
     val homeViewModel = remember { HomeViewModel() }
     val vehiculosDTO by homeViewModel.vehiculos.collectAsState()
-    val vehiculos = vehiculosDTO.map { it.toVehiculo() }
+    val vehiculosList = vehiculos ?: vehiculosDTO.map { it.toVehiculo() }
 
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
@@ -62,7 +65,7 @@ fun CrearRepostajeScreen(
 
     // Estado para el vehículo seleccionado y referencia al mapa
     var selectedIndex by remember { mutableIntStateOf(0) }
-    var vehiculoSeleccionado = vehiculos.getOrNull(selectedIndex)
+    var vehiculoSeleccionado = vehiculosList.getOrNull(selectedIndex)
 
     var litros by remember { mutableStateOf("") }
     var precioPorLitro by remember { mutableStateOf("") }
@@ -210,7 +213,7 @@ fun CrearRepostajeScreen(
                     expanded = expandedVehiculo,
                     onDismissRequest = { expandedVehiculo = false }
                 ) {
-                    vehiculos.forEach { vehiculo ->
+                    vehiculosList.forEach { vehiculo ->
                         DropdownMenuItem(
                             text = { Text("${vehiculo.nombre} - ${vehiculo.matricula}") },
                             onClick = {
@@ -279,6 +282,17 @@ fun CrearRepostajeScreen(
 
             Button(
                 onClick = {
+                    val error = validarCamposRepostaje(
+                        vehiculoSeleccionado,
+                        litros,
+                        precioPorLitro,
+                        precioTotal,
+                        fechaHora,
+                    )
+                    if (error != null) {
+                        errorMsg = error
+                        return@Button
+                    }
                     vehiculoSeleccionado?.let { vehiculo ->
                         repostajeViewModel.crearRepostaje(
                             repostaje = NuevoRepostajeData(
@@ -296,7 +310,11 @@ fun CrearRepostajeScreen(
                                 Toast.makeText(context, "Repostaje creado correctamente", Toast.LENGTH_SHORT).show()
                                 onBackClick()
                             } else {
-                                errorMsg = resultMsg
+                                errorMsg = try {
+                                    JSONObject(resultMsg).optString("error", "Error desconocido")
+                                } catch (e: Exception) {
+                                    "Error desconocido"
+                                }
                             }
                         }
                     }
@@ -308,7 +326,7 @@ fun CrearRepostajeScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFEF4444)
                 ),
-                enabled = litros.isNotBlank() &&  fechaHora != null && precioPorLitro.isNotBlank() && precioTotal.isNotBlank()
+                // enabled = litros.isNotBlank() &&  fechaHora != null && precioPorLitro.isNotBlank() && precioTotal.isNotBlank()
             ) {
                 Text(
                     text = "Crear Repostaje",
@@ -328,4 +346,26 @@ fun CrearRepostajeScreen(
             Spacer(modifier = Modifier.height(30.dp))
         }
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun validarCamposRepostaje(
+    vehiculoSeleccionado: Vehiculo?,
+    litros: String,
+    precioPorLitro: String,
+    precioTotal: String,
+    fechaHora: LocalDateTime?,
+): String? {
+    if (vehiculoSeleccionado == null) return "El vehículo no existe"
+    if (litros.isBlank()) return "Los litros repostados no pueden estar vacíos"
+    val litrosDouble = litros.toDoubleOrNull()
+    if (litrosDouble == null || litrosDouble <= 0) return "Los litros repostados deben ser un número mayor que 0"
+    if (precioPorLitro.isBlank()) return "El precio por litro no puede estar vacío"
+    val precioPorLitroDouble = precioPorLitro.toDoubleOrNull()
+    if (precioPorLitroDouble == null || precioPorLitroDouble <= 0) return "El precio por litro debe ser un número mayor que 0"
+    if (precioTotal.isBlank()) return "El precio total no puede estar vacío"
+    val precioTotalDouble = precioTotal.toDoubleOrNull()
+    if (precioTotalDouble == null || precioTotalDouble <= 0) return "El precio total debe ser un número mayor que 0"
+    if (fechaHora == null) return "La fecha y hora del repostaje no puede estar vacía"
+    return null
 }
