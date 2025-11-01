@@ -23,7 +23,7 @@ class CrearViajeAcceptanceTest {
 
     private val testNombreViaje = "Viaje de Juan a Madrid"
     private val testDescripcion = "Viaje de fin de semana a Madrid"
-    private val testKmRealizados = "600"
+    private val testKmRealizados = "600.0"
     private val testConsumoCombustible = "6.5"
 
     @Before

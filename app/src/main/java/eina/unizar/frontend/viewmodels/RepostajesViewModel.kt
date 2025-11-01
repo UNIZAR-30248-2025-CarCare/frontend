@@ -10,10 +10,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel para gestionar los repostajes de vehículos.
+ *
+ * Responsabilidades:
+ * - Obtener el resumen de repostajes de un vehículo.
+ * - Calcular el próximo repostaje necesario.
+ * - Crear nuevos repostajes.
+ */
 class RepostajesViewModel : ViewModel() {
     private val _resumen = MutableStateFlow<ResumenRepostajesResponse?>(null)
     val resumen: StateFlow<ResumenRepostajesResponse?> = _resumen
 
+    /**
+     * Obtiene el resumen de repostajes para un vehículo específico.
+     *
+     * @param token Token de autenticación JWT.
+     * @param vehiculoId ID del vehículo cuyos repostajes se desean obtener.
+     */
     fun fetchRepostajes(token: String, vehiculoId: String) {
         viewModelScope.launch {
             try {
@@ -32,6 +46,12 @@ class RepostajesViewModel : ViewModel() {
     private val _proximo = MutableStateFlow<ProximoRepostajeResponse?>(null)
     val proximo: StateFlow<ProximoRepostajeResponse?> = _proximo
 
+    /**
+     * Calcula el próximo repostaje necesario para un vehículo específico.
+     *
+     * @param token Token de autenticación JWT.
+     * @param vehiculoId ID del vehículo para el cual se calcula el próximo repostaje.
+     */
     fun fetchProximoRepostaje(token: String, vehiculoId: String) {
         viewModelScope.launch {
             try {
@@ -47,6 +67,13 @@ class RepostajesViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Crea un nuevo repostaje para un vehículo.
+     *
+     * @param token Token de autenticación JWT.
+     * @param repostaje Datos del nuevo repostaje a crear.
+     * @param onResult Callback que recibe un String con el error en caso de fallo, o null si fue exitoso.
+     */
     fun crearRepostaje(
         token: String,
         repostaje: NuevoRepostajeData,
