@@ -13,10 +13,23 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlinx.serialization.json.Json
 
+/**
+ * ViewModel para gestionar los viajes de vehículos.
+ *
+ * Responsabilidades:
+ * - Obtener la lista de viajes de un vehículo.
+ * - Crear nuevos viajes.
+ */
 class ViajesViewModel : ViewModel() {
     private val _viajes = MutableStateFlow<List<Viaje>>(emptyList())
     val viajes: StateFlow<List<Viaje>> = _viajes
 
+    /**
+     * Obtiene la lista de viajes para un vehículo específico.
+     *
+     * @param vehiculoId ID del vehículo cuyos viajes se desean obtener.
+     * @param token Token de autenticación JWT.
+     */
     fun fetchViajes(vehiculoId: String, token: String) {
         viewModelScope.launch {
             try {
@@ -32,6 +45,14 @@ class ViajesViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Crea un nuevo viaje para un vehículo.
+     *
+     * @param token Token de autenticación JWT.
+     * @param viaje Datos del nuevo viaje a crear.
+     * @param onResult Callback que recibe un String con el mensaje de error en caso de fallo,
+     *                 o null si la operación fue exitosa.
+     */
     fun crearViaje(
         token: String,
         viaje: NuevoViajeData,

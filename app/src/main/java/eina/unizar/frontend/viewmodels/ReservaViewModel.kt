@@ -19,6 +19,14 @@ import retrofit2.Callback
 import retrofit2.Response
 import kotlin.coroutines.resume
 
+/**
+ * ViewModel para gestionar las reservas de vehículos.
+ *
+ * Responsabilidades:
+ * - Obtener la lista de reservas de un usuario.
+ * - Crear nuevas reservas.
+ * - Eliminar reservas existentes.
+ */
 class ReservaViewModel : ViewModel() {
     private val _reservas = MutableStateFlow<List<ReservaDTO>>(emptyList())
     val reservas: StateFlow<List<ReservaDTO>> = _reservas
@@ -29,6 +37,11 @@ class ReservaViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    /**
+     * Obtiene la lista de reservas del usuario autenticado.
+     *
+     * @param token Token de autenticación JWT.
+     */
     fun fetchReservas(token: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -63,7 +76,13 @@ class ReservaViewModel : ViewModel() {
         }
     }
 
-    // ✅ NUEVO: Crear reserva Y refrescar automáticamente
+    /**
+     * Crea una nueva reserva y refresca la lista de reservas.
+     *
+     * @param token Token de autenticación JWT.
+     * @param reserva Datos de la nueva reserva a crear.
+     * @return Booleano que indica si la creación fue exitosa.
+     */
     suspend fun crearYRefrescarReserva(token: String, reserva: NuevaReservaData): Boolean {
         return suspendCancellableCoroutine { continuation ->
             // Convertir NuevaReservaData a ReservaRequest (String)
@@ -107,7 +126,13 @@ class ReservaViewModel : ViewModel() {
         }
     }
 
-    // ✅ Eliminar reserva
+    /**
+     * Elimina una reserva existente y refresca la lista de reservas.
+     *
+     * @param token Token de autenticación JWT.
+     * @param reservaId ID de la reserva a eliminar.
+     * @return Booleano que indica si la eliminación fue exitosa.
+     */
     suspend fun eliminarReserva(token: String, reservaId: String): Boolean {
         return suspendCancellableCoroutine { continuation ->
             RetrofitClient.instance.eliminarReserva(reservaId, "Bearer $token")
