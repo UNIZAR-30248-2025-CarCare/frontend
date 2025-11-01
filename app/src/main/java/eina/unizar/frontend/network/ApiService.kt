@@ -6,14 +6,21 @@ import eina.unizar.frontend.models.LoginResponse
 import eina.unizar.frontend.models.UserNameResponse
 import eina.unizar.frontend.models.ReservaRequest
 import eina.unizar.frontend.models.ReservaResponse
+import eina.unizar.frontend.models.ReservasListResponse
 import eina.unizar.frontend.models.RegistrarVehiculoRequest
 import eina.unizar.frontend.models.VehiculoResponse
 import eina.unizar.frontend.models.InvitacionBody
 import eina.unizar.frontend.models.InvitacionResponse
 import eina.unizar.frontend.models.InvitacionesRecibidasResponse
+import eina.unizar.frontend.models.NuevoRepostajeData
+import eina.unizar.frontend.models.NuevoViajeData
+import eina.unizar.frontend.models.ProximoRepostajeResponse
+import eina.unizar.frontend.models.ViajesResponse
+import eina.unizar.frontend.models.ResumenRepostajesResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -84,6 +91,27 @@ interface ApiService {
         @Body reserva: ReservaRequest
     ): Call<ReservaResponse>
 
+    @GET("reserva")
+    fun obtenerReservas(
+        @Header("Authorization") token: String
+    ): Call<ReservasListResponse>
+
+    /**
+     * Elimina una reserva por su ID.
+     * 
+     * Endpoint: DELETE /reserva/{id}
+     * Requiere autenticación.
+     * 
+     * @param id Identificador de la reserva
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Call<Void> Respuesta sin contenido en caso de éxito
+     */
+    @DELETE("reserva/{id}")
+    fun eliminarReserva(
+        @Path("id") id: String,
+        @Header("Authorization") token: String
+    ): Call<Void>
+
     /**
      * Registra un nuevo vehículo en el sistema.
      * 
@@ -117,6 +145,18 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Call<VehiculoResponse>
 
+    /**
+     * Genera una invitación para un vehículo.
+     *
+     * Endpoint: POST /invitacion/generarInvitacion/{vehiculoId}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param vehiculoId Identificador del vehículo
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param body Datos de la invitación
+     * @return Response<InvitacionResponse> Respuesta con los datos de la invitación generada
+     */
     @POST("invitacion/generarInvitacion/{vehiculoId}")
     suspend fun generarInvitacion(
         @Path("vehiculoId") vehiculoId: String,
@@ -124,21 +164,139 @@ interface ApiService {
         @Body body: InvitacionBody
     ): Response<InvitacionResponse>
 
+    /**
+     * Obtiene las invitaciones recibidas por un usuario.
+     *
+     * Endpoint: GET /invitacion/invitacionesRecibidas/{usuarioId}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param usuarioId Identificador del usuario
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Response<InvitacionesRecibidasResponse> Respuesta con la lista de invitaciones recibidas
+     */
     @GET("invitacion/invitacionesRecibidas/{usuarioId}")
     suspend fun getInvitacionesRecibidas(
         @Path("usuarioId") usuarioId: String,
         @Header("Authorization") token: String
     ): Response<InvitacionesRecibidasResponse>
 
+    /**
+     * Acepta una invitación recibida.
+     *
+     * Endpoint: POST /invitacion/aceptarInvitacion
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param body Datos necesarios para aceptar la invitación
+     * @return Response<InvitacionResponse> Respuesta con los datos de la invitación aceptada
+     */
     @POST("invitacion/aceptarInvitacion")
     suspend fun aceptarInvitacion(
         @Header("Authorization") token: String,
         @Body body: Map<String, String>
     ): Response<InvitacionResponse>
 
+    /**
+     * Rechaza una invitación recibida.
+     *
+     * Endpoint: POST /invitacion/rechazarInvitacion
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param body Datos necesarios para rechazar la invitación
+     * @return Response<InvitacionResponse> Respuesta con los datos de la invitación rechazada
+     */
     @POST("invitacion/rechazarInvitacion")
     suspend fun rechazarInvitacion(
         @Header("Authorization") token: String,
         @Body body: Map<String, Int>
     ): Response<InvitacionResponse>
+
+    /**
+     * Obtiene los viajes asociados a un vehículo.
+     *
+     * Endpoint: GET /viaje/obtenerViajes/{vehiculoId}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param vehiculoId Identificador del vehículo
+     * @param authHeader Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Response<ViajesResponse> Respuesta con la lista de viajes
+     */
+    @GET("viaje/obtenerViajes/{vehiculoId}")
+    suspend fun obtenerViajes(
+        @Header("Authorization") authHeader: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ViajesResponse>
+
+    /**
+     * Crea un nuevo viaje para un vehículo.
+     *
+     * Endpoint: POST /viaje/crearViaje
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param nuevoViaje Datos del viaje a crear
+     * @return Response<Unit> Respuesta HTTP con código de estado
+     */
+    @POST("viaje/crearViaje")
+    suspend fun crearViaje(
+        @Header("Authorization") token: String,
+        @Body nuevoViaje: NuevoViajeData
+    ): Response<Unit>
+
+    /**
+     * Obtiene el resumen de repostajes de un vehículo.
+     *
+     * Endpoint: GET /repostaje/obtenerRepostajesVehiculo/{vehiculoId}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param vehiculoId Identificador del vehículo
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Response<ResumenRepostajesResponse> Respuesta con el resumen de repostajes
+     */
+    @GET("repostaje/obtenerRepostajesVehiculo/{vehiculoId}")
+    suspend fun obtenerRepostajesVehiculo(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ResumenRepostajesResponse>
+
+    /**
+     * Calcula el próximo repostaje recomendado para un vehículo.
+     *
+     * Endpoint: GET /repostaje/calcularProximoRepostaje/{vehiculoId}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param vehiculoId Identificador del vehículo
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Response<ProximoRepostajeResponse> Respuesta con los datos del próximo repostaje
+     */
+    @GET("repostaje/calcularProximoRepostaje/{vehiculoId}")
+    suspend fun calcularProximoRepostaje(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ProximoRepostajeResponse>
+
+    /**
+     * Crea un nuevo repostaje para un vehículo.
+     *
+     * Endpoint: POST /repostaje/crearRepostaje
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param nuevoRepostaje Datos del repostaje a crear
+     * @return Response<Unit> Respuesta HTTP con código de estado
+     */
+    @POST("repostaje/crearRepostaje")
+    suspend fun crearRepostaje(
+        @Header("Authorization") token: String,
+        @Body nuevoRepostaje: NuevoRepostajeData
+    ): Response<Unit>
 }

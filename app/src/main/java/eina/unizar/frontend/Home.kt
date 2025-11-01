@@ -64,6 +64,8 @@ fun HomeScreenWrapper(
     onMapaClick: () -> Unit,
     onCalendarioClick: () -> Unit,
     onIncidenciasClick: () -> Unit,
+    onViajesClick: () -> Unit,
+    onRepostajesClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -86,6 +88,8 @@ fun HomeScreenWrapper(
         onMapaClick = onMapaClick,
         onCalendarioClick = onCalendarioClick,
         onIncidenciasClick = onIncidenciasClick,
+        onViajesClick = onViajesClick,
+        onRepostajesClick = onRepostajesClick,
         selectedTab = selectedTab,
         onTabSelected = onTabSelected,
         navController = navController,
@@ -102,6 +106,8 @@ fun HomeScreen(
     onMapaClick: () -> Unit,
     onCalendarioClick: () -> Unit,
     onIncidenciasClick: () -> Unit,
+    onViajesClick: () -> Unit,
+    onRepostajesClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -258,6 +264,30 @@ fun HomeScreen(
                         onClick = onIncidenciasClick,
                         modifier = Modifier.weight(1f)
                     )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Segunda fila
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    QuickAccessCard(
+                        icon = Icons.Default.Place,
+                        title = "Viajes",
+                        color = Color(0xFF8B5CF6),
+                        onClick = onViajesClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                    QuickAccessCard(
+                        icon = Icons.Default.Settings,
+                        title = "Repostajes",
+                        color = Color(0xFFF97316),
+                        onClick = onRepostajesClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
                 }
 
                 Spacer(modifier = Modifier.height(100.dp))

@@ -23,6 +23,7 @@ import java.time.YearMonth
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eina.unizar.frontend.models.Ubicacion
@@ -59,8 +60,15 @@ fun AppNavigation() {
     val context = LocalContext.current
     val activity = context as ComponentActivity
 
+    LaunchedEffect(Unit) {
+        val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        sharedPrefs.edit().clear().apply()
+        Log.d("AppNavigation", "✅ SharedPreferences limpiadas - ID 6 eliminado")
+    }
+    
     val authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = activity)
-
+    
+    
     // Asegúrate de que los valores se recolectan correctamente
     val userId by authViewModel.userId.collectAsState()
     val token by authViewModel.token.collectAsState()
@@ -77,6 +85,8 @@ fun AppNavigation() {
     // Usa los valores de SharedPreferences si los valores del ViewModel son nulos
     val efectiveUserId = userId ?: storedUserId
     val efectiveToken = token ?: storedToken
+    val selectedVehiculo = remember { mutableStateOf<Vehiculo?>(null) }
+
 
 
     // --- Datos de Ejemplo para Home y otras pantallas ---
@@ -155,19 +165,6 @@ fun AppNavigation() {
             usuariosVinculados = listOf("David Borrel")
         )
 
-    // --- Datos de Ejemplo (Mantenerlos para que las pantallas compilen) ---
-    val reservasEjemplo = listOf(
-        Reserva(
-            id = "R01",
-            usuario = usuarioEjemplo,
-            vehiculo = vehiculoEjemplo,
-            fecha = LocalDate.now(), // Para que aparezca en el día actual
-            horaInicio = "09:00",
-            horaFin = "11:00",
-            tipo = TipoReserva.TRABAJO,
-            estado = EstadoReserva.CONFIRMADA
-        )
-    )
     // ---------------------------------------------------------------------
 
 
@@ -218,6 +215,7 @@ fun AppNavigation() {
 
                     // Callbacks de navegación de la pantalla:
                     onVehiculoClick = { vehiculoId: String ->
+                        selectedVehiculo.value = vehiculosDisponibles.find { it.id == vehiculoId }
                         navController.navigate("vehiculo_detalle/$vehiculoId")
                     },
                     onAddVehiculoClick = {
@@ -235,7 +233,11 @@ fun AppNavigation() {
                     selectedTab = 0,
                     onTabSelected = { /* lógica */ },
                     navController = navController,
-                    authViewModel = authViewModel
+                    authViewModel = authViewModel,
+                    onViajesClick = {
+                        navController.navigate("viajes")
+                    },
+                    onRepostajesClick = { navController.navigate("repostajes") }
                 )
             }
         }
@@ -291,7 +293,8 @@ fun AppNavigation() {
                 }
                 Text("Cargando vehículos...")
             } else {
-                val vehiculoSeleccionado = vehiculos.map { it.toVehiculo() }.find { it.id == vehiculoId }
+                val vehiculoSeleccionado =
+                    vehiculos.map { it.toVehiculo() }.find { it.id == vehiculoId }
                 if (vehiculoSeleccionado != null) {
                     DetalleVehiculoScreen(
                         vehiculo = vehiculoSeleccionado.toVehiculoDetalle(),
@@ -352,38 +355,131 @@ fun AppNavigation() {
         }
         // ===========================================
 
-        // --- RUTA DE RESERVAS/CALENDARIO  ---
-        composable("reservas") { // "reservas"
-            CalendarioScreen(
-                vehiculoSeleccionado = vehiculoEjemplo,
-                reservas = reservasEjemplo,
-                mesActual = YearMonth.now(),
-                diaSeleccionado = LocalDate.now(),
+        composable("reservas") {
+            val userId = authViewModel.userId.collectAsState().value ?: ""
+            val token = authViewModel.token.collectAsState().value ?: ""
+
+            CalendarioScreenWrapper(
+                userId = userId,
+                token = token,
+                vehiculoSeleccionado = selectedVehiculo.value ?: vehiculoEjemplo, // fallback
                 onBackClick = { navController.popBackStack() },
-                onVehiculoClick = { /* Lógica */ },
-                onMesAnterior = { /* Lógica */ },
-                onMesSiguiente = { /* Lógica */ },
-                onDiaClick = { /* Lógica */ },
-                onAddReservaClick = {
-                    navController.navigate("nueva_reserva")
+                onVehiculoClick = { nuevoVehiculo ->
+                    selectedVehiculo.value = nuevoVehiculo
                 },
+                onAddReservaClick = { navController.navigate("nueva_reserva") },
                 navController = navController
             )
         }
 
+
         // --- NUEVA RUTA DE RESERVA ---
         composable("nueva_reserva") {
-            // Asegúrate de usar @RequiresApi si es necesario
-            NuevaReservaScreen(
-                vehiculos = vehiculosDisponibles, // Pasar los vehículos disponibles
-                onBackClick = { navController.popBackStack() },
+            val userId = authViewModel.userId.collectAsState().value ?: ""
+            val token = authViewModel.token.collectAsState().value ?: ""
+
+            Log.d("AppNavigation", "Nueva Reserva - userId: $userId, token: $token")
+
+            CrearReservaWrapper(
+                userId = userId,
+                token = token,
+                onBackClick = {
+                    navController.popBackStack()
+                },
                 onCrearReserva = { nuevaReservaData ->
-                    // Aquí iría la lógica para enviar los datos al backend
-                    println("Reserva creada: $nuevaReservaData")
-                    navController.popBackStack() // Volver al calendario tras crear
+                    Log.d("NuevaReserva", "Reserva creada: $nuevaReservaData")
+                    navController.popBackStack()
                 }
             )
         }
+        // ------------------------------------
+        // --- NUEVA RUTA DE EDICIÓN DE RESERVA ---
+        composable(
+            route = "editarReserva/{vehiculoId}/{reservaId}",
+            arguments = listOf(
+                navArgument("vehiculoId") { type = NavType.StringType },
+                navArgument("reservaId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val vehiculoId = backStackEntry.arguments?.getString("vehiculoId") ?: ""
+            val reservaId = backStackEntry.arguments?.getString("reservaId") ?: ""
+            
+            Log.d("AppNavigation", "Editar Reserva - vehiculoId: $vehiculoId, reservaId: $reservaId, token: $efectiveToken")
+            
+            if (efectiveToken != null) {
+                EditarReservaScreen(
+                    navController = navController,
+                    vehiculoId = vehiculoId,
+                    reservaId = reservaId,
+                    token = efectiveToken
+                )
+            } else {
+                // Redirigir al login si no hay token
+                LaunchedEffect(Unit) {
+                    navController.navigate("eleccion") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            }
+        }
 
+        // Ruta para viajes
+        composable("viajes") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                ViajesScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onViajeClick = { /* lógica */ },
+                    onAddViajeClick = { navController.navigate("add_viaje") },
+                    navController = navController,
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para crear viajes
+        composable("add_viaje") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                CrearViajeScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onCrearViaje = { nuevoViajeData ->
+                        // Lógica para enviar los datos al backend
+                        println("Viaje creado: $nuevoViajeData")
+                        navController.popBackStack() // Volver a la pantalla anterior
+                    },
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para repostajes
+        composable("repostajes") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                RepostajesScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onAddRepostajeClick = { navController.navigate("add_repostaje") },
+                    navController = navController,
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para crear repostajes
+        composable("add_repostaje") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                CrearRepostajeScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onCrearRepostaje = { nuevoRepostajeData ->
+                        // Lógica para enviar los datos al backend
+                        println("Repostaje creado: $nuevoRepostajeData")
+                        navController.popBackStack() // Volver a la pantalla anterior
+                    },
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
     }
 }
