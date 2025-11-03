@@ -1,6 +1,9 @@
 package eina.unizar.frontend
 
+import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -15,12 +18,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import eina.unizar.frontend.models.VehiculoDetalle
 import eina.unizar.frontend.viewmodels.InvitacionViewModel
+import eina.unizar.frontend.viewmodels.VehiculoViewModel
 
 
 /**
@@ -39,7 +47,7 @@ import eina.unizar.frontend.viewmodels.InvitacionViewModel
  * La UI usa `Surface` y `Row` para estructurar encabezado y contenido.
  */
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DetalleVehiculoScreen(
     vehiculo: VehiculoDetalle,
@@ -47,11 +55,17 @@ fun DetalleVehiculoScreen(
     onVerMapaClick: () -> Unit,
     onAddUsuarioClick: () -> Unit,
     efectiveUserId: String?,
-    efectiveToken: String?
+    efectiveToken: String?,
+    navController: NavHostController
 ) {
     var showDialog by remember { mutableStateOf(false) }
     val invitacionViewModel = remember { InvitacionViewModel() }
     var email by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
+    var showUserMenu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val viewModel: VehiculoViewModel = viewModel()
+    var usuarioSeleccionado by remember { mutableStateOf<String?>(null) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,12 +98,44 @@ fun DetalleVehiculoScreen(
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-                IconButton(onClick = { /* Más opciones */ }) {
+                 IconButton(onClick ={ expanded = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "Más",
                         tint = Color.White
                     )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Editar vehículo") },
+                            onClick = {
+                                expanded = false
+                                navController.navigate("editar_vehiculo/${vehiculo.id}/$efectiveUserId/$efectiveToken")
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Eliminar vehículo") },
+                            onClick = {
+                                expanded = false
+                                viewModel.eliminarVehiculo(efectiveToken ?: "", vehiculo.id.toString())
+                            }
+                        )
+
+                        // Observa el resultado y muestra el Toast
+                        LaunchedEffect(viewModel.mensajeEliminacion, viewModel.errorEliminacion) {
+                            viewModel.mensajeEliminacion?.let {
+                                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                                navController.popBackStack() // Vuelve atrás tras eliminar
+                                viewModel.mensajeEliminacion = null
+                            }
+                            viewModel.errorEliminacion?.let {
+                                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                                viewModel.errorEliminacion = null
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -270,7 +316,8 @@ fun DetalleVehiculoScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1F2937)
                         )
-                        IconButton(onClick = { showDialog = true}) {
+                        IconButton(onClick = { showDialog = true},
+                            modifier = Modifier.testTag("addUserButton")) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Añadir usuario",
@@ -287,7 +334,11 @@ fun DetalleVehiculoScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 8.dp)
+                                .combinedClickable(
+                                    onClick = { /* nada */ },
+                                    onLongClick = { usuarioSeleccionado = nombre }
+                                ),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
@@ -314,6 +365,38 @@ fun DetalleVehiculoScreen(
                             )
                         }
                     }
+                }
+            }
+            if (usuarioSeleccionado != null) {
+                AlertDialog(
+                    onDismissRequest = { usuarioSeleccionado = null },
+                    title = { Text("Eliminar usuario") },
+                    text = { Text("¿Eliminar a $usuarioSeleccionado del vehículo?") },
+                    confirmButton = {
+                        Button(onClick = {
+                            usuarioSeleccionado?.let { nombre ->
+                                if (efectiveToken != null) {
+                                    viewModel.eliminarUsuarioVinculado(efectiveToken, vehiculo.id.toString(), nombre)
+                                }
+                            }
+                            usuarioSeleccionado = null
+                        }) { Text("Eliminar") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { usuarioSeleccionado = null }) { Text("Cancelar") }
+                    }
+                )
+            }
+
+            // Observa los mensajes de eliminación
+            LaunchedEffect(viewModel.mensajeEliminacionUsuario, viewModel.errorEliminacionUsuario) {
+                viewModel.mensajeEliminacionUsuario?.let {
+                    Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                    viewModel.mensajeEliminacionUsuario = null
+                }
+                viewModel.errorEliminacionUsuario?.let {
+                    Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                    viewModel.errorEliminacionUsuario = null
                 }
             }
 
