@@ -16,13 +16,17 @@ import java.util.*
 /**
  * Tests de Aceptación - Happy Path
  *
- * Estos tests verifican el flujo completo de registrar un nuevo vehículo:
+ * Estos tests verifican el flujo completo de registrar, editar y borrar un nuevo vehículo:
  * 1. Usuario inicia sesión con datos válidos
  * 2. Usuario registra un nuevo vehículo con datos válidos
  * 3. El vehículo aparece en la lista de vehículos del usuario
+ * 4. Usuario edita el vehículo con datos válidos
+ * 5. Los cambios se reflejan correctamente en la lista de vehículos
+ * 6. Usuario borra el vehículo
+ * 7. El vehículo desaparece de la lista de vehículos
  */
 @RunWith(AndroidJUnit4::class)
-class RegistroVehiculoAcceptanceTest {
+class RegistroEdiciónBorradoVehiculoAcceptanceTest {
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
@@ -32,7 +36,7 @@ class RegistroVehiculoAcceptanceTest {
     private val testNombreVehiculo = "Coche de Juan" + System.currentTimeMillis().toString()
     private val testFabricante = "Toyota"
     private val testModelo = "Corolla"
-    private val testMatricula = (System.currentTimeMillis() % 10000).toString() + " BBC"
+    private val testMatricula = (System.currentTimeMillis() % 10000).toString() + " DBC"
     private val testAno = "2020"
     private val testCapacidadDeposito = "50.0"
     private val testConsumoMedio = "5.5"
@@ -47,7 +51,7 @@ class RegistroVehiculoAcceptanceTest {
     }
 
     @Test
-    fun happyPath_loginYRegistroVehiculo() {
+    fun happyPath_loginYRegistroYEdiciónYBorradoVehiculo() {
         // PASO 1: Navegar a la pantalla de inicio de sesión
         composeTestRule.onNodeWithText("Continuar")
             .assertIsDisplayed()
@@ -106,16 +110,66 @@ class RegistroVehiculoAcceptanceTest {
         composeTestRule.onNodeWithText("Gasolina").performClick()
         composeTestRule.onNodeWithText(testTipoCombustible).performClick()
 
-
         // PASO 5: Enviar formulario de registro de vehículo
         composeTestRule.onNode(
             hasText("Añadir Vehículo") and hasClickAction()
         ).performScrollTo().performClick()
 
+        Thread.sleep(5000)
+
         // PASO 6: Verificar que el vehículo se registró correctamente
 
         composeTestRule.onNodeWithText(testNombreVehiculo)
             .assertIsDisplayed()
+            .performClick()
+
+        Thread.sleep(1000)
+
+
+        // PASO 7: Editar el vehículo registrado
+        composeTestRule.onNodeWithContentDescription("Más")
+            .assertIsDisplayed()
+            .performClick()
+
+        Thread.sleep(500)
+
+        composeTestRule.onNodeWithText("Editar vehículo")
+            .assertIsDisplayed()
+            .performClick()
+
+        // PASO 8: Modificar algunos campos del vehículo
+        Thread.sleep(1000)
+        composeTestRule.onNodeWithText("Diésel").performClick()
+        composeTestRule.onNodeWithText("Gasolina").performClick()
+
+        Thread.sleep(1000)
+        composeTestRule.onNode(
+            hasText("Editar Vehículo") and hasClickAction()
+        ).performScrollTo().performClick()
+
+        Thread.sleep(3000)
+        // PASO 10: Verificar que el vehículo se ha editado correctamente
+        composeTestRule.onNodeWithText(testNombreVehiculo)
+            .assertIsDisplayed()
+            .performClick()
+
+        Thread.sleep(1000)
+
+        // PASO 11: Eliminar el vehículo
+        composeTestRule.onNodeWithContentDescription("Más")
+            .assertIsDisplayed()
+            .performClick()
+
+        Thread.sleep(500)
+
+        composeTestRule.onNodeWithText("Eliminar vehículo")
+            .assertIsDisplayed()
+            .performClick()
+
+        Thread.sleep(3000)
+
+        composeTestRule.onNodeWithText(testNombreVehiculo)
+            .assertIsNotDisplayed()
     }
 
 }
