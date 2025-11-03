@@ -24,6 +24,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 
@@ -128,6 +129,64 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: RegistrarVehiculoRequest
     ): Response<Void>
+
+
+    /**
+     * Edita un vehículo existente en el sistema.
+     *
+     * Endpoint: PUT /api/vehiculos/{id}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param vehiculoId Identificador del vehículo a editar
+     * @param request Datos actualizados del vehículo
+     * @return Response<Any> Respuesta HTTP con código de estado
+     */
+    @PUT("/vehiculo/editar/{id}")
+    suspend fun editarVehiculo(
+        @Header("Authorization") token: String,
+        @Path("id") vehiculoId: String,
+        @Body request: RegistrarVehiculoRequest
+    ): Response<Any>
+
+    /**
+     * Elimina un vehículo del sistema.
+     *
+     * Endpoint: DELETE /api/vehiculos/{id}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param auth Token de autenticación JWT (formato: "Bearer {token}")
+     * @param vehiculoId Identificador del vehículo a eliminar
+     * @return Response<MensajeResponse> Respuesta con mensaje de confirmación
+     */
+    @DELETE("/vehiculo/eliminar/{id}")
+    suspend fun eliminarVehiculo(
+        @Header("Authorization") auth: String,
+        @Path("id") vehiculoId: String
+    ): Response<MensajeResponse>
+
+    data class MensajeResponse(val message: String)
+
+    /**
+     * Elimina un usuario vinculado a un vehículo.
+     *
+     * Endpoint: POST /vehiculo/eliminarUsuario/{vehiculoId}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param vehiculoId Identificador del vehículo
+     * @param body Datos necesarios para eliminar el usuario vinculado
+     * @return Response<MensajeResponse> Respuesta con mensaje de confirmación
+     */
+    @POST("/vehiculo/eliminarUsuario/{vehiculoId}")
+    suspend fun eliminarUsuarioVinculado(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String,
+        @Body body: Map<String, String>
+    ): Response<MensajeResponse>
 
     /**
      * Obtiene la lista de vehículos asociados a un usuario.

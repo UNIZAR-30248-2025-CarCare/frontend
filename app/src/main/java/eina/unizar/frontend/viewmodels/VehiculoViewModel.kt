@@ -34,6 +34,44 @@ class VehiculoViewModel : ViewModel() {
     var registroExitoso by mutableStateOf(false)
 
     /**
+     * Indica si la edición del vehículo fue exitosa.
+     *
+     * La UI puede observar este valor para navegar a otra pantalla
+     * o mostrar un mensaje de confirmación tras la edición exitosa.
+     */
+    var edicionExitosa by mutableStateOf(false)
+
+    /**
+     * Mensaje de confirmación tras eliminar un vehículo.
+     *
+     * La UI puede observar este valor para mostrar un mensaje de confirmación
+     * tras la eliminación exitosa.
+     */
+    var mensajeEliminacion by mutableStateOf<String?>(null)
+
+    /**
+     * Mensaje de error en caso de fallo al eliminar un vehículo.
+     *
+     * La UI puede observar este valor para mostrar mensajes de error al usuario.
+     */
+    var errorEliminacion by mutableStateOf<String?>(null)
+
+    /**
+     * Mensaje de confirmación tras eliminar un usuario.
+     *
+     * La UI puede observar este valor para mostrar un mensaje de confirmación
+     * tras la eliminación exitosa.
+     */
+    var mensajeEliminacionUsuario by mutableStateOf<String?>(null)
+
+    /**
+     * Mensaje de error en caso de fallo al eliminar un usuario.
+     *
+     * La UI puede observar este valor para mostrar mensajes de error al usuario.
+     */
+    var errorEliminacionUsuario by mutableStateOf<String?>(null)
+
+    /**
      * Registra un nuevo vehículo en el sistema.
      * 
      * Realiza una petición suspendida al backend para crear un nuevo vehículo.
@@ -55,6 +93,92 @@ class VehiculoViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 errorMessage = "Error de red: ${e.message}"
+            }
+        }
+    }
+
+    /**
+     * Indica si la edición del vehículo fue exitosa.
+     *
+     * La UI puede observar este valor para navegar a otra pantalla
+     * o mostrar un mensaje de confirmación tras la edición exitosa.
+     */
+    fun editarVehiculo(token: String, vehiculoId: String, request: RegistrarVehiculoRequest) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.instance.editarVehiculo("Bearer $token", vehiculoId, request)
+                if (response.isSuccessful) {
+                    edicionExitosa = true
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    errorMessage = errorBody ?: "Error: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                errorMessage = "Error de red: ${e.message}"
+            }
+        }
+    }
+
+    /**
+     * Elimina un vehículo del sistema.
+     *
+     * Realiza una petición suspendida al backend para eliminar un vehículo existente.
+     * Actualiza mensajeEliminacion con la confirmación si tiene éxito,
+     * o establece errorEliminacion con los detalles del error si falla.
+     *
+     * @param token Token JWT de autenticación (sin el prefijo "Bearer")
+     * @param vehiculoId ID del vehículo a eliminar
+     */
+    fun eliminarVehiculo(token: String, vehiculoId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.instance.eliminarVehiculo("Bearer $token", vehiculoId)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    mensajeEliminacion = body?.message ?: "Vehículo eliminado"
+                    errorEliminacion = null
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Error al eliminar"
+                    errorEliminacion = errorMsg
+                    mensajeEliminacion = null
+                }
+            } catch (e: Exception) {
+                errorEliminacion = "Error de red"
+                mensajeEliminacion = null
+            }
+        }
+    }
+
+    /**
+     * Elimina un usuario vinculado a un vehículo.
+     *
+     * Realiza una petición suspendida al backend para eliminar un usuario vinculado.
+     * Actualiza mensajeEliminacionUsuario con la confirmación si tiene éxito,
+     * o establece errorEliminacionUsuario con los detalles del error si falla.
+     *
+     * @param token Token JWT de autenticación (sin el prefijo "Bearer")
+     * @param vehiculoId ID del vehículo del cual se eliminará el usuario
+     * @param usuarioId ID del usuario a eliminar
+     */
+    fun eliminarUsuarioVinculado(token: String, vehiculoId: String, usuarioNombre: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.instance.eliminarUsuarioVinculado(
+                    "Bearer $token",
+                    vehiculoId,
+                    mapOf("usuarioNombre" to usuarioNombre)
+                )
+                if (response.isSuccessful) {
+                    mensajeEliminacionUsuario = response.body()?.message ?: "Usuario eliminado"
+                    errorEliminacionUsuario = null
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Error al eliminar usuario"
+                    errorEliminacionUsuario = errorMsg
+                    mensajeEliminacionUsuario = null
+                }
+            } catch (e: Exception) {
+                errorEliminacionUsuario = "Error de red"
+                mensajeEliminacionUsuario = null
             }
         }
     }
