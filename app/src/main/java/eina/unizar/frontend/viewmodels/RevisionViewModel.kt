@@ -28,7 +28,7 @@ class RevisionViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    fun fetchRevisiones(token: String, vehiculoId: Int, tipo: String? = null) {
+    fun fetchRevisiones(token: String, vehiculoId: String, tipo: String? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -62,37 +62,30 @@ class RevisionViewModel : ViewModel() {
         }
     }
 
-    // ✅ NUEVO: Crear revisión Y refrescar automáticamente
-    suspend fun crearYRefrescarRevision(token: String, revision: RevisionRequest, vehiculoId: Int): Boolean {
-        return suspendCancellableCoroutine { continuation ->
-            RetrofitClient.instance.registrarRevision("Bearer $token", revision)
-                .enqueue(object : Callback<RevisionResponse> {
-                    override fun onResponse(call: Call<RevisionResponse>, response: Response<RevisionResponse>) {
-                        if (response.isSuccessful) {
-                            Log.d("RevisionViewModel", "✅ Revisión creada exitosamente: ${response.body()}")
-
-                            // Lanzar refresh después de un delay
-                            viewModelScope.launch {
-                                delay(500)
-                                fetchRevisiones(token, vehiculoId)
-                            }
-
-                            continuation.resume(true)
-                        } else {
-                            val errorBody = response.errorBody()?.string()
-                            _error.value = "Error al crear revisión: ${response.code()}"
-                            Log.e("RevisionViewModel", "❌ Error ${response.code()}: $errorBody")
-                            continuation.resume(false)
-                        }
+    // Crear revisión y refrescar revisiones
+    fun crearRevision(revision: RevisionRequest, token: String, callback: (String?) -> Unit) {
+        RetrofitClient.instance.registrarRevision("Bearer $token", revision)
+            .enqueue(object : Callback<RevisionResponse> {
+                override fun onResponse(call: Call<RevisionResponse>, response: Response<RevisionResponse>) {
+                    if (response.isSuccessful) {
+                        Log.d("RevisionViewModel", "✅ Revisión creada exitosamente: ${response.body()}")
+                        callback(null) // null = éxito
+                    } else {
+                        val errorBody = response.errorBody()?.string()
+                        val errorMsg = "Error al crear revisión: ${response.code()}"
+                        _error.value = errorMsg
+                        Log.e("RevisionViewModel", "❌ Error ${response.code()}: $errorBody")
+                        callback(errorMsg) // devolver mensaje de error
                     }
+                }
 
-                    override fun onFailure(call: Call<RevisionResponse>, t: Throwable) {
-                        _error.value = "Error al crear revisión: ${t.message}"
-                        Log.e("RevisionViewModel", "❌ Excepción al crear revisión", t)
-                        continuation.resume(false)
-                    }
-                })
-        }
+                override fun onFailure(call: Call<RevisionResponse>, t: Throwable) {
+                    val errorMsg = "Error al crear revisión: ${t.message}"
+                    _error.value = errorMsg
+                    Log.e("RevisionViewModel", "❌ Excepción al crear revisión", t)
+                    callback(errorMsg) // devolver mensaje de error
+                }
+            })
     }
 
     // ✅ Filtrar revisiones por tipo localmente

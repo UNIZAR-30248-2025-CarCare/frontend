@@ -14,7 +14,7 @@ data class RevisionRequest(
     val usuarioId: Int,
 
     @SerializedName("vehiculoId")
-    val vehiculoId: Int,
+    val vehiculoId: String,
 
     @SerializedName("fecha")
     val fecha: String, // Formato: "yyyy-MM-dd"

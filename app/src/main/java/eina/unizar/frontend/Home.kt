@@ -66,6 +66,7 @@ fun HomeScreenWrapper(
     onIncidenciasClick: () -> Unit,
     onViajesClick: () -> Unit,
     onRepostajesClick: () -> Unit,
+    onRevisionesClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -90,6 +91,7 @@ fun HomeScreenWrapper(
         onIncidenciasClick = onIncidenciasClick,
         onViajesClick = onViajesClick,
         onRepostajesClick = onRepostajesClick,
+        onRevisionesClick = onRevisionesClick,
         selectedTab = selectedTab,
         onTabSelected = onTabSelected,
         navController = navController,
@@ -108,6 +110,7 @@ fun HomeScreen(
     onIncidenciasClick: () -> Unit,
     onViajesClick: () -> Unit,
     onRepostajesClick: () -> Unit,
+    onRevisionesClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -285,6 +288,13 @@ fun HomeScreen(
                         title = "Repostajes",
                         color = Color(0xFFF97316),
                         onClick = onRepostajesClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                    QuickAccessCard(
+                        icon = Icons.Default.Build,
+                        title = "Revisiones",
+                        color = Color(0xFF9333EA),
+                        onClick = onRevisionesClick,
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.weight(1f))
