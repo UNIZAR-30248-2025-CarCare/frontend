@@ -7,7 +7,7 @@ data class NuevoViajeData(
     val descripcion: String,
     val fechaHoraInicio: String,
     val fechaHoraFin: String,
-    val kmRealizados: Int,
-    val consumoCombustible: Int,
+    val kmRealizados: Double,
+    val consumoCombustible: Double,
     val ubicacionFinal: Ubicacion
 )

@@ -41,6 +41,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import eina.unizar.frontend.viewmodels.ViajesViewModel
 import androidx.compose.foundation.gestures.detectTapGestures
+import org.json.JSONObject
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,14 +50,15 @@ fun CrearViajeScreen(
     onBackClick: () -> Unit,
     onCrearViaje: (NuevoViajeData) -> Unit,
     efectiveUserId: String,
-    efectiveToken: String
+    efectiveToken: String,
+    vehiculos: List<Vehiculo>? = null
 ) {
     val context = LocalContext.current
     val viajeViewModel = remember { ViajesViewModel() }
     // ViewModel y vehículos
     val homeViewModel = remember { HomeViewModel() }
     val vehiculosDTO by homeViewModel.vehiculos.collectAsState()
-    val vehiculos = vehiculosDTO.map { it.toVehiculo() }
+    val vehiculosList = vehiculos ?: vehiculosDTO.map { it.toVehiculo() }
 
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
@@ -66,7 +68,7 @@ fun CrearViajeScreen(
 
     // Estado para el vehículo seleccionado y referencia al mapa
     var selectedIndex by remember { mutableIntStateOf(0) }
-    var vehiculoSeleccionado = vehiculos.getOrNull(selectedIndex)
+    var vehiculoSeleccionado = vehiculosList.getOrNull(selectedIndex)
 
     var nombre by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
@@ -220,7 +222,7 @@ fun CrearViajeScreen(
                     expanded = expandedVehiculo,
                     onDismissRequest = { expandedVehiculo = false }
                 ) {
-                    vehiculos.forEach { vehiculo ->
+                    vehiculosList.forEach { vehiculo ->
                         DropdownMenuItem(
                             text = { Text("${vehiculo.nombre} - ${vehiculo.matricula}") },
                             onClick = {
@@ -370,6 +372,19 @@ fun CrearViajeScreen(
 
             Button(
                 onClick = {
+                    val error = validarCampos(
+                        vehiculoSeleccionado,
+                        nombre,
+                        descripcion,
+                        fechaHoraInicio,
+                        fechaHoraFin,
+                        kmRealizados,
+                        consumoCombustible
+                    )
+                    if (error != null) {
+                        errorMsg = error
+                        return@Button
+                    }
                     vehiculoSeleccionado?.let { vehiculo ->
                         viajeViewModel.crearViaje(
                             viaje = NuevoViajeData(
@@ -379,8 +394,8 @@ fun CrearViajeScreen(
                                 descripcion = descripcion,
                                 fechaHoraInicio = fechaHoraInicio?.format(DateTimeFormatter.ISO_DATE_TIME) ?: "",
                                 fechaHoraFin = fechaHoraFin?.format(DateTimeFormatter.ISO_DATE_TIME) ?: "",
-                                kmRealizados = kmRealizados.toIntOrNull() ?: 0,
-                                consumoCombustible = consumoCombustible.toIntOrNull() ?: 0,
+                                kmRealizados = kmRealizados.toDoubleOrNull() ?: 0.0,
+                                consumoCombustible = consumoCombustible.toDoubleOrNull() ?: 0.0,
                                 ubicacionFinal = Ubicacion(
                                     latitud = latitud.toDoubleOrNull() ?: 0.0,
                                     longitud = longitud.toDoubleOrNull() ?: 0.0
@@ -393,7 +408,11 @@ fun CrearViajeScreen(
                                 Toast.makeText(context, "Viaje creado correctamente", Toast.LENGTH_SHORT).show()
                                 onBackClick()
                             } else {
-                                errorMsg = resultMsg
+                                errorMsg = try {
+                                    JSONObject(resultMsg).optString("error", "Error desconocido")
+                                } catch (e: Exception) {
+                                    "Error desconocido"
+                                }
                             }
                         }
                     }
@@ -405,8 +424,8 @@ fun CrearViajeScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFEF4444)
                 ),
-                enabled = nombre.isNotBlank() && descripcion.isNotBlank() && fechaHoraInicio != null && fechaHoraFin != null
-                        && kmRealizados.isNotBlank() && consumoCombustible.isNotBlank() && latitud.isNotBlank() && longitud.isNotBlank()
+                 // enabled = nombre.isNotBlank() && descripcion.isNotBlank() && fechaHoraInicio != null && fechaHoraFin != null
+                 //       && kmRealizados.isNotBlank() && consumoCombustible.isNotBlank() && latitud.isNotBlank() && longitud.isNotBlank()
             ) {
                 Text(
                     text = "Crear Viaje",
@@ -419,7 +438,7 @@ fun CrearViajeScreen(
                 Text(
                     text = errorMsg ?: "",
                     color = Color.Red,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
 
@@ -427,3 +446,26 @@ fun CrearViajeScreen(
         }
     }
 }
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun validarCampos(
+    vehiculoSeleccionado: Vehiculo?,
+    nombre: String,
+    descripcion: String,
+    fechaHoraInicio: LocalDateTime?,
+    fechaHoraFin: LocalDateTime?,
+    kmRealizados: String,
+    consumoCombustible: String
+): String? {
+    if (vehiculoSeleccionado == null) return "El vehículo no existe"
+    if (nombre.isBlank()) return "El nombre debe ser un string no vacío"
+    if (descripcion.isBlank()) return "La descripción debe ser un string no vacío"
+    if (fechaHoraInicio == null || fechaHoraFin == null) return "Las fechas deben tener un formato válido"
+    if (fechaHoraInicio != null && fechaHoraFin != null && fechaHoraInicio!!.isAfter(fechaHoraFin)) return "La fecha de inicio no puede ser mayor que la de fin"
+    if (kmRealizados.toDoubleOrNull() == null || kmRealizados.toDouble() <= 0) return "Los km realizados deben ser un número mayor que 0"
+    if (consumoCombustible.toDoubleOrNull() == null || consumoCombustible.toDouble() <= 0) return "El consumo de combustible debe ser un número mayor que 0"
+    // Puedes añadir más validaciones aquí
+    return null
+}
+
+

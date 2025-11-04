@@ -37,7 +37,7 @@ class RegistroVehiculoScreenTest {
         // Modelo
         composeTestRule.onNodeWithText("Ej: Ibiza, Corolla...").performTextInput("Corolla")
         //Matrícula
-        composeTestRule.onNodeWithText("1234 ABC").performTextInput("1234 BCD")
+        composeTestRule.onNodeWithText("1234 BBC").performTextInput("1234 BCD")
         // Año
         composeTestRule.onNodeWithText("2020").performTextInput("2020")
         // Tipo de combustible
@@ -87,7 +87,7 @@ class RegistroVehiculoScreenTest {
         // Modelo
         composeTestRule.onNodeWithText("Ej: Ibiza, Corolla...").performTextInput("Corolla")
         //Matrícula
-        composeTestRule.onNodeWithText("1234 ABC").performTextInput("12 AB123")
+        composeTestRule.onNodeWithText("1234 BBC").performTextInput("12 AB123")
         // Año
         composeTestRule.onNodeWithText("2020").performTextInput("2020")
         // Tipo de combustible
@@ -136,7 +136,7 @@ class RegistroVehiculoScreenTest {
         // Modelo
         composeTestRule.onNodeWithText("Ej: Ibiza, Corolla...").performTextInput("Corolla")
         //Matrícula
-        composeTestRule.onNodeWithText("1234 ABC").performTextInput("1234 BCD")
+        composeTestRule.onNodeWithText("1234 BBC").performTextInput("1234 BCD")
         // Año
         composeTestRule.onNodeWithText("2020").performTextInput("1899")
         // Tipo de combustible
@@ -184,7 +184,7 @@ class RegistroVehiculoScreenTest {
         // Modelo
         composeTestRule.onNodeWithText("Ej: Ibiza, Corolla...").performTextInput("Corolla")
         //Matrícula
-        composeTestRule.onNodeWithText("1234 ABC").performTextInput("1234 BCD")
+        composeTestRule.onNodeWithText("1234 BBC").performTextInput("1234 BCD")
         // Año
         composeTestRule.onNodeWithText("2020").performTextInput("2020")
         // Tipo de combustible
@@ -232,7 +232,7 @@ class RegistroVehiculoScreenTest {
         // Modelo
         composeTestRule.onNodeWithText("Ej: Ibiza, Corolla...").performTextInput("Corolla")
         //Matrícula
-        composeTestRule.onNodeWithText("1234 ABC").performTextInput("1234 BCD")
+        composeTestRule.onNodeWithText("1234 BBC").performTextInput("1234 BCD")
         // Año
         composeTestRule.onNodeWithText("2020").performTextInput("2020")
         // Tipo de combustible
