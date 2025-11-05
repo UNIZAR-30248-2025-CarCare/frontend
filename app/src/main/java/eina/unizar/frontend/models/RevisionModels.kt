@@ -47,10 +47,10 @@ object TiposRevision {
     const val SUSPENSION = "Suspensión"
     const val ELECTRICO = "Eléctrico"
     const val CLIMATIZACION = "Climatización"
-    const val GENERAL = "General"
+    const val OTROS = "Otros"
 
     val TODOS = listOf(
         ACEITE, FILTROS, FRENOS, NEUMATICOS, MOTOR,
-        TRANSMISION, SUSPENSION, ELECTRICO, CLIMATIZACION, GENERAL
+        TRANSMISION, SUSPENSION, ELECTRICO, CLIMATIZACION, OTROS
     )
 }

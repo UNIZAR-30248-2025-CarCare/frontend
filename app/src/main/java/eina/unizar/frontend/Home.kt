@@ -297,7 +297,7 @@ fun HomeScreen(
                         onClick = onRevisionesClick,
                         modifier = Modifier.weight(1f)
                     )
-                    Spacer(modifier = Modifier.weight(1f))
+                    
                 }
 
                 Spacer(modifier = Modifier.height(100.dp))

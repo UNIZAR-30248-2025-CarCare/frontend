@@ -400,6 +400,9 @@ fun CrearRevisionScreen(
                             isCreating = true
                             errorMsg = null
 
+                            Log.d("CrearRevision", "Tipo seleccionado: '$tipoSeleccionado'")
+                            Log.d("CrearRevision", "Longitud del tipo: ${tipoSeleccionado.length}")
+
                             val revisionRequest = RevisionRequest(
                                 usuarioId = efectiveUserId.toInt(),
                                 vehiculoId = vehiculo.id,
@@ -411,7 +414,7 @@ fun CrearRevisionScreen(
                                 taller = if (taller.isBlank()) null else taller
                             )
 
-                            // ✅ Usar callback igual que en CrearRepostaje
+                            // Usar callback
                             revisionViewModel.crearRevision(
                                 revision = revisionRequest,
                                 token = efectiveToken
