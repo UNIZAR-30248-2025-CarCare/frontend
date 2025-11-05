@@ -22,7 +22,7 @@ import eina.unizar.frontend.TipoVehiculo
  * la interfaz de usuario no permite introducir datos inválidos en esos campos.
  */
 @RunWith(AndroidJUnit4::class)
-class CreareRespostajeScreenTest {
+class CrearRespostajeScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()

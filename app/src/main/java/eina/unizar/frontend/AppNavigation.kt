@@ -332,7 +332,8 @@ fun AppNavigation(intent: Intent? = null) {
                         onVerMapaClick = { navController.navigate("mapa") },
                         onAddUsuarioClick = { /* lógica */ },
                         efectiveUserId = efectiveUserId,
-                        efectiveToken = efectiveToken
+                        efectiveToken = efectiveToken,
+                        navController = navController
                     )
                 } else {
                     Text("Vehículo no encontrado")
@@ -340,6 +341,41 @@ fun AppNavigation(intent: Intent? = null) {
             }
         }
         // ----------------------------------------------------------
+        // --- RUTA PARA EDITAR UN VEHÍCULO ---
+        composable(
+            route = "editar_vehiculo/{vehiculoId}/{userId}/{token}",
+            arguments = listOf(
+                navArgument("vehiculoId") { type = NavType.StringType },
+                navArgument("userId") { type = NavType.StringType },
+                navArgument("token") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val vehiculoId = backStackEntry.arguments?.getString("vehiculoId") ?: ""
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            val viewModel: HomeViewModel = viewModel()
+            val vehiculos by viewModel.vehiculos.collectAsState()
+
+            val vehiculo = vehiculos.map { it.toVehiculo() }.find { it.id == vehiculoId }
+            if (vehiculos.isEmpty()) {
+                LaunchedEffect(Unit) {
+                    if (userId.isNotEmpty() && token.isNotEmpty()) {
+                        viewModel.fetchVehiculos(userId, token)
+                    }
+                }
+                Text("Cargando vehículos...")
+            } else if (vehiculo != null) {
+                EditVehiculoScreen(
+                    vehiculo = vehiculo,
+                    userId = userId,
+                    token = token,
+                    onBackClick = { navController.popBackStack() },
+                    onAddClick = { navController.navigate("home") }
+                )
+            } else {
+                Text("Vehículo no encontrado")
+            }
+        }
 
         // --- NUEVA RUTA DE INVITACIONES
         composable("invitaciones") {

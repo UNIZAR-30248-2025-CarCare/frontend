@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.junit.ktx)
+    implementation(libs.androidx.navigation.testing.android)
     testImplementation(libs.junit)
     //testImplementation(libs.androidx.ui.test.junit4.android)
     androidTestImplementation(libs.androidx.junit)
