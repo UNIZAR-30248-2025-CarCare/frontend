@@ -17,6 +17,9 @@ import eina.unizar.frontend.models.NuevoViajeData
 import eina.unizar.frontend.models.ProximoRepostajeResponse
 import eina.unizar.frontend.models.ViajesResponse
 import eina.unizar.frontend.models.ResumenRepostajesResponse
+import eina.unizar.frontend.models.RevisionRequest
+import eina.unizar.frontend.models.RevisionResponse
+import eina.unizar.frontend.models.RevisionesListResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -26,7 +29,7 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
-
+import retrofit2.http.Query
 
 /**
  * Interfaz que define los endpoints de la API REST del backend.
@@ -358,4 +361,17 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body nuevoRepostaje: NuevoRepostajeData
     ): Response<Unit>
+
+    @GET("revision/obtenerRevisiones/{vehiculoId}")
+    fun obtenerRevisiones(
+        @Path("vehiculoId") vehiculoId: String,
+        @Query("tipo") tipo: String?,
+        @Header("Authorization") token: String
+    ): Call<RevisionesListResponse>
+
+    @POST("revision/registrar")
+    fun registrarRevision(
+        @Header("Authorization") token: String,
+        @Body revision: RevisionRequest
+    ): Call<RevisionResponse>
 }

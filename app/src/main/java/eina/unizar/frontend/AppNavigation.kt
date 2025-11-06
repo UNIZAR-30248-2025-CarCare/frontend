@@ -237,7 +237,8 @@ fun AppNavigation() {
                     onViajesClick = {
                         navController.navigate("viajes")
                     },
-                    onRepostajesClick = { navController.navigate("repostajes") }
+                    onRepostajesClick = { navController.navigate("repostajes") },
+                    onRevisionesClick = { navController.navigate("revisiones") }
                 )
             }
         }
@@ -512,6 +513,30 @@ fun AppNavigation() {
                         println("Repostaje creado: $nuevoRepostajeData")
                         navController.popBackStack() // Volver a la pantalla anterior
                     },
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para revisiones
+        composable("revisiones") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                RevisionesScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onAddRevisionClick = { navController.navigate("add_revision") },
+                    navController = navController,
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para crear revisiones
+        composable("add_revision") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                CrearRevisionScreen(
+                    onBackClick = { navController.popBackStack() },
                     efectiveUserId = efectiveUserId,
                     efectiveToken = efectiveToken
                 )
