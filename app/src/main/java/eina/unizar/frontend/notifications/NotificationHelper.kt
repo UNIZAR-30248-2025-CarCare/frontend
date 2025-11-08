@@ -5,9 +5,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import eina.unizar.frontend.MainActivity
 import eina.unizar.frontend.R
 
@@ -58,9 +60,28 @@ object NotificationHelper {
     }
 
     /**
+     * Verifica si la app tiene permiso para mostrar notificaciones.
+     *
+     * @param context Contexto de la aplicación
+     * @return true si tiene permiso, false en caso contrario
+     */
+    private fun hasNotificationPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            // En versiones anteriores a Android 13, el permiso se otorga automáticamente
+            true
+        }
+    }
+
+    /**
      * Muestra una notificación de recordatorio de reserva.
      *
      * - Comprueba preferencias de notificación antes de mostrar.
+     * - Verifica permisos de notificación.
      * - Crea un PendingIntent que abre MainActivity con extras:
      *   navigate_to = "reservation_detail" y reservation_id = reservationId
      * - Usa un notificationId único sumando NOTIFICATION_ID_RESERVATION + reservationId.
@@ -71,7 +92,13 @@ object NotificationHelper {
         title: String,
         message: String
     ) {
+        // Verificar preferencias del usuario
         if (!NotificationPreferences.areReservationNotificationsEnabled(context)) {
+            return
+        }
+
+        // Verificar permisos
+        if (!hasNotificationPermission(context)) {
             return
         }
 
@@ -97,15 +124,22 @@ object NotificationHelper {
             .setContentIntent(pendingIntent)
             .build()
 
-        NotificationManagerCompat.from(context).notify(
-            NOTIFICATION_ID_RESERVATION + reservationId,
-            notification
-        )
+        try {
+            NotificationManagerCompat.from(context).notify(
+                NOTIFICATION_ID_RESERVATION + reservationId,
+                notification
+            )
+        } catch (e: SecurityException) {
+            // El usuario revocó los permisos después de que se programó la notificación
+            e.printStackTrace()
+        }
     }
+
     /**
      * Muestra una notificación de mantenimiento/revisión.
      *
      * - Comprueba preferencias de notificación antes de mostrar.
+     * - Verifica permisos de notificación.
      * - Crea un PendingIntent que abre MainActivity con extras:
      *   navigate_to = "maintenance_detail" y maintenance_id = maintenanceId
      * - Usa un notificationId único sumando NOTIFICATION_ID_MAINTENANCE + maintenanceId.
@@ -116,7 +150,13 @@ object NotificationHelper {
         title: String,
         message: String
     ) {
+        // Verificar preferencias del usuario
         if (!NotificationPreferences.areMaintenanceNotificationsEnabled(context)) {
+            return
+        }
+
+        // Verificar permisos
+        if (!hasNotificationPermission(context)) {
             return
         }
 
@@ -142,9 +182,14 @@ object NotificationHelper {
             .setContentIntent(pendingIntent)
             .build()
 
-        NotificationManagerCompat.from(context).notify(
-            NOTIFICATION_ID_MAINTENANCE + maintenanceId,
-            notification
-        )
+        try {
+            NotificationManagerCompat.from(context).notify(
+                NOTIFICATION_ID_MAINTENANCE + maintenanceId,
+                notification
+            )
+        } catch (e: SecurityException) {
+            // El usuario revocó los permisos después de que se programó la notificación
+            e.printStackTrace()
+        }
     }
 }
