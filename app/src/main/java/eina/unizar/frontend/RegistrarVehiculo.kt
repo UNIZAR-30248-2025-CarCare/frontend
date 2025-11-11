@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import java.util.Calendar
+import java.util.Locale
 
 /**
  * Pantalla para añadir un nuevo vehículo al sistema.
@@ -484,7 +485,7 @@ fun AddVehiculoScreen(
                     nombreError = nombreVehiculo.isBlank()
                     fabricanteError = fabricante.isBlank()
                     modeloError = modelo.isBlank()
-                    matriculaError = matricula.isBlank()
+                    matriculaError = matricula.isBlank() && !esMatriculaValida(matricula)
                     anioError = anio.isBlank()
                     capacidadError = capacidadDeposito.isBlank()
                     consumoError = consumoMedio.isBlank()
@@ -602,3 +603,28 @@ data class VehiculoData(
     val capacidadDeposito: Int,
     val consumoMedio: Double
 )
+
+// Letras permitidas en el sistema actual (sin vocales, Ñ, Q)
+val letrasPermitidas = "BCDFGHJKLMNPRSTVWXYZ"
+
+// Última matrícula emitida (actualízala según la DGT)
+val ultimaMatriculaEmitida = "9999 NGG"
+
+fun esMatriculaValida(matricula: String): Boolean {
+    val matriculaActualRegex = Regex("""^\d{4}[$letrasPermitidas]{3}$""")
+    val matriculaProvincialRegex = Regex("""^[A-Z]{1,2}\s?\d{4}\s?[A-Z]{1,2}$""")
+
+    val limpia = matricula.replace(" ", "").uppercase(Locale.getDefault())
+
+    // Formato actual
+    if (matriculaActualRegex.matches(limpia)) {
+        // Comprobar que no es posterior a la última emitida
+        if (limpia > ultimaMatriculaEmitida.replace(" ", "")) return false
+        return true
+    }
+    // Formato provincial antiguo
+    if (matriculaProvincialRegex.matches(limpia)) {
+        return true
+    }
+    return false
+}
