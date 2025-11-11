@@ -392,35 +392,56 @@ fun AppNavigation(intent: Intent? = null) {
 
         // --- NUEVA RUTA DE INCIDENCIAS ---
         composable("incidencias") {
-            IncidenciasScreen(
-                vehiculoSeleccionado = vehiculoEjemplo,
-                incidenciasActivas = incidenciasActivas,
-                incidenciasResueltas = incidenciasResueltas,
-                onBackClick = { navController.popBackStack() },
-                onVehiculoClick = { /* Lógica para cambiar vehículo */ },
-                onIncidenciaClick = { incidenciaId ->
-                    // Lógica para ver detalles
-                    println("Ver incidencia: $incidenciaId")
-                },
-                onAddIncidenciaClick = { navController.navigate("add_incidencia") },
-                navController = navController
-            )
-        }
-        // ------------------------------------
-
-        // === NUEVA RUTA PARA REPORTAR INCIDENCIA ===
-        composable("add_incidencia") {
-            NuevaIncidenciaScreen(
-                vehiculos = vehiculosDisponibles, // Puedes usar la misma lista de ejemplo
-                onBackClick = { navController.popBackStack() },
-                onReportarIncidencia = { nuevaIncidenciaData ->
-                    // Lógica para enviar los datos al backend
-                    println("Incidencia reportada: $nuevaIncidenciaData")
-                    navController.popBackStack() // Volver a la pantalla anterior
+            if (efectiveUserId != null && efectiveToken != null) {
+                IncidenciasScreen(
+                    userId = efectiveUserId,
+                    token = efectiveToken,
+                    onBackClick = { navController.popBackStack() },
+                    onAddIncidenciaClick = {
+                        navController.navigate("add_incidencia/$efectiveUserId/$efectiveToken")
+                    },
+                    navController = navController
+                )
+            } else {
+                // Redirigir al login si no hay autenticación
+                LaunchedEffect(Unit) {
+                    navController.navigate("eleccion") {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
-            )
+            }
         }
-        // ===========================================
+
+        // --- RUTA PARA CREAR INCIDENCIA ---
+        composable(
+            route = "add_incidencia/{userId}/{token}",
+            arguments = listOf(
+                navArgument("userId") { type = NavType.StringType },
+                navArgument("token") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+
+            if (userId.isNotEmpty() && token.isNotEmpty()) {
+                NuevaIncidenciaScreen(
+                    userId = userId,
+                    token = token,
+                    onBackClick = { navController.popBackStack() },
+                    onIncidenciaCreada = {
+                        // Volver a la pantalla de incidencias
+                        navController.popBackStack()
+                    }
+                )
+            } else {
+                // Si no hay userId o token, redirigir al login
+                LaunchedEffect(Unit) {
+                    navController.navigate("eleccion") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            }
+        }
 
         composable("reservas") {
             val userId = authViewModel.userId.collectAsState().value ?: ""

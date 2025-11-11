@@ -22,9 +22,13 @@ import androidx.compose.ui.unit.sp
 import java.time.LocalDate
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.res.painterResource
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import eina.unizar.frontend.models.IncidenciaDetalle
 import eina.unizar.frontend.models.Vehiculo
-
+import eina.unizar.frontend.models.VehiculoDTO
+import eina.unizar.frontend.viewmodels.HomeViewModel
+import eina.unizar.frontend.viewmodels.IncidenciaViewModel
 
 
 // Clases solicitadas
@@ -92,20 +96,60 @@ enum class EstadoIncidencia {
  * - `onIncidenciaClick(id)` → Navega al detalle de la incidencia.
  * - `onAddIncidenciaClick()` → Crea una nueva incidencia.
  */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IncidenciasScreen(
-    vehiculoSeleccionado: Vehiculo?,
-    incidenciasActivas: List<Incidencia>,
-    incidenciasResueltas: List<Incidencia>,
+    userId: String,
+    token: String,
     onBackClick: () -> Unit,
-    onVehiculoClick: () -> Unit,
-    onIncidenciaClick: (String) -> Unit,
     onAddIncidenciaClick: () -> Unit,
     navController: NavHostController
 ) {
-    var tabSeleccionada by remember { mutableIntStateOf(0) } // 0: Activas, 1: Resueltas
+    val viewModel: IncidenciaViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel()
+
+    val vehiculos by homeViewModel.vehiculos.collectAsState()
+    val incidencias = viewModel.incidencias
+    val isLoading = viewModel.isLoading
+    val errorMessage = viewModel.errorMessage
+
+    var vehiculoSeleccionado by remember { mutableStateOf<VehiculoDTO?>(null) }
+    var tabSeleccionada by remember { mutableIntStateOf(0) }
+    var expandedVehiculo by remember { mutableStateOf(false) }
+
     val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+    // Cargar vehículos e incidencias
+    LaunchedEffect(Unit) {
+        if (vehiculos.isEmpty()) {
+            homeViewModel.fetchVehiculos(userId, token)
+        }
+        viewModel.obtenerIncidenciasUsuario(token)
+    }
+
+    // Establecer primer vehículo como seleccionado
+    LaunchedEffect(vehiculos) {
+        if (vehiculoSeleccionado == null && vehiculos.isNotEmpty()) {
+            vehiculoSeleccionado = vehiculos.first()
+        }
+    }
+
+    // Filtrar incidencias
+    val incidenciasFiltradas = incidencias.filter { incidencia ->
+        // Si hay un vehículo seleccionado, filtramos. Si no, devolvemos 'true' (todas).
+        vehiculoSeleccionado?.let { vehiculo ->
+            // Convertimos el ID de la incidencia (Int) a String para compararlo con el ID del Vehículo (String).
+            incidencia.vehiculoId.toString() == vehiculo.id
+        } ?: true
+    }
+
+    val incidenciasActivas = incidenciasFiltradas.filter {
+        it.estado !in listOf("RESUELTA", "CANCELADA")
+    }
+    val incidenciasResueltas = incidenciasFiltradas.filter {
+        it.estado in listOf("RESUELTA", "CANCELADA")
+    }
 
     Scaffold(
         bottomBar = {
@@ -122,13 +166,15 @@ fun IncidenciasScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
         ) {
-
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
                 // Header
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -160,183 +206,338 @@ fun IncidenciasScreen(
                     }
                 }
 
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 20.dp)
-                ) {
-                    item {
-                        Spacer(modifier = Modifier.height(15.dp))
+                if (isLoading && incidencias.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFFEF4444))
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        item {
+                            Spacer(modifier = Modifier.height(15.dp))
 
-                        // Selector de vehículo
-                        vehiculoSeleccionado?.let { vehiculo ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                                    .shadow(2.dp, RoundedCornerShape(25.dp))
-                                    .clickable(onClick = onVehiculoClick),
-                                shape = RoundedCornerShape(25.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(horizontal = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                            // Selector de vehículo
+                            if (vehiculos.isNotEmpty() && vehiculoSeleccionado != null) {
+                                ExposedDropdownMenuBox(
+                                    expanded = expandedVehiculo,
+                                    onExpandedChange = { expandedVehiculo = it }
                                 ) {
-                                    Box(
+                                    Card(
                                         modifier = Modifier
-                                            .size(30.dp)
-                                            .background(
-                                                vehiculo.tipo.color.copy(alpha = 0.1f),
-                                                CircleShape
-                                            ),
-                                        contentAlignment = Alignment.Center
+                                            .fillMaxWidth()
+                                            .height(50.dp)
+                                            .shadow(2.dp, RoundedCornerShape(25.dp))
+                                            .menuAnchor()
+                                            .clickable { expandedVehiculo = true },
+                                        shape = RoundedCornerShape(25.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White)
                                     ) {
-                                        Icon(
-                                            painter = painterResource(id = vehiculo.tipo.iconRes),
-                                            contentDescription = vehiculo.tipo.name,
-                                            tint = vehiculo.tipo.color,
-                                            modifier = Modifier.size(18.dp)
-                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(horizontal = 16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            vehiculoSeleccionado?.let { vehiculo ->
+                                                val tipoVehiculo = TipoVehiculo.valueOf(vehiculo.tipo.uppercase())
+
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(30.dp)
+                                                        .background(
+                                                            tipoVehiculo.color.copy(alpha = 0.1f),
+                                                            CircleShape
+                                                        ),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        painter = painterResource(id = tipoVehiculo.iconRes),
+                                                        contentDescription = tipoVehiculo.name,
+                                                        tint = tipoVehiculo.color,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Text(
+                                                    text = "${vehiculo.nombre} - ${vehiculo.matricula}",
+                                                    fontSize = 15.sp,
+                                                    color = Color(0xFF1F2937),
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                            }
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = "Cambiar vehículo",
+                                                tint = Color(0xFF6B7280)
+                                            )
+                                        }
                                     }
-                                    Spacer(modifier = Modifier.width(12.dp))
+
+                                    ExposedDropdownMenu(
+                                        expanded = expandedVehiculo,
+                                        onDismissRequest = { expandedVehiculo = false }
+                                    ) {
+                                        vehiculos.forEach { vehiculo ->
+                                            DropdownMenuItem(
+                                                text = { Text("${vehiculo.nombre} - ${vehiculo.matricula}") },
+                                                onClick = {
+                                                    vehiculoSeleccionado = vehiculo
+                                                    expandedVehiculo = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(15.dp))
+
+                            // Tabs
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                TabButton(
+                                    text = "Activas (${incidenciasActivas.size})",
+                                    selected = tabSeleccionada == 0,
+                                    onClick = { tabSeleccionada = 0 },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TabButton(
+                                    text = "Resueltas",
+                                    selected = tabSeleccionada == 1,
+                                    onClick = { tabSeleccionada = 1 },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+
+                        // Lista de incidencias
+                        val incidenciasAMostrar = if (tabSeleccionada == 0) incidenciasActivas else incidenciasResueltas
+
+                        if (incidenciasAMostrar.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     Text(
-                                        text = "${vehiculo.nombre} - ${vehiculo.matricula}",
-                                        fontSize = 15.sp,
-                                        color = Color(0xFF1F2937),
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = "Cambiar vehículo",
-                                        tint = Color(0xFF6B7280)
+                                        text = if (tabSeleccionada == 0)
+                                            "No hay incidencias activas"
+                                        else
+                                            "No hay incidencias resueltas",
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF9CA3AF)
                                     )
                                 }
                             }
-                        }
-
-                        Spacer(modifier = Modifier.height(15.dp))
-
-                        // Tabs
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            TabButton(
-                                text = "Activas (${incidenciasActivas.size})",
-                                selected = tabSeleccionada == 0,
-                                onClick = { tabSeleccionada = 0 },
-                                modifier = Modifier.weight(1f)
-                            )
-                            TabButton(
-                                text = "Resueltas",
-                                selected = tabSeleccionada == 1,
-                                onClick = { tabSeleccionada = 1 },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-                    }
-
-                    // Lista de incidencias
-                    val incidencias =
-                        if (tabSeleccionada == 0) incidenciasActivas else incidenciasResueltas
-
-                    if (incidencias.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = if (tabSeleccionada == 0)
-                                        "No hay incidencias activas"
-                                    else
-                                        "No hay incidencias resueltas",
-                                    fontSize = 14.sp,
-                                    color = Color(0xFF9CA3AF)
+                        } else {
+                            items(incidenciasAMostrar) { incidencia ->
+                                IncidenciaCardItem(
+                                    incidencia = incidencia,
+                                    onClick = {
+                                        // Navegar al detalle de incidencia
+                                        navController.navigate("detalle_incidencia/${incidencia.id}")
+                                    }
                                 )
+                                Spacer(modifier = Modifier.height(15.dp))
                             }
                         }
-                    } else {
-                        items(incidencias) { incidencia ->
-                            IncidenciaCard(
-                                incidencia = incidencia,
-                                onClick = { onIncidenciaClick(incidencia.id) }
+
+                        item {
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            // Estadísticas
+                            Text(
+                                text = "Resumen",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1F2937)
                             )
+
                             Spacer(modifier = Modifier.height(15.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                EstadisticaCard(
+                                    numero = incidenciasActivas.size.toString(),
+                                    texto = "Incidencias\nactivas",
+                                    color = Color(0xFFEF4444),
+                                    modifier = Modifier.weight(1f)
+                                )
+                                EstadisticaCard(
+                                    numero = incidenciasResueltas.size.toString(),
+                                    texto = "Incidencias\nresueltas",
+                                    color = Color(0xFF10B981),
+                                    modifier = Modifier.weight(1f)
+                                )
+                                EstadisticaCard(
+                                    numero = incidenciasFiltradas.size.toString(),
+                                    texto = "Total\nhistórico",
+                                    color = Color(0xFF3B82F6),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(120.dp))
                         }
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Estadísticas
-                        Text(
-                            text = "Resumen",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1F2937)
-                        )
-
-                        Spacer(modifier = Modifier.height(15.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            EstadisticaCard(
-                                numero = incidenciasActivas.size.toString(),
-                                texto = "Incidencias\nactivas",
-                                color = Color(0xFFEF4444),
-                                modifier = Modifier.weight(1f)
-                            )
-                            EstadisticaCard(
-                                numero = incidenciasResueltas.size.toString(),
-                                texto = "Incidencias\nresueltas",
-                                color = Color(0xFF10B981),
-                                modifier = Modifier.weight(1f)
-                            )
-                            EstadisticaCard(
-                                numero = (incidenciasActivas.size + incidenciasResueltas.size).toString(),
-                                texto = "Total\nhistórico",
-                                color = Color(0xFF3B82F6),
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(120.dp))
                     }
                 }
+            }
 
-                // Botón flotante añadir incidencia
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 20.dp, bottom = 10.dp),
-                    contentAlignment = Alignment.BottomEnd
+            // Botón flotante
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(end = 20.dp, bottom = 20.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                FloatingActionButton(
+                    onClick = onAddIncidenciaClick,
+                    containerColor = Color(0xFFEF4444),
+                    modifier = Modifier.size(56.dp)
                 ) {
-                    FloatingActionButton(
-                        onClick = onAddIncidenciaClick,
-                        containerColor = Color(0xFFEF4444),
-                        modifier = Modifier.size(56.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Añadir incidencia",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Añadir incidencia",
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
             }
         }
     }
+}
+
+@Composable
+fun IncidenciaCardItem(
+    incidencia: IncidenciaDetalle,
+    onClick: () -> Unit
+) {
+    val prioridadColor = when (incidencia.prioridad.uppercase()) {
+        "ALTA" -> Color(0xFFEF4444)
+        "MEDIA" -> Color(0xFFF59E0B)
+        else -> Color(0xFF10B981)
+    }
+
+    val prioridadTexto = when (incidencia.prioridad.uppercase()) {
+        "ALTA" -> "ALTA PRIORIDAD"
+        "MEDIA" -> "MEDIA PRIORIDAD"
+        else -> "BAJA PRIORIDAD"
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(2.dp, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Barra de color según prioridad
+            Box(
+                modifier = Modifier
+                    .width(5.dp)
+                    .height(110.dp)
+                    .background(prioridadColor)
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Icono
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                prioridadColor.copy(alpha = 0.1f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = when (incidencia.prioridad.uppercase()) {
+                                "ALTA" -> Icons.Default.KeyboardArrowUp
+                                "MEDIA" -> Icons.Default.KeyboardArrowDown
+                                else -> Icons.Default.Info
+                            },
+                            contentDescription = null,
+                            tint = prioridadColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Información
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = incidencia.titulo,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1F2937)
+                        )
+                        Text(
+                            text = incidencia.vehiculoId.toString(),
+                            fontSize = 13.sp,
+                            color = Color(0xFF6B7280)
+                        )
+                        Text(
+                            text = incidencia.fechaCreacion,
+                            fontSize = 12.sp,
+                            color = Color(0xFF9CA3AF)
+                        )
+                    }
+
+                    // Flecha
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Ver detalles",
+                        tint = Color(0xFF9CA3AF)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Badge de prioridad
+                Surface(
+                    shape = RoundedCornerShape(11.dp),
+                    color = prioridadColor.copy(alpha = 0.1f)
+                ) {
+                    Text(
+                        text = prioridadTexto,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = prioridadColor,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+
 
 @Composable
 fun TabButton(
