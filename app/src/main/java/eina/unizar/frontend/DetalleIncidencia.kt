@@ -273,61 +273,6 @@ fun DetalleIncidenciaScreen(
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // Información del vehículo
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                val tipoVehiculo = try {
-                                    TipoVehiculo.valueOf("incidenciaDetalle.vehiculo.tipo.uppercase()")
-                                } catch (e: Exception) {
-                                    TipoVehiculo.OTRO
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(
-                                            tipoVehiculo.color.copy(alpha = 0.1f),
-                                            CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = tipoVehiculo.iconRes),
-                                        contentDescription = tipoVehiculo.name,
-                                        tint = tipoVehiculo.color,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                Column {
-                                    Text(
-                                        text = "Nombre del vehiuclo",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF1F2937)
-                                    )
-                                    Text(
-                                        text = "matricula del vehiuclo",
-                                        fontSize = 14.sp,
-                                        color = Color(0xFF6B7280)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
                         if (modoEdicion) {
                             // MODO EDICIÓN
 

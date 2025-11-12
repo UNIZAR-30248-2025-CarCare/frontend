@@ -420,7 +420,6 @@ fun IncidenciasScreen(
         }
     }
 }
-
 @Composable
 fun IncidenciaCardItem(
     incidencia: IncidenciaDetalle,
@@ -449,21 +448,26 @@ fun IncidenciaCardItem(
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Barra de color según prioridad
+            // Barra de color según prioridad: REDUCIMOS LA ALTURA
             Box(
                 modifier = Modifier
                     .width(5.dp)
-                    .height(110.dp)
+                    // Altura reducida de 110.dp a 85.dp para estrechar la tarjeta
+                    .height(85.dp)
                     .background(prioridadColor)
             )
 
+            // Contenido principal de la tarjeta
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    // Reducimos el padding vertical para estrechar la tarjeta
+                    .padding(vertical = 12.dp, horizontal = 16.dp)
             ) {
+                // PRIMERA FILA: Icono, Título/Vehículo, y Badge de Prioridad
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     // Icono
                     Box(
@@ -489,18 +493,15 @@ fun IncidenciaCardItem(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    // Información
+                    // Información principal (Título y Vehículo/ID)
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = incidencia.titulo,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1F2937)
-                        )
-                        Text(
-                            text = incidencia.vehiculoId.toString(),
-                            fontSize = 13.sp,
-                            color = Color(0xFF6B7280)
+                            color = Color(0xFF1F2937),
+                            maxLines = 1, // Añadido para evitar que el título ocupe mucho espacio
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                         Text(
                             text = incidencia.fechaCreacion.formatToDateOnly(),
@@ -509,34 +510,26 @@ fun IncidenciaCardItem(
                         )
                     }
 
-                    // Flecha
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Ver detalles",
-                        tint = Color(0xFF9CA3AF)
-                    )
-                }
+                    Spacer(modifier = Modifier.width(10.dp)) // Espacio entre info y badge
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Badge de prioridad
-                Surface(
-                    shape = RoundedCornerShape(11.dp),
-                    color = prioridadColor.copy(alpha = 0.1f)
-                ) {
-                    Text(
-                        text = prioridadTexto,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = prioridadColor,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                    )
+                    // Badge de prioridad (MOVIDO AQUÍ A LA DERECHA)
+                    Surface(
+                        shape = RoundedCornerShape(11.dp),
+                        color = prioridadColor.copy(alpha = 0.1f)
+                    ) {
+                        Text(
+                            text = prioridadTexto,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = prioridadColor,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
-
 
 
 @Composable
