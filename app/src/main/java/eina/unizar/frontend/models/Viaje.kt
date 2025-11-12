@@ -11,7 +11,7 @@ data class Viaje(
     val fechaHoraInicio: String, // ISO 8601, se puede parsear a LocalDateTime si queremos
     val fechaHoraFin: String,
     val kmRealizados: Int,
-    val consumoCombustible: Int,
+    val consumoCombustible: Double,
     val ubicacionFinal: Ubicacion,
     val usuario: String
 )

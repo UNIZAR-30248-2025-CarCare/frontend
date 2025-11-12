@@ -66,10 +66,11 @@ fun ViajesScreen(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(vehiculoSeleccionado?.id) {
-        vehiculoSeleccionado?.let {
-            viajesViewModel.fetchViajes(it.id, efectiveToken)
-        }
+    LaunchedEffect(vehiculos.size, selectedIndex) {
+        vehiculos.getOrNull(selectedIndex)?.let { vehiculo ->
+            Log.d("ViajesScreen", "Solicitando viajes para vehículo: ${vehiculo.id}")
+            viajesViewModel.fetchViajes(vehiculo.id, efectiveToken)
+        } ?: Log.w("ViajesScreen", "No hay vehículo seleccionado en índice $selectedIndex")
     }
 
     Scaffold(
