@@ -1,5 +1,6 @@
 package eina.unizar.frontend.network
 
+import eina.unizar.frontend.models.EstadisticasData
 import eina.unizar.frontend.models.Usuario
 import eina.unizar.frontend.models.LoginRequest
 import eina.unizar.frontend.models.LoginResponse
@@ -362,6 +363,17 @@ interface ApiService {
         @Body nuevoRepostaje: NuevoRepostajeData
     ): Response<Unit>
 
+    /**
+     * Obtiene las revisiones de un vehículo.
+     *
+     * Endpoint: GET /revision/obtenerRevisiones/{vehiculoId}
+     * Requiere autenticación.
+     *
+     * @param vehiculoId Identificador del vehículo
+     * @param tipo Tipo de revisión (opcional)
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Call<RevisionesListResponse> Respuesta con la lista de revisiones
+     */
     @GET("revision/obtenerRevisiones/{vehiculoId}")
     fun obtenerRevisiones(
         @Path("vehiculoId") vehiculoId: String,
@@ -369,9 +381,40 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Call<RevisionesListResponse>
 
+    /**
+     * Registra una nueva revisión para un vehículo.
+     *
+     * Endpoint: POST /revision/registrar
+     * Requiere autenticación.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param revision Datos de la revisión a registrar
+     * @return Call<RevisionResponse> Respuesta con los datos de la revisión registrada
+     */
     @POST("revision/registrar")
     fun registrarRevision(
         @Header("Authorization") token: String,
         @Body revision: RevisionRequest
     ): Call<RevisionResponse>
+
+    /**
+     * Obtiene las estadísticas de un vehículo para un mes y año específicos.
+     *
+     * Endpoint: GET /estadisticas/{vehiculoId}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param vehiculoId Identificador del vehículo
+     * @param mes Mes para el cual se solicitan las estadísticas
+     * @param ano Año para el cual se solicitan las estadísticas
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Response<EstadisticasData> Respuesta con los datos estadísticos
+     */
+    @GET("estadisticas/{vehiculoId}")
+    suspend fun getEstadisticas(
+        @Path("vehiculoId") vehiculoId: String,
+        @Query("mes") mes: Int,
+        @Query("ano") ano: Int,
+        @Header("Authorization") token: String
+    ): Response<EstadisticasData>
 }
