@@ -1,5 +1,6 @@
 package eina.unizar.frontend.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eina.unizar.frontend.models.NuevoViajeData
@@ -35,11 +36,15 @@ class ViajesViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.instance.obtenerViajes("Bearer $token", vehiculoId)
                 if (response.isSuccessful) {
-                    _viajes.value = response.body()?.viajes ?: emptyList()
+                     val viajesRecibidos = response.body()?.viajes ?: emptyList()
+                    Log.d("ViajesViewModel", "Viajes recibidos: ${viajesRecibidos.size}")
+                    Log.d("ViajesViewModel", "Contenido viajes: $viajesRecibidos")
+                    _viajes.value = viajesRecibidos
                 } else {
                     _viajes.value = emptyList()
                 }
             } catch (e: Exception) {
+                Log.e("ViajesViewModel", "Excepción al obtener viajes: ${e.message}", e)
                 _viajes.value = emptyList()
             }
         }

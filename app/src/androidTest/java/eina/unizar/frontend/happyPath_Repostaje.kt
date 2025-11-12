@@ -21,9 +21,9 @@ class CrearRepostajeAcceptanceTest {
     private val userEmail = "juan.perez@email.com"
     private val userPassword = "password123"
 
-    private val testLitros = "30.0"
+    private val testLitros = "30.00"
     private val testPrecioPorLitro = "1.50"
-    private val testPrecioTotal = "45.0"
+    private val testPrecioTotal = "45.00"
 
     @Before
     fun setup() {
@@ -82,8 +82,8 @@ class CrearRepostajeAcceptanceTest {
             .performTextInput(testLitros)
         composeTestRule.onNodeWithText("Precio por litro")
             .performTextInput(testPrecioPorLitro)
-        composeTestRule.onNodeWithText("Precio total")
-            .performTextInput(testPrecioTotal)
+        //composeTestRule.onNodeWithText("67.50")
+            //.performTextInput(testPrecioTotal)
 
         // PASO 7: Seleccionar fecha y hora
         composeTestRule.onNodeWithText("Fecha y hora del repostaje")

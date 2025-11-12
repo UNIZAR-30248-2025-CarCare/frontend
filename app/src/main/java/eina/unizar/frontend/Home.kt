@@ -69,6 +69,7 @@ fun HomeScreenWrapper(
     onViajesClick: () -> Unit,
     onRepostajesClick: () -> Unit,
     onRevisionesClick: () -> Unit,
+    onEstadisticasClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -94,6 +95,7 @@ fun HomeScreenWrapper(
         onViajesClick = onViajesClick,
         onRepostajesClick = onRepostajesClick,
         onRevisionesClick = onRevisionesClick,
+        onEstadisticasClick = onEstadisticasClick,
         selectedTab = selectedTab,
         onTabSelected = onTabSelected,
         navController = navController,
@@ -113,6 +115,7 @@ fun HomeScreen(
     onViajesClick: () -> Unit,
     onRepostajesClick: () -> Unit,
     onRevisionesClick: () -> Unit,
+    onEstadisticasClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -299,7 +302,22 @@ fun HomeScreen(
                         onClick = onRevisionesClick,
                         modifier = Modifier.weight(1f)
                     )
-                    
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Tercera fila
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    QuickAccessCard(
+                        icon = Icons.Default.Info,
+                        title = "Estadísticas",
+                        color = Color(0xFF14B8A6),
+                        onClick = onEstadisticasClick,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(100.dp))

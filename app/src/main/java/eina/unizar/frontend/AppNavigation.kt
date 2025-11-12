@@ -268,7 +268,8 @@ fun AppNavigation(intent: Intent? = null) {
                         navController.navigate("viajes")
                     },
                     onRepostajesClick = { navController.navigate("repostajes") },
-                    onRevisionesClick = { navController.navigate("revisiones") }
+                    onRevisionesClick = { navController.navigate("revisiones") },
+                    onEstadisticasClick = { navController.navigate("estadisticas") }
                 )
             }
         }
@@ -612,6 +613,17 @@ fun AppNavigation(intent: Intent? = null) {
             if (efectiveUserId != null && efectiveToken != null) {
                 CrearRevisionScreen(
                     onBackClick = { navController.popBackStack() },
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para estadisticas
+        composable("estadisticas") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                EstadisticasScreen(
+                    navController = navController,
                     efectiveUserId = efectiveUserId,
                     efectiveToken = efectiveToken
                 )
