@@ -61,9 +61,9 @@ class CrearRespostajeScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Litros repostados").performTextInput("50.0")
+        composeTestRule.onNodeWithText("Litros repostados").performTextInput("45.0")
         composeTestRule.onNodeWithText("Precio por litro").performTextInput("1.5")
-        composeTestRule.onNodeWithText("Precio total").performTextInput("75.0")
+        //composeTestRule.onNodeWithText("Precio total").performTextInput("67.5")
 
         // PASO 7: Seleccionar fecha y hora
         composeTestRule.onNodeWithText("Fecha y hora del repostaje")

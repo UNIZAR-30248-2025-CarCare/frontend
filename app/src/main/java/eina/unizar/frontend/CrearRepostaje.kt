@@ -70,6 +70,7 @@ fun CrearRepostajeScreen(
     var litros by remember { mutableStateOf("") }
     var precioPorLitro by remember { mutableStateOf("") }
     var precioTotal by remember { mutableStateOf("") }
+    var precioTotalEditadoManualmente by remember { mutableStateOf(false) }
 
     var expandedVehiculo by remember { mutableStateOf(false) }
 
@@ -229,7 +230,18 @@ fun CrearRepostajeScreen(
 
             OutlinedTextField(
                 value = litros,
-                onValueChange = { litros = it },
+                onValueChange = {
+                    litros = it
+                    if (!precioTotalEditadoManualmente) {
+                        val litrosDouble = it.toDoubleOrNull()
+                        val precioPorLitroDouble = precioPorLitro.toDoubleOrNull()
+                        if (litrosDouble != null && precioPorLitroDouble != null) {
+                            precioTotal = String.format(Locale.US, "%.2f", litrosDouble * precioPorLitroDouble)
+                        } else {
+                            precioTotal = ""
+                        }
+                    }
+                },
                 label = { Text("Litros repostados") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
@@ -239,7 +251,18 @@ fun CrearRepostajeScreen(
 
             OutlinedTextField(
                 value = precioPorLitro,
-                onValueChange = { precioPorLitro = it },
+                onValueChange = {
+                    precioPorLitro = it
+                    if (!precioTotalEditadoManualmente) {
+                        val litrosDouble = litros.toDoubleOrNull()
+                        val precioPorLitroDouble = it.toDoubleOrNull()
+                        if (litrosDouble != null && precioPorLitroDouble != null) {
+                            precioTotal = String.format(Locale.US, "%.2f", litrosDouble * precioPorLitroDouble)
+                        } else {
+                            precioTotal = ""
+                        }
+                    }
+                },
                 label = { Text("Precio por litro") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
@@ -249,7 +272,10 @@ fun CrearRepostajeScreen(
 
             OutlinedTextField(
                 value = precioTotal,
-                onValueChange = { precioTotal = it },
+                onValueChange = {
+                    precioTotal = it
+                    precioTotalEditadoManualmente = true
+                },
                 label = { Text("Precio total") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
