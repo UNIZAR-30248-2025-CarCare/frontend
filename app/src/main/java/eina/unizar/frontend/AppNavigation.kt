@@ -443,6 +443,30 @@ fun AppNavigation(intent: Intent? = null) {
             }
         }
 
+        // --- RUTA PARA DETALLE DE INCIDENCIA ---
+        composable(
+            route = "detalle_incidencia/{incidenciaId}",
+            arguments = listOf(
+                navArgument("incidenciaId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val incidenciaId = backStackEntry.arguments?.getInt("incidenciaId") ?: -1
+
+            if (efectiveToken != null && incidenciaId != -1) {
+                DetalleIncidenciaScreen(
+                    incidenciaId = incidenciaId,
+                    token = efectiveToken,
+                    onBackClick = { navController.popBackStack() }
+                )
+            } else {
+                LaunchedEffect(Unit) {
+                    navController.navigate("eleccion") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            }
+        }
+
         composable("reservas") {
             val userId = authViewModel.userId.collectAsState().value ?: ""
             val token = authViewModel.token.collectAsState().value ?: ""

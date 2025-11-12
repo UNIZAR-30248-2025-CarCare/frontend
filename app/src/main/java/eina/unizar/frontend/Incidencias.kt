@@ -145,10 +145,10 @@ fun IncidenciasScreen(
     }
 
     val incidenciasActivas = incidenciasFiltradas.filter {
-        it.estado !in listOf("RESUELTA", "CANCELADA")
+        it.estado !in listOf("Resuelta", "Cancelada")
     }
     val incidenciasResueltas = incidenciasFiltradas.filter {
-        it.estado in listOf("RESUELTA", "CANCELADA")
+        it.estado in listOf("Resuelta", "Cancelada")
     }
 
     Scaffold(
@@ -503,7 +503,7 @@ fun IncidenciaCardItem(
                             color = Color(0xFF6B7280)
                         )
                         Text(
-                            text = incidencia.fechaCreacion,
+                            text = incidencia.fechaCreacion.formatToDateOnly(),
                             fontSize = 12.sp,
                             color = Color(0xFF9CA3AF)
                         )
