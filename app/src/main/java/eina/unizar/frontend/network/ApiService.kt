@@ -1,5 +1,6 @@
 package eina.unizar.frontend.network
 
+import eina.unizar.frontend.models.BusquedaResponse
 import eina.unizar.frontend.models.ActualizarEstadoRequest
 import eina.unizar.frontend.models.CrearIncidenciaRequest
 import eina.unizar.frontend.models.CrearIncidenciaResponse
@@ -496,4 +497,23 @@ interface ApiService {
         @Query("ano") ano: Int,
         @Header("Authorization") token: String
     ): Response<EstadisticasData>
+
+    /**
+     * Realiza una búsqueda global en los datos asociados a un vehículo.
+     *
+     * Endpoint: GET /busqueda/global/{vehiculoId}
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param vehiculoId Identificador del vehículo
+     * @param query Término de búsqueda
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Response<BusquedaResponse> Respuesta con los resultados de la búsqueda
+     */
+    @GET("busqueda/global/{vehiculoId}")
+    suspend fun busquedaGlobal(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String,
+        @Query("query") query: String
+    ): Response<BusquedaResponse>
 }

@@ -4,7 +4,7 @@ import eina.unizar.frontend.Usuario
 import java.time.LocalDate
 
 data class Viaje(
-    val id: String,
+    val id: Int,
     val vehiculoId: String,
     val nombre: String,
     val descripcion: String,

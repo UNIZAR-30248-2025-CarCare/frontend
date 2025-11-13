@@ -141,7 +141,7 @@ fun IncidenciasScreen(
 
     // Estados para modo selección
     var modoSeleccion by remember { mutableStateOf(false) }
-    var incidenciasSeleccionadas by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    var incidenciasSeleccionadas by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     val currentRoute = navController.currentBackStackEntry?.destination?.route
 
