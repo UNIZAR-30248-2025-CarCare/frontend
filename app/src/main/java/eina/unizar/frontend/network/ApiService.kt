@@ -1,5 +1,9 @@
 package eina.unizar.frontend.network
 
+import eina.unizar.frontend.models.ActualizarEstadoRequest
+import eina.unizar.frontend.models.CrearIncidenciaRequest
+import eina.unizar.frontend.models.CrearIncidenciaResponse
+import eina.unizar.frontend.models.IncidenciaResponse
 import eina.unizar.frontend.models.EstadisticasData
 import eina.unizar.frontend.models.Usuario
 import eina.unizar.frontend.models.LoginRequest
@@ -13,6 +17,7 @@ import eina.unizar.frontend.models.VehiculoResponse
 import eina.unizar.frontend.models.InvitacionBody
 import eina.unizar.frontend.models.InvitacionResponse
 import eina.unizar.frontend.models.InvitacionesRecibidasResponse
+import eina.unizar.frontend.models.ListaIncidenciasResponse
 import eina.unizar.frontend.models.NuevoRepostajeData
 import eina.unizar.frontend.models.NuevoViajeData
 import eina.unizar.frontend.models.ProximoRepostajeResponse
@@ -27,6 +32,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -396,6 +402,79 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body revision: RevisionRequest
     ): Call<RevisionResponse>
+
+    // ========== INCIDENCIAS ==========
+
+    /**
+     * Crear una nueva incidencia.
+     * POST /api/incidencias/crear
+     */
+    @POST("incidencia/crear")
+    suspend fun crearIncidencia(
+        @Header("Authorization") token: String,
+        @Body request: CrearIncidenciaRequest
+    ): Response<CrearIncidenciaResponse>
+
+    /**
+     * Obtener todas las incidencias de un vehículo específico.
+     * GET /api/incidencias/vehiculo/:vehiculoId
+     */
+    @GET("incidencia/vehiculo/{vehiculoId}")
+    suspend fun obtenerIncidenciasVehiculo(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<ListaIncidenciasResponse>
+
+    /**
+     * Obtener todas las incidencias de los vehículos del usuario.
+     * GET /api/incidencias/usuario
+     */
+    @GET("incidencia/usuario")
+    suspend fun obtenerIncidenciasUsuario(
+        @Header("Authorization") token: String
+    ): Response<ListaIncidenciasResponse>
+
+    /**
+     * Obtener una incidencia específica.
+     * GET /api/incidencias/:incidenciaId
+     */
+    @GET("incidencia/{incidenciaId}")
+    suspend fun obtenerIncidencia(
+        @Header("Authorization") token: String,
+        @Path("incidenciaId") incidenciaId: Int
+    ): Response<IncidenciaResponse>
+
+    /**
+     * Actualizar solo el estado de una incidencia.
+     * PATCH /api/incidencias/:incidenciaId/estado
+     */
+    @PATCH("incidencia/{incidenciaId}/estado")
+    suspend fun actualizarEstadoIncidencia(
+        @Header("Authorization") token: String,
+        @Path("incidenciaId") incidenciaId: Int,
+        @Body request: ActualizarEstadoRequest
+    ): Response<CrearIncidenciaResponse>
+
+    /**
+     * Actualizar una incidencia completa.
+     * PUT /api/incidencias/:incidenciaId
+     */
+    @PUT("incidencia/{incidenciaId}")
+    suspend fun actualizarIncidencia(
+        @Header("Authorization") token: String,
+        @Path("incidenciaId") incidenciaId: Int,
+        @Body request: CrearIncidenciaRequest
+    ): Response<CrearIncidenciaResponse>
+
+    /**
+     * Eliminar una incidencia.
+     * DELETE /api/incidencias/:incidenciaId
+     */
+    @DELETE("incidencia/{incidenciaId}")
+    suspend fun eliminarIncidencia(
+        @Header("Authorization") token: String,
+        @Path("incidenciaId") incidenciaId: Int
+    ): Response<MensajeResponse>
 
     /**
      * Obtiene las estadísticas de un vehículo para un mes y año específicos.
