@@ -33,6 +33,7 @@ import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.models.toVehiculoDetalle
 import eina.unizar.frontend.viewmodels.HomeViewModel
 import android.content.Intent
+import eina.unizar.frontend.models.SearchResult
 
 /**
  * Composable principal que gestiona la navegación entre pantallas.
@@ -269,7 +270,8 @@ fun AppNavigation(intent: Intent? = null) {
                     },
                     onRepostajesClick = { navController.navigate("repostajes") },
                     onRevisionesClick = { navController.navigate("revisiones") },
-                    onEstadisticasClick = { navController.navigate("estadisticas") }
+                    onEstadisticasClick = { navController.navigate("estadisticas") },
+                    onBusquedaClick = { navController.navigate("busqueda") }
                 )
             }
         }
@@ -626,6 +628,17 @@ fun AppNavigation(intent: Intent? = null) {
                     navController = navController,
                     efectiveUserId = efectiveUserId,
                     efectiveToken = efectiveToken
+                )
+            }
+        }
+
+        // Ruta para busquedas
+        composable("busqueda") {
+            if (efectiveToken != null) {
+                BusquedaScreen(
+                    efectiveUserId = efectiveUserId ?: "",
+                    efectiveToken = efectiveToken ?: "",
+                    onBackClick = { navController.popBackStack() }
                 )
             }
         }

@@ -70,6 +70,7 @@ fun HomeScreenWrapper(
     onRepostajesClick: () -> Unit,
     onRevisionesClick: () -> Unit,
     onEstadisticasClick: () -> Unit,
+    onBusquedaClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -96,6 +97,7 @@ fun HomeScreenWrapper(
         onRepostajesClick = onRepostajesClick,
         onRevisionesClick = onRevisionesClick,
         onEstadisticasClick = onEstadisticasClick,
+        onBusquedaClick = onBusquedaClick,
         selectedTab = selectedTab,
         onTabSelected = onTabSelected,
         navController = navController,
@@ -116,6 +118,7 @@ fun HomeScreen(
     onRepostajesClick: () -> Unit,
     onRevisionesClick: () -> Unit,
     onEstadisticasClick: () -> Unit,
+    onBusquedaClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -316,6 +319,13 @@ fun HomeScreen(
                         title = "Estadísticas",
                         color = Color(0xFF14B8A6),
                         onClick = onEstadisticasClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                    QuickAccessCard(
+                        icon = Icons.Default.Search,
+                        title = "Busqueda",
+                        color = Color(0xFF14B8A6),
+                        onClick = onBusquedaClick,
                         modifier = Modifier.weight(1f)
                     )
                 }
