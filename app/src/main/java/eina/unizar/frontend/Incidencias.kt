@@ -168,10 +168,10 @@ fun IncidenciasScreen(
     }
 
     val incidenciasActivas = incidenciasFiltradas.filter {
-        it.estado !in listOf("RESUELTA", "CANCELADA")
+        it.estado !in listOf("Resuelta", "Cancelada")
     }
     val incidenciasResueltas = incidenciasFiltradas.filter {
-        it.estado in listOf("RESUELTA", "CANCELADA")
+        it.estado in listOf("Resuelta", "Cancelada")
     }
 
     val incidenciasAMostrar = if (tabSeleccionada == 0) incidenciasActivas else incidenciasResueltas
@@ -188,7 +188,7 @@ fun IncidenciasScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(65.dp)
+                            .height(150.dp)
                             .padding(horizontal = 20.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -529,7 +529,7 @@ fun IncidenciasScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(120.dp))
+                            Spacer(modifier = Modifier.height(80.dp))
                         }
                     }
                 }
@@ -698,6 +698,18 @@ fun generarPDF(
         val lineHeight = 20f
         val margin = 40f
 
+        // Helper function para convertir Base64 a Bitmap
+        fun base64ToBitmap(base64String: String): android.graphics.Bitmap? {
+            return try {
+                val cleanBase64 = base64String.removePrefix("data:image/jpeg;base64,")
+                val decodedBytes = android.util.Base64.decode(cleanBase64, android.util.Base64.DEFAULT)
+                android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+
         // Crear primera página
         var pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
         var page = pdfDocument.startPage(pageInfo)
@@ -706,8 +718,7 @@ fun generarPDF(
         // Paint para diferentes estilos
         val titlePaint = Paint().apply {
             textSize = 24f
-            //color = Color.rgb(239, 68, 68)
-            color = android.graphics.Color.RED
+            color = android.graphics.Color.rgb(239, 68, 68)
             isFakeBoldText = true
         }
 

@@ -30,6 +30,45 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 
+
+
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+
+import androidx.compose.foundation.verticalScroll
+
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
+
+import java.io.ByteArrayOutputStream
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetalleIncidenciaScreen(
@@ -38,6 +77,7 @@ fun DetalleIncidenciaScreen(
     onBackClick: () -> Unit
 ) {
     val viewModel: IncidenciaViewModel = viewModel()
+    val context = LocalContext.current
 
     val incidenciaDetalle = viewModel.incidenciaDetalle
     val isLoading = viewModel.isLoading
@@ -48,6 +88,7 @@ fun DetalleIncidenciaScreen(
     var modoEdicion by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showEstadoDialog by remember { mutableStateOf(false) }
+    var imagenAmpliadaIndex by remember { mutableStateOf<Int?>(null) }
 
     // Estados para edición
     var tituloEdit by remember { mutableStateOf("") }
@@ -55,6 +96,7 @@ fun DetalleIncidenciaScreen(
     var tipoEdit by remember { mutableStateOf("AVERIA") }
     var prioridadEdit by remember { mutableStateOf("MEDIA") }
     var estadoEdit by remember { mutableStateOf("PENDIENTE") }
+    var fotosEdit by remember { mutableStateOf<List<String>>(emptyList()) }
     var expandedTipo by remember { mutableStateOf(false) }
     var expandedPrioridad by remember { mutableStateOf(false) }
     var expandedEstado by remember { mutableStateOf(false) }
@@ -62,6 +104,30 @@ fun DetalleIncidenciaScreen(
     val tiposIncidencia = listOf("AVERIA", "ACCIDENTE", "MANTENIMIENTO", "OTRO")
     val prioridades = listOf("ALTA", "MEDIA", "BAJA")
     val estados = listOf("PENDIENTE", "EN PROGRESO", "RESUELTA", "CANCELADA")
+
+    // Launcher para añadir nuevas imágenes en edición
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            val nuevasFotos = mutableListOf<String>()
+
+            uris.forEach { uri ->
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        val bitmap = BitmapFactory.decodeStream(inputStream)
+                        val resizedBitmap = resizeImage(bitmap, 800)
+                        val base64String = bitmapToBase64(resizedBitmap)
+                        nuevasFotos.add("data:image/jpeg;base64,$base64String")
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            fotosEdit = fotosEdit + nuevasFotos
+        }
+    }
 
     // Cargar incidencia al iniciar
     LaunchedEffect(incidenciaId) {
@@ -76,6 +142,7 @@ fun DetalleIncidenciaScreen(
             tipoEdit = it.tipo
             prioridadEdit = it.prioridad
             estadoEdit = it.estado
+            fotosEdit = it.fotos ?: emptyList()
         }
     }
 
@@ -167,6 +234,56 @@ fun DetalleIncidenciaScreen(
                 }
             }
         )
+    }
+
+    // Diálogo para ampliar imagen
+    imagenAmpliadaIndex?.let { index ->
+        val fotos = if (modoEdicion) fotosEdit else (incidenciaDetalle?.fotos ?: emptyList())
+        if (index < fotos.size) {
+            Dialog(onDismissRequest = { imagenAmpliadaIndex = null }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable { imagenAmpliadaIndex = null },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(0.95f)
+                            .fillMaxHeight(0.8f),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            val base64String = fotos[index].removePrefix("data:image/jpeg;base64,")
+                            val bitmap = base64ToBitmap(base64String)
+
+                            if (bitmap != null) {
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = "Imagen ampliada",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { imagenAmpliadaIndex = null },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                                    .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Cerrar",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     Scaffold(
@@ -468,34 +585,113 @@ fun DetalleIncidenciaScreen(
 
                             Spacer(modifier = Modifier.height(20.dp))
 
-                            // Fotos (placeholder)
+                            // Fotos - EDICIÓN
                             Text(
-                                text = "Fotos (pendiente de implementar)",
+                                text = "Fotos - ${fotosEdit.size} imágenes",
                                 fontSize = 13.sp,
                                 color = Color(0xFF6B7280),
                                 modifier = Modifier.padding(bottom = 5.dp)
                             )
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(80.dp)
-                                    .border(
-                                        width = 2.dp,
-                                        color = Color(0xFFE5E7EB),
-                                        shape = RoundedCornerShape(8.dp)
-                                    ),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
+
+                            if (fotosEdit.isEmpty()) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(80.dp)
+                                        .border(
+                                            width = 2.dp,
+                                            color = Color(0xFFE5E7EB),
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable { imagePickerLauncher.launch("image/*") },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
                                 ) {
-                                    Text(
-                                        text = "Gestión de fotos próximamente",
-                                        fontSize = 12.sp,
-                                        color = Color(0xFF9CA3AF)
-                                    )
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Icon(
+                                                imageVector = Icons.Default.AddCircle,
+                                                contentDescription = "Añadir fotos",
+                                                tint = Color(0xFFEF4444),
+                                                modifier = Modifier.size(28.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = "Añadir fotos",
+                                                fontSize = 12.sp,
+                                                color = Color(0xFF9CA3AF)
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                LazyRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    items(fotosEdit.size) { index ->
+                                        Box(modifier = Modifier.size(100.dp)) {
+                                            Card(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clickable { imagenAmpliadaIndex = index },
+                                                shape = RoundedCornerShape(8.dp)
+                                            ) {
+                                                val base64String = fotosEdit[index].removePrefix("data:image/jpeg;base64,")
+                                                val bitmap = base64ToBitmap(base64String)
+
+                                                if (bitmap != null) {
+                                                    Image(
+                                                        bitmap = bitmap.asImageBitmap(),
+                                                        contentDescription = "Foto ${index + 1}",
+                                                        modifier = Modifier.fillMaxSize(),
+                                                        contentScale = ContentScale.Crop
+                                                    )
+                                                }
+                                            }
+                                            IconButton(
+                                                onClick = {
+                                                    fotosEdit = fotosEdit.toMutableList().apply { removeAt(index) }
+                                                },
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                                    .size(24.dp)
+                                                    .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Close,
+                                                    contentDescription = "Eliminar",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    item {
+                                        Card(
+                                            modifier = Modifier
+                                                .size(100.dp)
+                                                .clickable { imagePickerLauncher.launch("image/*") },
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Add,
+                                                    contentDescription = "Añadir más",
+                                                    tint = Color(0xFFEF4444),
+                                                    modifier = Modifier.size(32.dp)
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -509,13 +705,13 @@ fun DetalleIncidenciaScreen(
                                 OutlinedButton(
                                     onClick = {
                                         modoEdicion = false
-                                        // Restaurar valores originales
                                         incidenciaDetalle?.let {
                                             tituloEdit = it.titulo
                                             descripcionEdit = it.descripcion
                                             tipoEdit = it.tipo
                                             prioridadEdit = it.prioridad
                                             estadoEdit = it.estado
+                                            fotosEdit = it.fotos ?: emptyList()
                                         }
                                     },
                                     modifier = Modifier
@@ -541,7 +737,7 @@ fun DetalleIncidenciaScreen(
                                             prioridad = prioridadEdit,
                                             titulo = tituloEdit,
                                             descripcion = descripcionEdit,
-                                            fotos = emptyList(),
+                                            fotos = fotosEdit,
                                             compartirConGrupo = true
                                         )
                                         viewModel.actualizarIncidencia(token, incidenciaId, request)
@@ -633,29 +829,71 @@ fun DetalleIncidenciaScreen(
 
                             Spacer(modifier = Modifier.height(20.dp))
 
-                            // Fotos (placeholder)
+                            // Fotos - VISUALIZACIÓN
                             Text(
                                 text = "Fotos",
                                 fontSize = 13.sp,
                                 color = Color(0xFF6B7280),
                                 modifier = Modifier.padding(bottom = 5.dp)
                             )
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(80.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
+
+                            val fotosIncidencia = incidenciaDetalle.fotos ?: emptyList()
+
+                            if (fotosIncidencia.isEmpty()) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(80.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
                                 ) {
-                                    Text(
-                                        text = "No hay fotos disponibles",
-                                        fontSize = 12.sp,
-                                        color = Color(0xFF9CA3AF)
-                                    )
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "No hay fotos disponibles",
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF9CA3AF)
+                                        )
+                                    }
+                                }
+                            } else {
+                                LazyRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    items(fotosIncidencia.size) { index ->
+                                        Card(
+                                            modifier = Modifier
+                                                .size(100.dp)
+                                                .clickable { imagenAmpliadaIndex = index },
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            val base64String = fotosIncidencia[index].removePrefix("data:image/jpeg;base64,")
+                                            val bitmap = base64ToBitmap(base64String)
+
+                                            if (bitmap != null) {
+                                                Image(
+                                                    bitmap = bitmap.asImageBitmap(),
+                                                    contentDescription = "Foto ${index + 1}",
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                            } else {
+                                                Box(
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Warning,
+                                                        contentDescription = "Error",
+                                                        tint = Color(0xFF9CA3AF)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -743,7 +981,16 @@ fun InfoField(
     }
 }
 
-
+// Función para convertir Base64 a Bitmap
+fun base64ToBitmap(base64String: String): Bitmap? {
+    return try {
+        val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
 
 
 /**
