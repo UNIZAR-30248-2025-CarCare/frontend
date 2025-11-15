@@ -688,10 +688,11 @@ fun generarPDF(
     incidencias: List<IncidenciaDetalle>,
     vehiculo: VehiculoDTO?
 ) {
+    // --- Declaraciones de configuración y Paints (Mantienen la estructura original) ---
     try {
         val pdfDocument = PdfDocument()
-        val pageWidth = 595 // A4 width in points
-        val pageHeight = 842 // A4 height in points
+        val pageWidth = 595 // Ancho A4 en puntos
+        val pageHeight = 842 // Alto A4 en puntos
 
         var pageNumber = 1
         var yPosition = 80f
@@ -701,6 +702,7 @@ fun generarPDF(
         // Helper function para convertir Base64 a Bitmap
         fun base64ToBitmap(base64String: String): android.graphics.Bitmap? {
             return try {
+                // Limpiar prefijo 'data:image/jpeg;base64,' si está presente
                 val cleanBase64 = base64String.removePrefix("data:image/jpeg;base64,")
                 val decodedBytes = android.util.Base64.decode(cleanBase64, android.util.Base64.DEFAULT)
                 android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
@@ -738,6 +740,18 @@ fun generarPDF(
             color = android.graphics.Color.GRAY
         }
 
+        // Función para dibujar el pie de página
+        fun drawFooter(canvas: android.graphics.Canvas, pageNumber: Int) {
+            canvas.drawText(
+                "Página $pageNumber",
+                (pageWidth / 2 - 30).toFloat(),
+                pageHeight - 30f,
+                smallPaint
+            )
+        }
+
+        // --- PORTADA y ÍNDICE ---
+
         // PORTADA
         canvas.drawText("Reporte de Incidencias", margin, yPosition, titlePaint)
         yPosition += 40f
@@ -758,8 +772,10 @@ fun generarPDF(
         canvas.drawText("Índice de Incidencias", margin, yPosition, headerPaint)
         yPosition += 30f
 
+        // Dibujar entradas de índice (usando la misma lógica de salto de página que tenías)
         incidencias.forEachIndexed { index, incidencia ->
             if (yPosition > pageHeight - 100) {
+                drawFooter(canvas, pageNumber) // Dibuja pie antes de terminar
                 pdfDocument.finishPage(page)
                 pageNumber++
                 pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
@@ -767,32 +783,38 @@ fun generarPDF(
                 canvas = page.canvas
                 yPosition = 80f
             }
-
             canvas.drawText("${index + 1}. ${incidencia.titulo}", margin + 20, yPosition, normalPaint)
             yPosition += lineHeight
         }
+
+        drawFooter(canvas, pageNumber) // Pie de página del índice
 
         // Nueva página para detalles
         pdfDocument.finishPage(page)
         pageNumber++
 
-        // DETALLES DE CADA INCIDENCIA
+        // --- DETALLES DE CADA INCIDENCIA (Incluyendo Fotos) ---
+
+        val maxContentWidth = pageWidth - (2 * margin) // Ancho máximo disponible para contenido
+        val imageMaxHeight = 250f // Altura máxima reservada para cada imagen
+
         incidencias.forEachIndexed { index, incidencia ->
+            // Inicia una nueva página para cada incidencia
             pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
             page = pdfDocument.startPage(pageInfo)
             canvas = page.canvas
             yPosition = 80f
 
             // Título de la incidencia
-            canvas.drawText("Incidencia #${index + 1}", margin, yPosition, headerPaint)
+            canvas.drawText("Incidencia #${index + 1}: ${incidencia.titulo}", margin, yPosition, headerPaint)
             yPosition += 30f
 
             // Cuadro de estado con color
             val estadoColor = when (incidencia.estado.uppercase()) {
-                "RESUELTA" -> android.graphics.Color.rgb(16, 185, 129)
-                "CANCELADA" -> android.graphics.Color.rgb(107, 114, 128)
-                "EN PROGRESO" -> android.graphics.Color.rgb(245, 158, 11)
-                else -> android.graphics.Color.rgb(239, 68, 68)
+                "RESUELTA", "CERRADA" -> android.graphics.Color.rgb(16, 185, 129) // Verde
+                "CANCELADA" -> android.graphics.Color.rgb(107, 114, 128) // Gris
+                "EN PROGRESO" -> android.graphics.Color.rgb(245, 158, 11) // Naranja
+                else -> android.graphics.Color.rgb(239, 68, 68) // Rojo (Activa/Abierta)
             }
 
             val estadoPaint = Paint().apply {
@@ -800,37 +822,34 @@ fun generarPDF(
                 style = Paint.Style.FILL
             }
 
-            canvas.drawRoundRect(
-                margin, yPosition - 15f, margin + 150f, yPosition + 5f,
-                10f, 10f, estadoPaint
-            )
-
             val estadoTextPaint = Paint().apply {
                 textSize = 12f
                 color = android.graphics.Color.WHITE
                 isFakeBoldText = true
             }
+
+            // Dibuja el fondo del estado
+            canvas.drawRoundRect(
+                margin, yPosition - 15f, margin + 150f, yPosition + 5f,
+                10f, 10f, estadoPaint
+            )
+            // Dibuja el texto del estado
             canvas.drawText(incidencia.estado, margin + 10, yPosition, estadoTextPaint)
             yPosition += 40f
 
-            // Información principal
-            canvas.drawText("Título:", margin, yPosition, headerPaint)
-            yPosition += 20f
-            canvas.drawText(incidencia.titulo, margin + 20, yPosition, normalPaint)
-            yPosition += 30f
-
+            // Información principal (Título, Descripción, etc.)
             canvas.drawText("Descripción:", margin, yPosition, headerPaint)
             yPosition += 20f
 
-            // Dividir descripción en líneas
+            // Dividir descripción en líneas (Usando lógica original)
             val descripcionPalabras = incidencia.descripcion.split(" ")
             var lineaActual = ""
-            val maxWidth = pageWidth - (2 * margin) - 20
+            val textMargin = margin + 20
 
             descripcionPalabras.forEach { palabra ->
                 val testLine = if (lineaActual.isEmpty()) palabra else "$lineaActual $palabra"
-                if (normalPaint.measureText(testLine) > maxWidth) {
-                    canvas.drawText(lineaActual, margin + 20, yPosition, normalPaint)
+                if (normalPaint.measureText(testLine) > maxContentWidth - 20) { // Restar el margen extra de 20
+                    canvas.drawText(lineaActual, textMargin, yPosition, normalPaint)
                     yPosition += lineHeight
                     lineaActual = palabra
                 } else {
@@ -838,7 +857,7 @@ fun generarPDF(
                 }
             }
             if (lineaActual.isNotEmpty()) {
-                canvas.drawText(lineaActual, margin + 20, yPosition, normalPaint)
+                canvas.drawText(lineaActual, textMargin, yPosition, normalPaint)
                 yPosition += lineHeight
             }
 
@@ -860,25 +879,100 @@ fun generarPDF(
                 isFakeBoldText = true
             }
             canvas.drawText("Prioridad: ", margin, yPosition, normalPaint)
-            canvas.drawText(incidencia.prioridad, margin + 80, yPosition, prioridadPaint)
+            // Dibuja la prioridad con color diferente
+            canvas.drawText(incidencia.prioridad, margin + normalPaint.measureText("Prioridad: "), yPosition, prioridadPaint)
             yPosition += lineHeight
 
             // Fecha
+            // Asumiendo que formatToDateOnly() es una función de extensión que funciona.
             canvas.drawText("Fecha de creación: ${incidencia.fechaCreacion.formatToDateOnly()}", margin, yPosition, normalPaint)
             yPosition += 40f
+
+            // -------------------------------------------------------------------
+            // LÓGICA PARA DIBUJAR IMÁGENES (FOTOS)
+            // -------------------------------------------------------------------
+
+            // Suponemos que IncidenciaDetalle tiene un campo 'fotosBase64: List<String>'
+            // DEBES ASEGURARTE DE QUE ESTE CAMPO EXISTE EN TU MODELO DE DATOS
+            val fotosBase64 = try {
+                incidencia::class.java.getDeclaredField("fotos").apply { isAccessible = true }.get(incidencia) as? List<String> ?: emptyList()
+            } catch (e: Exception) {
+                // Si el campo no existe, simplemente usa una lista vacía y registra el error.
+                e.printStackTrace()
+                emptyList()
+            }
+
+            if (fotosBase64.isNotEmpty()) {
+                canvas.drawText("Imágenes Adjuntas:", margin, yPosition, headerPaint)
+                yPosition += 30f
+
+                fotosBase64.forEachIndexed { imgIndex, base64String ->
+                    val bitmap = base64ToBitmap(base64String)
+
+                    if (bitmap != null) {
+                        // Calcula el redimensionamiento de la imagen
+                        val imageScaleFactor = maxContentWidth / bitmap.width.toFloat()
+                        var imageWidth = bitmap.width.toFloat() * imageScaleFactor
+                        var imageHeight = bitmap.height.toFloat() * imageScaleFactor
+
+                        // Si la imagen es muy alta, limitamos la altura y recalculamos el ancho
+                        if (imageHeight > imageMaxHeight) {
+                            val heightRatio = imageMaxHeight / imageHeight
+                            imageHeight = imageMaxHeight
+                            imageWidth *= heightRatio
+                        }
+
+                        // Si la imagen no cabe en la página actual, salta a la siguiente
+                        if (yPosition + imageHeight + lineHeight > pageHeight - margin) {
+                            drawFooter(canvas, pageNumber)
+                            pdfDocument.finishPage(page)
+                            pageNumber++
+                            pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
+                            page = pdfDocument.startPage(pageInfo)
+                            canvas = page.canvas
+                            yPosition = margin // Reinicia la posición Y en la nueva página
+
+                            // Opcional: Escribir un encabezado de continuación
+                            canvas.drawText("Incidencia #${index + 1} (Imágenes - Cont.)", margin, yPosition, headerPaint)
+                            yPosition += 30f
+                        }
+
+                        // Dibuja el subtítulo de la imagen
+                        canvas.drawText("Foto ${imgIndex + 1}:", margin, yPosition, normalPaint)
+                        yPosition += lineHeight
+
+                        // Dibuja el Bitmap redimensionado en el Canvas
+                        val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(
+                            bitmap,
+                            imageWidth.toInt(),
+                            imageHeight.toInt(),
+                            true
+                        )
+
+                        canvas.drawBitmap(scaledBitmap, margin, yPosition, normalPaint)
+
+                        yPosition += imageHeight + 20f // Avanza la posición Y + padding
+                        scaledBitmap.recycle() // Liberar memoria del bitmap escalado
+                    } else {
+                        canvas.drawText("Foto ${imgIndex + 1}: [Error al cargar imagen Base64]", margin, yPosition, smallPaint)
+                        yPosition += lineHeight + 10f
+                    }
+                }
+            } else {
+                canvas.drawText("No hay imágenes adjuntas para esta incidencia.", margin, yPosition, normalPaint)
+                yPosition += 20f
+            }
+            // -------------------------------------------------------------------
 
             // Línea separadora
             canvas.drawLine(margin, yPosition, pageWidth - margin, yPosition, smallPaint)
 
-            // Pie de página
-            canvas.drawText("Página $pageNumber",
-                (pageWidth / 2 - 30).toFloat(), pageHeight - 30f, smallPaint)
-
+            drawFooter(canvas, pageNumber) // Pie de página
             pdfDocument.finishPage(page)
             pageNumber++
         }
 
-        // PÁGINA DE RESUMEN
+        // --- PÁGINA DE RESUMEN (Mantenida) ---
         pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
         page = pdfDocument.startPage(pageInfo)
         canvas = page.canvas
@@ -908,12 +1002,10 @@ fun generarPDF(
         yPosition += 20f
         canvas.drawText("  Baja: $totalBaja", margin + 20, yPosition, normalPaint)
 
-        canvas.drawText("Página $pageNumber",
-            (pageWidth / 2 - 30).toFloat(), pageHeight - 30f, smallPaint)
-
+        drawFooter(canvas, pageNumber) // Pie de página
         pdfDocument.finishPage(page)
 
-        // Guardar el PDF
+        // --- Guardar el PDF (Mantenido) ---
         val fileName = "Incidencias_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.pdf"
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, fileName)
@@ -939,7 +1031,6 @@ fun generarPDF(
         ).show()
     }
 }
-
 @Composable
 fun IncidenciaCardItem(
     incidencia: IncidenciaDetalle,
