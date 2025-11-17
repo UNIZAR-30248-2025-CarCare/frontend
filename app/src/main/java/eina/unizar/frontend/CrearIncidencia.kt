@@ -5,6 +5,35 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import eina.unizar.frontend.models.Vehiculo
+import androidx.compose.ui.res.painterResource
+import androidx.lifecycle.viewmodel.compose.viewModel
+
+
+
+
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -15,16 +44,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import eina.unizar.frontend.models.Vehiculo
-import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eina.unizar.frontend.models.CrearIncidenciaRequest
 import eina.unizar.frontend.models.VehiculoDTO
 import eina.unizar.frontend.viewmodels.HomeViewModel
 import eina.unizar.frontend.viewmodels.IncidenciaViewModel
+import java.io.ByteArrayOutputStream
 
 
 data class NuevaIncidenciaData(
@@ -62,6 +95,7 @@ fun NuevaIncidenciaScreen(
 ) {
     val viewModel: IncidenciaViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel()
+    val context = LocalContext.current
 
     val vehiculos by homeViewModel.vehiculos.collectAsState()
 
@@ -75,8 +109,44 @@ fun NuevaIncidenciaScreen(
     var expandedTipo by remember { mutableStateOf(false) }
     var expandedPrioridad by remember { mutableStateOf(false) }
 
+    // Estado para las fotos
+    var fotosBase64 by remember { mutableStateOf<List<String>>(emptyList()) }
+    var fotosBitmap by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
+
     val tiposIncidencia = listOf("AVERIA", "ACCIDENTE", "MANTENIMIENTO", "OTRO")
     val prioridades = listOf("ALTA", "MEDIA", "BAJA")
+
+    // Launcher para seleccionar múltiples imágenes
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            val nuevasFotos = mutableListOf<String>()
+            val nuevosBitmaps = mutableListOf<Bitmap>()
+
+            uris.forEach { uri ->
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        val bitmap = BitmapFactory.decodeStream(inputStream)
+
+                        // Redimensionar la imagen para que no sea muy grande
+                        val resizedBitmap = resizeImage(bitmap, 800)
+
+                        // Convertir a Base64
+                        val base64String = bitmapToBase64(resizedBitmap)
+
+                        nuevasFotos.add("data:image/jpeg;base64,$base64String")
+                        nuevosBitmaps.add(resizedBitmap)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            fotosBase64 = fotosBase64 + nuevasFotos
+            fotosBitmap = fotosBitmap + nuevosBitmaps
+        }
+    }
 
     // Cargar vehículos al iniciar
     LaunchedEffect(Unit) {
@@ -428,43 +498,111 @@ fun NuevaIncidenciaScreen(
 
                     Spacer(modifier = Modifier.height(15.dp))
 
-                    // Añadir fotos (placeholder)
+                    // Añadir fotos
                     Text(
-                        text = "Fotos (opcional)",
+                        text = "Fotos (opcional) - ${fotosBitmap.size} seleccionadas",
                         fontSize = 13.sp,
                         color = Color(0xFF6B7280),
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(100.dp)
-                            .border(
-                                width = 2.dp,
-                                color = Color(0xFFE5E7EB),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .clickable { /* TODO: Abrir selector de fotos */ },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+
+                    if (fotosBitmap.isEmpty()) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp)
+                                .border(
+                                    width = 2.dp,
+                                    color = Color(0xFFE5E7EB),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .clickable { imagePickerLauncher.launch("image/*") },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Create,
-                                contentDescription = "Añadir fotos",
-                                tint = Color(0xFF9CA3AF),
-                                modifier = Modifier.size(32.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Toca para añadir fotos",
-                                fontSize = 13.sp,
-                                color = Color(0xFF6B7280)
-                            )
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AddCircle,
+                                    contentDescription = "Añadir fotos",
+                                    tint = Color(0xFFEF4444),
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Toca para añadir fotos",
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF6B7280)
+                                )
+                            }
+                        }
+                    } else {
+                        Column {
+                            LazyRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                items(fotosBitmap) { bitmap ->
+                                    Box(
+                                        modifier = Modifier.size(100.dp)
+                                    ) {
+                                        Card(
+                                            modifier = Modifier.fillMaxSize(),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Image(
+                                                bitmap = bitmap.asImageBitmap(),
+                                                contentDescription = "Foto seleccionada",
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                val index = fotosBitmap.indexOf(bitmap)
+                                                fotosBitmap = fotosBitmap.toMutableList().apply { removeAt(index) }
+                                                fotosBase64 = fotosBase64.toMutableList().apply { removeAt(index) }
+                                            },
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .size(24.dp)
+                                                .background(Color.Black.copy(alpha = 0.6f), androidx.compose.foundation.shape.CircleShape)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Eliminar",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                item {
+                                    Card(
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .clickable { imagePickerLauncher.launch("image/*") },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Add,
+                                                contentDescription = "Añadir más",
+                                                tint = Color(0xFFEF4444),
+                                                modifier = Modifier.size(32.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -511,7 +649,7 @@ fun NuevaIncidenciaScreen(
                                     prioridad = prioridadSeleccionada,
                                     titulo = titulo,
                                     descripcion = descripcion,
-                                    fotos = emptyList(),
+                                    fotos = fotosBase64, // Enviamos las fotos en Base64
                                     compartirConGrupo = compartirConGrupo
                                 )
                                 viewModel.crearIncidencia(token, request)
@@ -519,6 +657,7 @@ fun NuevaIncidenciaScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
+                            .testTag("botonReportarIncidencia")
                             .height(55.dp),
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -549,4 +688,36 @@ fun NuevaIncidenciaScreen(
             }
         }
     }
+}
+
+// Función para redimensionar imagen
+fun resizeImage(bitmap: Bitmap, maxSize: Int): Bitmap {
+    val width = bitmap.width
+    val height = bitmap.height
+
+    if (width <= maxSize && height <= maxSize) {
+        return bitmap
+    }
+
+    val aspectRatio = width.toFloat() / height.toFloat()
+    val newWidth: Int
+    val newHeight: Int
+
+    if (width > height) {
+        newWidth = maxSize
+        newHeight = (maxSize / aspectRatio).toInt()
+    } else {
+        newHeight = maxSize
+        newWidth = (maxSize * aspectRatio).toInt()
+    }
+
+    return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+}
+
+// Función para convertir Bitmap a Base64
+fun bitmapToBase64(bitmap: Bitmap): String {
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
+    val byteArray = byteArrayOutputStream.toByteArray()
+    return Base64.encodeToString(byteArray, Base64.NO_WRAP)
 }
