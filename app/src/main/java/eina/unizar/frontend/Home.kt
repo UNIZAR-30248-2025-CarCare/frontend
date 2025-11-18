@@ -23,6 +23,7 @@ import androidx.navigation.NavHostController
 import eina.unizar.frontend.models.Vehiculo
 import eina.unizar.frontend.models.VehiculoDTO
 import eina.unizar.frontend.viewmodels.HomeViewModel
+import eina.unizar.frontend.services.LogrosSyncService
 import androidx.compose.ui.res.painterResource
 import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.models.toVehiculoDTO
@@ -71,6 +72,7 @@ fun HomeScreenWrapper(
     onRevisionesClick: () -> Unit,
     onEstadisticasClick: () -> Unit,
     onBusquedaClick: () -> Unit,
+    onLogrosClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -98,9 +100,12 @@ fun HomeScreenWrapper(
         onRevisionesClick = onRevisionesClick,
         onEstadisticasClick = onEstadisticasClick,
         onBusquedaClick = onBusquedaClick,
+        onLogrosClick = onLogrosClick,
         selectedTab = selectedTab,
         onTabSelected = onTabSelected,
         navController = navController,
+        token = token,  
+        userId = userId,
         authViewModel = authViewModel
     )
 }
@@ -119,13 +124,30 @@ fun HomeScreen(
     onRevisionesClick: () -> Unit,
     onEstadisticasClick: () -> Unit,
     onBusquedaClick: () -> Unit,
+    onLogrosClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
+    token: String,
+    userId: String,
     authViewModel: AuthViewModel
 ) {
-
+    val context = LocalContext.current
     val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+    LaunchedEffect(Unit) {
+        LogrosSyncService.iniciarSincronizacion(
+            context = context,
+            usuarioId = userId.toInt(),
+            token = token
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            LogrosSyncService.detenerSincronizacion()
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -326,6 +348,13 @@ fun HomeScreen(
                         title = "Busqueda",
                         color = Color(0xFF14B8A6),
                         onClick = onBusquedaClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                    QuickAccessCard(
+                        icon = Icons.Default.Star,
+                        title = "Logros",
+                        color = Color(0xFFFFD700),
+                        onClick = onLogrosClick,
                         modifier = Modifier.weight(1f)
                     )
                 }
