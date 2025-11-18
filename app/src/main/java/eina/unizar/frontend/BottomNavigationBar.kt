@@ -39,7 +39,7 @@ fun BottomNavigationBar(
     )
 
     NavigationBar(
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = Modifier.shadow(8.dp)
     ) {
         items.forEach { item ->
@@ -60,7 +60,7 @@ fun BottomNavigationBar(
                     selectedTextColor = Color(0xFFEF4444),
                     unselectedIconColor = Color(0xFF6B7280),
                     unselectedTextColor = Color(0xFF6B7280),
-                    indicatorColor = Color.White
+                    indicatorColor = MaterialTheme.colorScheme.surface
                 )
             )
         }

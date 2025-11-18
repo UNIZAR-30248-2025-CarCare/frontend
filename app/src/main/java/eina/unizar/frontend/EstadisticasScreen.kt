@@ -94,18 +94,19 @@ fun EstadisticasScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Header
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFEF4444)
+                color = MaterialTheme.colorScheme.primary
             ) {
                 Row(
                     modifier = Modifier
@@ -118,14 +119,14 @@ fun EstadisticasScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
                         text = "Estadísticas",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.weight(1f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -151,7 +152,7 @@ fun EstadisticasScreen(
                                     .shadow(2.dp, RoundedCornerShape(25.dp))
                                     .clickable { vehiculoMenuExpanded = true },
                                 shape = RoundedCornerShape(25.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -179,23 +180,29 @@ fun EstadisticasScreen(
                                     Text(
                                         text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                         fontSize = 15.sp,
-                                        color = Color(0xFF1F2937),
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier.weight(1f)
                                     )
                                     Icon(
                                         imageVector = Icons.Default.ArrowDropDown,
                                         contentDescription = "Cambiar vehículo",
-                                        tint = Color(0xFF6B7280)
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
                             DropdownMenu(
                                 expanded = vehiculoMenuExpanded,
-                                onDismissRequest = { vehiculoMenuExpanded = false }
+                                onDismissRequest = { vehiculoMenuExpanded = false },
+                                containerColor = MaterialTheme.colorScheme.surface
                             ) {
                                 vehiculos.forEachIndexed { index, v ->
                                     DropdownMenuItem(
-                                        text = { Text("${v.nombre} - ${v.matricula}") },
+                                        text = {
+                                            Text(
+                                                "${v.nombre} - ${v.matricula}",
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        },
                                         onClick = {
                                             selectedVehiculoIndex = index
                                             vehiculoMenuExpanded = false
@@ -216,7 +223,7 @@ fun EstadisticasScreen(
                             .shadow(2.dp, RoundedCornerShape(25.dp))
                             .clickable { showDatePicker = true },
                         shape = RoundedCornerShape(25.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Row(
                             modifier = Modifier
@@ -227,19 +234,19 @@ fun EstadisticasScreen(
                             Icon(
                                 imageVector = Icons.Default.DateRange,
                                 contentDescription = "Periodo",
-                                tint = Color(0xFF6B7280)
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = "${LocalDate.of(anoSeleccionado, mesSeleccionado, 1).month.getDisplayName(TextStyle.FULL, Locale("es"))} $anoSeleccionado",
                                 fontSize = 15.sp,
-                                color = Color(0xFF1F2937),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = "Cambiar periodo",
-                                tint = Color(0xFF6B7280)
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -250,7 +257,7 @@ fun EstadisticasScreen(
                         text = "Resumen del Periodo",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     Spacer(modifier = Modifier.height(15.dp))
@@ -324,7 +331,7 @@ fun EstadisticaCard(item: EstadisticaItem) {
             .fillMaxWidth()
             .shadow(2.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -352,13 +359,13 @@ fun EstadisticaCard(item: EstadisticaItem) {
                 Text(
                     text = item.titulo,
                     fontSize = 14.sp,
-                    color = Color(0xFF6B7280)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = item.valor,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -377,10 +384,19 @@ fun DatePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Seleccionar Periodo") },
+        title = {
+            Text(
+                "Seleccionar Periodo",
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
         text = {
             Column {
-                Text("Mes", fontWeight = FontWeight.Bold)
+                Text(
+                    "Mes",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -388,18 +404,31 @@ fun DatePickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = { if (mesTemp > 1) mesTemp-- }) {
-                        Icon(Icons.Default.KeyboardArrowLeft, "Anterior")
+                        Icon(
+                            Icons.Default.KeyboardArrowLeft,
+                            "Anterior",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                     Text(
                         LocalDate.of(anoTemp, mesTemp, 1).month.getDisplayName(TextStyle.FULL, Locale("es")),
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     IconButton(onClick = { if (mesTemp < 12) mesTemp++ }) {
-                        Icon(Icons.Default.KeyboardArrowRight, "Siguiente")
+                        Icon(
+                            Icons.Default.KeyboardArrowRight,
+                            "Siguiente",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Año", fontWeight = FontWeight.Bold)
+                Text(
+                    "Año",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -407,24 +436,45 @@ fun DatePickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = { anoTemp-- }) {
-                        Icon(Icons.Default.KeyboardArrowLeft, "Anterior")
+                        Icon(
+                            Icons.Default.KeyboardArrowLeft,
+                            "Anterior",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                    Text(anoTemp.toString(), fontSize = 16.sp)
+                    Text(
+                        anoTemp.toString(),
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     IconButton(onClick = { anoTemp++ }) {
-                        Icon(Icons.Default.KeyboardArrowRight, "Siguiente")
+                        Icon(
+                            Icons.Default.KeyboardArrowRight,
+                            "Siguiente",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(mesTemp, anoTemp) }) {
-                Text("Aceptar")
+                Text(
+                    "Aceptar",
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(
+                    "Cancelar",
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurface
     )
 }

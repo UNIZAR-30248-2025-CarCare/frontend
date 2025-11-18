@@ -93,12 +93,12 @@ fun CrearRevisionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        // Header - Igual que en CrearRepostaje
+        // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFEF4444)
+            color = MaterialTheme.colorScheme.primary
         ) {
             Row(
                 modifier = Modifier
@@ -111,14 +111,14 @@ fun CrearRevisionScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Text(
                     text = "Crear Revisión",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -138,16 +138,16 @@ fun CrearRevisionScreen(
                 text = "Detalles de la revisión",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2937)
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Selector de vehículo - Igual que en CrearRepostaje
+            // Selector de vehículo
             Text(
                 text = "Vehículo",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
 
@@ -162,7 +162,7 @@ fun CrearRevisionScreen(
                         .menuAnchor()
                         .clickable { expandedVehiculo = true },
                     shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Row(
                         modifier = Modifier
@@ -196,25 +196,31 @@ fun CrearRevisionScreen(
                             Text(
                                 text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                 fontSize = 15.sp,
-                                color = Color(0xFF1F2937),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                         }
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = "Expandir",
-                            tint = Color(0xFF9CA3AF)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
                 ExposedDropdownMenu(
                     expanded = expandedVehiculo,
-                    onDismissRequest = { expandedVehiculo = false }
+                    onDismissRequest = { expandedVehiculo = false },
+                    containerColor = MaterialTheme.colorScheme.surface
                 ) {
                     vehiculos.forEachIndexed { index, vehiculo ->
                         DropdownMenuItem(
-                            text = { Text("${vehiculo.nombre} - ${vehiculo.matricula}") },
+                            text = {
+                                Text(
+                                    "${vehiculo.nombre} - ${vehiculo.matricula}",
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            },
                             onClick = {
                                 selectedVehiculoIndex = index
                                 expandedVehiculo = false
@@ -230,7 +236,7 @@ fun CrearRevisionScreen(
             Text(
                 text = "Tipo de revisión",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
 
@@ -245,7 +251,7 @@ fun CrearRevisionScreen(
                         .menuAnchor()
                         .clickable { expandedTipo = true },
                     shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Row(
                         modifier = Modifier
@@ -263,24 +269,30 @@ fun CrearRevisionScreen(
                         Text(
                             text = tipoSeleccionado,
                             fontSize = 15.sp,
-                            color = Color(0xFF1F2937),
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         )
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = "Expandir",
-                            tint = Color(0xFF9CA3AF)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
                 ExposedDropdownMenu(
                     expanded = expandedTipo,
-                    onDismissRequest = { expandedTipo = false }
+                    onDismissRequest = { expandedTipo = false },
+                    containerColor = MaterialTheme.colorScheme.surface
                 ) {
                     TiposRevision.TODOS.forEach { tipo ->
                         DropdownMenuItem(
-                            text = { Text(tipo) },
+                            text = {
+                                Text(
+                                    tipo,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            },
                             onClick = {
                                 tipoSeleccionado = tipo
                                 expandedTipo = false
@@ -296,11 +308,29 @@ fun CrearRevisionScreen(
             OutlinedTextField(
                 value = kilometraje,
                 onValueChange = { kilometraje = it },
-                label = { Text("Kilometraje actual") },
+                label = {
+                    Text(
+                        "Kilometraje actual",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                suffix = { Text("km", color = Color(0xFF6B7280)) }
+                suffix = {
+                    Text(
+                        "km",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -309,9 +339,22 @@ fun CrearRevisionScreen(
             OutlinedTextField(
                 value = taller,
                 onValueChange = { taller = it },
-                label = { Text("Taller (opcional)") },
+                label = {
+                    Text(
+                        "Taller (opcional)",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -325,7 +368,12 @@ fun CrearRevisionScreen(
                 OutlinedTextField(
                     value = fechaRevision?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "",
                     onValueChange = {},
-                    label = { Text("Fecha de la revisión") },
+                    label = {
+                        Text(
+                            "Fecha de la revisión",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
                     enabled = false,
@@ -333,13 +381,14 @@ fun CrearRevisionScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     trailingIcon = {
                         Icon(
                             Icons.Default.DateRange,
                             contentDescription = "Seleccionar fecha",
-                            tint = Color(0xFF6B7280)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 )
@@ -356,7 +405,12 @@ fun CrearRevisionScreen(
                 OutlinedTextField(
                     value = proximaRevision?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "",
                     onValueChange = {},
-                    label = { Text("Próxima revisión (opcional)") },
+                    label = {
+                        Text(
+                            "Próxima revisión (opcional)",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
                     enabled = false,
@@ -364,13 +418,14 @@ fun CrearRevisionScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     trailingIcon = {
                         Icon(
                             Icons.Default.DateRange,
                             contentDescription = "Seleccionar fecha",
-                            tint = Color(0xFF6B7280)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 )
@@ -382,12 +437,25 @@ fun CrearRevisionScreen(
             OutlinedTextField(
                 value = observaciones,
                 onValueChange = { observaciones = it },
-                label = { Text("Observaciones") },
+                label = {
+                    Text(
+                        "Observaciones",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
                 shape = RoundedCornerShape(8.dp),
-                maxLines = 4
+                maxLines = 4,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -438,7 +506,7 @@ fun CrearRevisionScreen(
                     .height(55.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFEF4444)
+                    containerColor = MaterialTheme.colorScheme.primary
                 ),
                 enabled = !isCreating &&
                         vehiculoSeleccionado != null &&
@@ -448,14 +516,15 @@ fun CrearRevisionScreen(
             ) {
                 if (isCreating) {
                     CircularProgressIndicator(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(20.dp)
                     )
                 } else {
                     Text(
                         text = "Crear Revisión",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }

@@ -148,12 +148,12 @@ fun NuevaReservaScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFEF4444)
+            color = MaterialTheme.colorScheme.primary
         ) {
             Row(
                 modifier = Modifier
@@ -166,14 +166,14 @@ fun NuevaReservaScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Text(
                     text = "Nueva Reserva",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -193,7 +193,7 @@ fun NuevaReservaScreen(
                 text = "Detalles de la reserva",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2937)
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -202,7 +202,7 @@ fun NuevaReservaScreen(
             Text(
                 text = "Vehículo",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
 
@@ -212,7 +212,7 @@ fun NuevaReservaScreen(
                         .fillMaxWidth()
                         .height(55.dp),
                     shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Row(
                         modifier = Modifier
@@ -222,14 +222,14 @@ fun NuevaReservaScreen(
                     ) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            color = Color(0xFFEF4444),
+                            color = MaterialTheme.colorScheme.primary,
                             strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = "Cargando vehículos...",
                             fontSize = 15.sp,
-                            color = Color(0xFF9CA3AF),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -246,7 +246,7 @@ fun NuevaReservaScreen(
                             .menuAnchor()
                             .clickable { expandedVehiculo = true },
                         shape = RoundedCornerShape(10.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Row(
                             modifier = Modifier
@@ -281,28 +281,29 @@ fun NuevaReservaScreen(
                                 Text(
                                     text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                     fontSize = 15.sp,
-                                    color = Color(0xFF1F2937),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
                             } ?: run {
                                 Text(
                                     text = "Selecciona un vehículo",
                                     fontSize = 15.sp,
-                                    color = Color(0xFF9CA3AF),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = "Expandir",
-                                tint = Color(0xFF9CA3AF)
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
                     ExposedDropdownMenu(
                         expanded = expandedVehiculo,
-                        onDismissRequest = { expandedVehiculo = false }
+                        onDismissRequest = { expandedVehiculo = false },
+                        containerColor = MaterialTheme.colorScheme.surface
                     ) {
                         vehiculos.forEach { vehiculo ->
                             DropdownMenuItem(
@@ -334,7 +335,7 @@ fun NuevaReservaScreen(
                                         Text(
                                             text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                             fontSize = 14.sp,
-                                            color = Color(0xFF1F2937)
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 },
@@ -354,7 +355,7 @@ fun NuevaReservaScreen(
             Text(
                 text = "Fecha de inicio",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
             OutlinedTextField(
@@ -366,11 +367,17 @@ fun NuevaReservaScreen(
                     .clickable { mostrarDatePickerInicio = true },
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFEF4444),
-                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surface
                 ),
                 leadingIcon = {
-                    Icon(Icons.Default.DateRange, contentDescription = "Fecha Inicio")
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = "Fecha Inicio",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 },
                 enabled = false
             )
@@ -381,7 +388,7 @@ fun NuevaReservaScreen(
             Text(
                 text = "Fecha de fin",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
             OutlinedTextField(
@@ -393,11 +400,17 @@ fun NuevaReservaScreen(
                     .clickable { mostrarDatePickerFin = true },
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFEF4444),
-                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surface
                 ),
                 leadingIcon = {
-                    Icon(Icons.Default.DateRange, contentDescription = "Fecha Fin")
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = "Fecha Fin",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 },
                 enabled = false
             )
@@ -413,7 +426,7 @@ fun NuevaReservaScreen(
                     Text(
                         text = "Hora de inicio",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
                     OutlinedTextField(
@@ -422,11 +435,19 @@ fun NuevaReservaScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFEF4444),
-                            unfocusedBorderColor = Color(0xFFE5E7EB)
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         ),
                         leadingIcon = {
-                            Icon(Icons.Default.DateRange, contentDescription = "Hora")
+                            Icon(
+                                Icons.Default.DateRange,
+                                contentDescription = "Hora",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     )
                 }
@@ -435,7 +456,7 @@ fun NuevaReservaScreen(
                     Text(
                         text = "Hora de fin",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
                     OutlinedTextField(
@@ -444,11 +465,19 @@ fun NuevaReservaScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFEF4444),
-                            unfocusedBorderColor = Color(0xFFE5E7EB)
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         ),
                         leadingIcon = {
-                            Icon(Icons.Default.DateRange, contentDescription = "Hora")
+                            Icon(
+                                Icons.Default.DateRange,
+                                contentDescription = "Hora",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     )
                 }
@@ -460,7 +489,7 @@ fun NuevaReservaScreen(
             Text(
                 text = "Tipo de reserva",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
 
@@ -488,20 +517,29 @@ fun NuevaReservaScreen(
             Text(
                 text = "Notas (opcional)",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
             OutlinedTextField(
                 value = notas,
                 onValueChange = { notas = it },
-                placeholder = { Text("Añade detalles sobre tu reserva...") },
+                placeholder = {
+                    Text(
+                        "Añade detalles sobre tu reserva...",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFEF4444),
-                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 ),
                 maxLines = 4
             )
@@ -617,7 +655,7 @@ fun NuevaReservaScreen(
                                     isLoading = false
                                     if (response.isSuccessful) {
                                         val reservaCreada = response.body()
-                                        
+
                                         scope.launch(Dispatchers.Main) {
                                             Toast.makeText(
                                                 context,
@@ -632,7 +670,7 @@ fun NuevaReservaScreen(
                                                         set(Calendar.YEAR, fechaInicio.year)
                                                         set(Calendar.MONTH, fechaInicio.monthValue - 1)
                                                         set(Calendar.DAY_OF_MONTH, fechaInicio.dayOfMonth)
-                                                        
+
                                                         // Parsear hora de inicio (formato "HH:mm")
                                                         val horaPartes = horaInicio.split(":")
                                                         set(Calendar.HOUR_OF_DAY, horaPartes[0].toInt())
@@ -640,7 +678,7 @@ fun NuevaReservaScreen(
                                                         set(Calendar.SECOND, 0)
                                                         set(Calendar.MILLISECOND, 0)
                                                     }
-                                                    
+
                                                     // Programar la notificación
                                                     NotificationScheduler.scheduleReservationNotification(
                                                         context = context,
@@ -648,7 +686,7 @@ fun NuevaReservaScreen(
                                                         reservationDateTime = fechaHoraReserva.time,
                                                         serviceName = "${vehiculo.nombre} - ${tipoSeleccionado.nombre}"
                                                     )
-                                                    
+
                                                     Log.d("CrearReserva", "Notificación programada para reserva ${reserva.id}")
                                                 } catch (e: Exception) {
                                                     Log.e("CrearReserva", "Error al programar notificación", e)
@@ -675,14 +713,14 @@ fun NuevaReservaScreen(
                                     }
                                 }
 
-        override fun onFailure(call: Call<ReservaResponse>, t: Throwable) {
-            isLoading = false
-            Log.e("CrearReserva", "Error de conexión", t)
-            scope.launch(Dispatchers.Main) {
-                errorMessage = "Error de conexión: ${t.message}"
-            }
-        }
-    })
+                                override fun onFailure(call: Call<ReservaResponse>, t: Throwable) {
+                                    isLoading = false
+                                    Log.e("CrearReserva", "Error de conexión", t)
+                                    scope.launch(Dispatchers.Main) {
+                                        errorMessage = "Error de conexión: ${t.message}"
+                                    }
+                                }
+                            })
                     }
                 },
                 modifier = Modifier
@@ -690,20 +728,21 @@ fun NuevaReservaScreen(
                     .height(55.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFEF4444)
+                    containerColor = MaterialTheme.colorScheme.primary
                 ),
                 enabled = !isLoading && disponible && vehiculoSeleccionado != null
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
                     Text(
                         text = "Crear Reserva",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -726,14 +765,14 @@ fun TipoReservaCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (selected) tipo.color else Color.White
-    val textColor = if (selected) Color.White else Color(0xFF1F2937)
+    val backgroundColor = if (selected) tipo.color else MaterialTheme.colorScheme.surface
+    val textColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
     val borderWidth = if (selected) 0.dp else 1.dp
 
     Card(
         modifier = modifier
             .height(55.dp)
-            .border(borderWidth, Color(0xFFE5E7EB), RoundedCornerShape(10.dp))
+            .border(borderWidth, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor)

@@ -50,18 +50,6 @@ class EleccionInicioActivity : ComponentActivity() {
     }
 }
 
-/**
- * Pantalla inicial de la aplicación donde el usuario elige entre:
- * - Iniciar sesión
- * - Registrarse
- * - Recuperar contraseña
- *
- * Contiene campos controlados (`email`, `password`) y callbacks
- * para manejar cada acción de navegación.
- *
- * Interactúa con `AuthViewModel` para validar las credenciales.
- */
-
 @SuppressLint("ContextCastToActivity")
 @Composable
 fun PantallaEleccionInicio(
@@ -77,7 +65,7 @@ fun PantallaEleccionInicio(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8F8))
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 32.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -85,7 +73,6 @@ fun PantallaEleccionInicio(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo
             Image(
                 painter = painterResource(id = R.drawable.carcare_logo),
                 contentDescription = "Logo CarCare",
@@ -94,19 +81,18 @@ fun PantallaEleccionInicio(
                     .padding(bottom = 16.dp)
             )
 
-            // Título
             Text(
                 text = "Bienvenido a",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1C1C1C)
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
                 text = "CarCare",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFE53935) // Rojo
+                color = Color(0xFFE53935)
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -114,19 +100,26 @@ fun PantallaEleccionInicio(
             Text(
                 text = "Gestiona tu vehículo compartido",
                 fontSize = 14.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Campos de texto
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -138,7 +131,15 @@ fun PantallaEleccionInicio(
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -160,7 +161,7 @@ fun PantallaEleccionInicio(
             Button(
                 onClick = {
                     val hashedPassword = hashPassword(password)
-                    Log.d("EleccionInicio", "Hashed Password: $hashedPassword") // Depuración
+                    Log.d("EleccionInicio", "Hashed Password: $hashedPassword")
                     val loginRequest = LoginRequest(email = email, contraseña = hashedPassword)
 
                     scope.launch(Dispatchers.IO) {
@@ -174,8 +175,7 @@ fun PantallaEleccionInicio(
                                             if (loginResponse != null) {
                                                 authViewModel.saveLoginData(loginResponse.userId, loginResponse.token)
                                             }
-                                            Log.d("EleccionInicio", "UserID: ${loginResponse?.userId}, Token: ${loginResponse?.token}") // Depuración
-                                            // Navegar a la pantalla principal
+                                            Log.d("EleccionInicio", "UserID: ${loginResponse?.userId}, Token: ${loginResponse?.token}")
                                             onLoginClick()
                                         }
                                     } else {
@@ -186,9 +186,7 @@ fun PantallaEleccionInicio(
                                     }
                                 }
 
-                                // Función para extraer solo el mensaje de error
                                 private fun extractErrorMessage(errorBody: String): String {
-                                    // Intentar extraer el mensaje entre comillas después de "error":"
                                     val regex = "\"error\":\"(.*?)\"".toRegex()
                                     val matchResult = regex.find(errorBody)
                                     return matchResult?.groupValues?.getOrNull(1) ?: errorBody
@@ -211,11 +209,10 @@ fun PantallaEleccionInicio(
                 Text("Iniciar Sesión", color = Color.White, fontSize = 16.sp)
             }
 
-            // Mostrar mensaje de error
             errorMessage?.let {
                 Text(
                     text = it,
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 14.sp,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
@@ -228,7 +225,6 @@ fun PantallaEleccionInicio(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Botón Registrarse
             OutlinedButton(
                 onClick = onRegisterClick,
                 shape = RoundedCornerShape(50),
@@ -245,20 +241,21 @@ fun PantallaEleccionInicio(
             Text(
                 text = "¿Eres nuevo por aquí?\nCrea tu cuenta y empieza a gestionar tu vehículo compartido",
                 fontSize = 12.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }
     }
 }
-    @Composable
-    fun DividerWithText() {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Divider(modifier = Modifier.weight(1f), color = Color.LightGray)
-            Text("  o  ", fontSize = 14.sp, color = Color.Gray)
-            Divider(modifier = Modifier.weight(1f), color = Color.LightGray)
-        }
+
+@Composable
+fun DividerWithText() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
+        Text("  o  ", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
     }
+}
