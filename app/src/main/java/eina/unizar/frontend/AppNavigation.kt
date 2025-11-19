@@ -34,6 +34,7 @@ import eina.unizar.frontend.models.toVehiculoDetalle
 import eina.unizar.frontend.viewmodels.HomeViewModel
 import android.content.Intent
 import eina.unizar.frontend.models.SearchResult
+import eina.unizar.frontend.PersonalizarIconoScreen
 
 /**
  * Composable principal que gestiona la navegación entre pantallas.
@@ -652,6 +653,26 @@ fun AppNavigation(intent: Intent? = null) {
                     onBackClick = { navController.popBackStack() }
                 )
             }
+        }
+
+        composable(
+            "personalizar_icono/{vehiculoId}/{vehiculoNombre}/{vehiculoTipo}",
+            arguments = listOf(
+                navArgument("vehiculoId") { type = NavType.StringType },
+                navArgument("vehiculoNombre") { type = NavType.StringType },
+                navArgument("vehiculoTipo") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val vehiculoId = backStackEntry.arguments?.getString("vehiculoId") ?: ""
+            val vehiculoNombre = backStackEntry.arguments?.getString("vehiculoNombre") ?: ""
+            val vehiculoTipo = backStackEntry.arguments?.getString("vehiculoTipo") ?: ""
+
+            PersonalizarIconoScreen(
+                vehiculoId = vehiculoId,
+                vehiculoNombre = vehiculoNombre,
+                vehiculoTipo = vehiculoTipo,
+                navController = navController
+            )
         }
     }
 }

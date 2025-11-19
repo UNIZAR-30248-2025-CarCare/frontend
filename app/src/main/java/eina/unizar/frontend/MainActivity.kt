@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import eina.unizar.frontend.notifications.NotificationHelper
+import eina.unizar.frontend.ui.theme.CarCareTheme
 
 
 class MainActivity : ComponentActivity() {
@@ -61,7 +62,7 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     @Composable
     fun MyApp(intent: android.content.Intent?) {
-        MaterialTheme {
+        CarCareTheme {
             AppNavigation(intent = intent)
         }
     }

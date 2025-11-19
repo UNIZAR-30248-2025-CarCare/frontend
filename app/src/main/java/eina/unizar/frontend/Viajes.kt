@@ -86,18 +86,19 @@ fun ViajesScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Header
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFEF4444)
+                color = MaterialTheme.colorScheme.primary
             ) {
                 Row(
                     modifier = Modifier
@@ -110,14 +111,14 @@ fun ViajesScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
                         text = "Viajes",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.weight(1f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -142,7 +143,7 @@ fun ViajesScreen(
                                 .shadow(2.dp, RoundedCornerShape(25.dp))
                                 .clickable{vehiculoMenuExpanded = true},
                             shape = RoundedCornerShape(25.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -170,23 +171,29 @@ fun ViajesScreen(
                                 Text(
                                     text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                     fontSize = 15.sp,
-                                    color = Color(0xFF1F2937),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(
                                     imageVector = Icons.Default.ArrowDropDown,
                                     contentDescription = "Cambiar vehículo",
-                                    tint = Color(0xFF6B7280)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                         DropdownMenu(
                             expanded = vehiculoMenuExpanded,
-                            onDismissRequest = { vehiculoMenuExpanded = false }
+                            onDismissRequest = { vehiculoMenuExpanded = false },
+                            containerColor = MaterialTheme.colorScheme.surface
                         ) {
                             vehiculos.forEachIndexed { index, v ->
                                 DropdownMenuItem(
-                                    text = { Text("${v.nombre} - ${v.matricula}") },
+                                    text = {
+                                        Text(
+                                            "${v.nombre} - ${v.matricula}",
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         selectedIndex = index
                                         vehiculoMenuExpanded = false
@@ -202,7 +209,7 @@ fun ViajesScreen(
                         text = "Historial de Viajes",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     Spacer(modifier = Modifier.height(15.dp))
@@ -220,7 +227,7 @@ fun ViajesScreen(
                             Text(
                                 text = "No hay viajes registrados",
                                 fontSize = 14.sp,
-                                color = Color(0xFF9CA3AF)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -246,25 +253,45 @@ fun ViajesScreen(
             if (viajeSeleccionado != null) {
                 ModalBottomSheet(
                     onDismissRequest = { viajeSeleccionado = null },
-                    sheetState = sheetState
+                    sheetState = sheetState,
+                    containerColor = MaterialTheme.colorScheme.surface
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Text(
                             text = viajeSeleccionado!!.nombre,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
+                            fontSize = 20.sp,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Descripción: ${viajeSeleccionado!!.descripcion}")
+                        Text(
+                            "Descripción: ${viajeSeleccionado!!.descripcion}",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Usuario: ${viajeSeleccionado!!.usuario}")
+                        Text(
+                            "Usuario: ${viajeSeleccionado!!.usuario}",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Fecha inicio: ${viajeSeleccionado!!.fechaHoraInicio.replace("T", " ")}")
+                        Text(
+                            "Fecha inicio: ${viajeSeleccionado!!.fechaHoraInicio.replace("T", " ")}",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Fecha fin: ${viajeSeleccionado!!.fechaHoraFin.replace("T", " ")}")
+                        Text(
+                            "Fecha fin: ${viajeSeleccionado!!.fechaHoraFin.replace("T", " ")}",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Km realizados: ${viajeSeleccionado!!.kmRealizados}")
-                        Text("Consumo combustible: ${viajeSeleccionado!!.consumoCombustible} L")
+                        Text(
+                            "Km realizados: ${viajeSeleccionado!!.kmRealizados}",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            "Consumo combustible: ${viajeSeleccionado!!.consumoCombustible} L",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }
@@ -278,13 +305,13 @@ fun ViajesScreen(
             ) {
                 FloatingActionButton(
                     onClick = onAddViajeClick,
-                    containerColor = Color(0xFFEF4444),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Añadir viaje",
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -304,7 +331,7 @@ fun ViajeCard(
             .shadow(2.dp, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -338,17 +365,17 @@ fun ViajeCard(
                     text = viaje.nombre,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "Realizado por ${viaje.usuario}",
                     fontSize = 13.sp,
-                    color = Color(0xFF6B7280)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = viaje.fechaHoraFin.replace("T", " "),
                     fontSize = 12.sp,
-                    color = Color(0xFF9CA3AF)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -356,7 +383,7 @@ fun ViajeCard(
             Icon(
                 imageVector = Icons.Default.PlayArrow,
                 contentDescription = "Ver detalles",
-                tint = Color(0xFF9CA3AF)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

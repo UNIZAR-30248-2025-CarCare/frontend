@@ -52,17 +52,18 @@ fun InvitacionesScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFEF4444)
+                color = MaterialTheme.colorScheme.primary
             ) {
                 Row(
                     modifier = Modifier
@@ -75,14 +76,14 @@ fun InvitacionesScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
                         text = "Invitaciones",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.weight(1f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -90,15 +91,24 @@ fun InvitacionesScreen(
                 }
             }
             if (invitacionViewModel.loading) {
-                CircularProgressIndicator()
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             } else {
-                LazyColumn {
+                LazyColumn(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     items(invitacionViewModel.invitaciones) { invitacion ->
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Row(
                                 modifier = Modifier.padding(16.dp),
@@ -112,8 +122,15 @@ fun InvitacionesScreen(
                                 )
                                 Spacer(Modifier.width(16.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(invitacion.Vehiculo.nombre, fontWeight = FontWeight.Bold)
-                                    Text(invitacion.Vehiculo.matricula, color = Color.Gray)
+                                    Text(
+                                        text = invitacion.Vehiculo.nombre,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = invitacion.Vehiculo.matricula,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                                 IconButton(
                                     onClick = {

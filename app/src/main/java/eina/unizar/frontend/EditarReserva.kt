@@ -141,7 +141,7 @@ fun EditarReservaScreen(
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFEF4444)
+                color = MaterialTheme.colorScheme.primary
             ) {
                 Row(
                     modifier = Modifier
@@ -154,21 +154,22 @@ fun EditarReservaScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
                         text = "Editar Reserva",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.width(48.dp))
                 }
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         if (reservaActual == null && !reservasDTO.isEmpty()) {
             // Error: reserva no encontrada
@@ -193,14 +194,19 @@ fun EditarReservaScreen(
                         text = "Reserva no encontrada",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = { navController.popBackStack() },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text("Volver")
+                        Text(
+                            "Volver",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             }
@@ -209,7 +215,7 @@ fun EditarReservaScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .background(Color(0xFFF5F5F5))
+                    .background(MaterialTheme.colorScheme.background)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 30.dp)
             ) {
@@ -260,7 +266,7 @@ fun EditarReservaScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
@@ -288,12 +294,12 @@ fun EditarReservaScreen(
                                     text = reserva.Vehiculo.nombre,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1F2937)
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = reserva.Vehiculo.matricula,
                                     fontSize = 14.sp,
-                                    color = Color(0xFF6B7280)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -304,7 +310,7 @@ fun EditarReservaScreen(
                     text = "Fechas de la reserva",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937),
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
@@ -312,7 +318,7 @@ fun EditarReservaScreen(
                 Text(
                     text = "Fecha de inicio",
                     fontSize = 13.sp,
-                    color = Color(0xFF6B7280),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 5.dp)
                 )
                 OutlinedTextField(
@@ -324,11 +330,17 @@ fun EditarReservaScreen(
                         .clickable { mostrarDatePickerInicio = true },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFEF4444),
-                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     leadingIcon = {
-                        Icon(Icons.Default.DateRange, contentDescription = "Fecha")
+                        Icon(
+                            Icons.Default.DateRange,
+                            contentDescription = "Fecha",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     },
                     enabled = false
                 )
@@ -339,7 +351,7 @@ fun EditarReservaScreen(
                 Text(
                     text = "Fecha de fin",
                     fontSize = 13.sp,
-                    color = Color(0xFF6B7280),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 5.dp)
                 )
                 OutlinedTextField(
@@ -351,11 +363,17 @@ fun EditarReservaScreen(
                         .clickable { mostrarDatePickerFin = true },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFEF4444),
-                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     leadingIcon = {
-                        Icon(Icons.Default.DateRange, contentDescription = "Fecha")
+                        Icon(
+                            Icons.Default.DateRange,
+                            contentDescription = "Fecha",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     },
                     enabled = false
                 )
@@ -366,7 +384,7 @@ fun EditarReservaScreen(
                     text = "Horario",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937),
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
@@ -379,7 +397,7 @@ fun EditarReservaScreen(
                         Text(
                             text = "Hora inicio",
                             fontSize = 13.sp,
-                            color = Color(0xFF6B7280),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 5.dp)
                         )
                         OutlinedTextField(
@@ -388,11 +406,19 @@ fun EditarReservaScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFEF4444),
-                                unfocusedBorderColor = Color(0xFFE5E7EB)
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
                             ),
                             leadingIcon = {
-                                Icon(Icons.Default.Call, contentDescription = "Hora")
+                                Icon(
+                                    Icons.Default.Call,
+                                    contentDescription = "Hora",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         )
                     }
@@ -402,7 +428,7 @@ fun EditarReservaScreen(
                         Text(
                             text = "Hora fin",
                             fontSize = 13.sp,
-                            color = Color(0xFF6B7280),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 5.dp)
                         )
                         OutlinedTextField(
@@ -411,11 +437,19 @@ fun EditarReservaScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFEF4444),
-                                unfocusedBorderColor = Color(0xFFE5E7EB)
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
                             ),
                             leadingIcon = {
-                                Icon(Icons.Default.Call, contentDescription = "Hora")
+                                Icon(
+                                    Icons.Default.Call,
+                                    contentDescription = "Hora",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         )
                     }
@@ -427,7 +461,7 @@ fun EditarReservaScreen(
                     text = "Tipo de reserva",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937),
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
@@ -455,7 +489,7 @@ fun EditarReservaScreen(
                     text = "Notas (opcional)",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937),
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
@@ -465,12 +499,19 @@ fun EditarReservaScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp),
-                    placeholder = { Text("Añade notas sobre la reserva...") },
+                    placeholder = {
+                        Text(
+                            "Añade notas sobre la reserva...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFEF4444),
-                        unfocusedBorderColor = Color(0xFFE5E7EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     shape = RoundedCornerShape(8.dp),
                     maxLines = 4
@@ -537,17 +578,24 @@ fun EditarReservaScreen(
                         .fillMaxWidth()
                         .height(55.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
                     enabled = !isLoading
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Guardar cambios", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Guardar cambios",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
 

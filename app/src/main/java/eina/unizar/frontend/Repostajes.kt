@@ -88,18 +88,19 @@ fun RepostajesScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Header
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFEF4444)
+                color = MaterialTheme.colorScheme.primary
             ) {
                 Row(
                     modifier = Modifier
@@ -112,14 +113,14 @@ fun RepostajesScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
                         text = "Repostajes",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.weight(1f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -144,7 +145,7 @@ fun RepostajesScreen(
                                 .shadow(2.dp, RoundedCornerShape(25.dp))
                                 .clickable { vehiculoMenuExpanded = true },
                             shape = RoundedCornerShape(25.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -172,23 +173,29 @@ fun RepostajesScreen(
                                 Text(
                                     text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                     fontSize = 15.sp,
-                                    color = Color(0xFF1F2937),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(
                                     imageVector = Icons.Default.ArrowDropDown,
                                     contentDescription = "Cambiar vehículo",
-                                    tint = Color(0xFF6B7280)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                         DropdownMenu(
                             expanded = vehiculoMenuExpanded,
-                            onDismissRequest = { vehiculoMenuExpanded = false }
+                            onDismissRequest = { vehiculoMenuExpanded = false },
+                            containerColor = MaterialTheme.colorScheme.surface
                         ) {
                             vehiculos.forEachIndexed { index, v ->
                                 DropdownMenuItem(
-                                    text = { Text("${v.nombre} - ${v.matricula}") },
+                                    text = {
+                                        Text(
+                                            "${v.nombre} - ${v.matricula}",
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         selectedIndex = index
                                         vehiculoMenuExpanded = false
@@ -208,7 +215,7 @@ fun RepostajesScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
                                 .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .padding(16.dp)
                         ) {
@@ -217,7 +224,7 @@ fun RepostajesScreen(
                                     text = "Resumen",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp,
-                                    color = Color(0xFF1F2937)
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(
@@ -227,12 +234,12 @@ fun RepostajesScreen(
                                     Text(
                                         text = "Total gastado:",
                                         fontSize = 15.sp,
-                                        color = Color(0xFF6B7280)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
                                         text = "Total litros",
                                         fontSize = 15.sp,
-                                        color = Color(0xFF6B7280)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -306,13 +313,13 @@ fun RepostajesScreen(
             ) {
                 FloatingActionButton(
                     onClick = onAddRepostajeClick,
-                    containerColor = Color(0xFFEF4444),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Añadir repostaje",
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -345,7 +352,8 @@ fun RepostajeCard(repostaje: Repostaje) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -372,18 +380,18 @@ fun RepostajeCard(repostaje: Repostaje) {
                     text = repostaje.usuarioNombre,
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
-                    color = Color(0xFF1F2937)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = fechaFormateada,
                     fontSize = 13.sp,
-                    color = Color(0xFF6B7280)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "${repostaje.litros} L",
                     fontSize = 13.sp,
-                    color = Color(0xFF6B7280)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             // Precio a la derecha
@@ -396,5 +404,3 @@ fun RepostajeCard(repostaje: Repostaje) {
         }
     }
 }
-
-

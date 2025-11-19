@@ -79,7 +79,7 @@ fun BusquedaScreen(
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFEF4444)
+                color = MaterialTheme.colorScheme.primary
             ) {
                 Column {
                     Row(
@@ -93,14 +93,14 @@ fun BusquedaScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Volver",
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                         Text(
                             text = "Búsqueda Global",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.weight(1f),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
@@ -117,7 +117,7 @@ fun BusquedaScreen(
                                 .shadow(2.dp, RoundedCornerShape(25.dp))
                                 .clickable{vehiculoMenuExpanded = true},
                             shape = RoundedCornerShape(25.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -145,23 +145,29 @@ fun BusquedaScreen(
                                 Text(
                                     text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                     fontSize = 15.sp,
-                                    color = Color(0xFF1F2937),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(
                                     imageVector = Icons.Default.ArrowDropDown,
                                     contentDescription = "Cambiar vehículo",
-                                    tint = Color(0xFF6B7280)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                         DropdownMenu(
                             expanded = vehiculoMenuExpanded,
-                            onDismissRequest = { vehiculoMenuExpanded = false }
+                            onDismissRequest = { vehiculoMenuExpanded = false },
+                            containerColor = MaterialTheme.colorScheme.surface
                         ) {
                             vehiculos.forEachIndexed { index, v ->
                                 DropdownMenuItem(
-                                    text = { Text("${v.nombre} - ${v.matricula}") },
+                                    text = {
+                                        Text(
+                                            "${v.nombre} - ${v.matricula}",
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         selectedIndex = index
                                         vehiculoMenuExpanded = false
@@ -180,11 +186,17 @@ fun BusquedaScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp),
-                        placeholder = { Text("Buscar...") },
+                        placeholder = {
+                            Text(
+                                "Buscar...",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Search,
-                                contentDescription = "Buscar"
+                                contentDescription = "Buscar",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         trailingIcon = {
@@ -195,27 +207,31 @@ fun BusquedaScreen(
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.Close,
-                                        contentDescription = "Limpiar"
+                                        contentDescription = "Limpiar",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
                         },
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                         ),
                         shape = RoundedCornerShape(25.dp),
                         singleLine = true
                     )
                 }
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Filtros
             if (searchQuery.isNotEmpty()) {
@@ -227,7 +243,12 @@ fun BusquedaScreen(
                         FilterChip(
                             selected = filtroActivo == null,
                             onClick = { viewModel.setFiltro(null) },
-                            label = { Text("Todos") }
+                            label = {
+                                Text(
+                                    "Todos",
+                                    color = if (filtroActivo == null) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         )
                     }
 
@@ -235,9 +256,15 @@ fun BusquedaScreen(
                         FilterChip(
                             selected = filtroActivo == tipo,
                             onClick = { viewModel.setFiltro(tipo) },
-                            label = { Text(tipo.displayName) },
+                            label = {
+                                Text(
+                                    tipo.displayName,
+                                    color = if (filtroActivo == tipo) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                )
+                            },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = tipo.color.copy(alpha = 0.2f)
+                                selectedContainerColor = tipo.color.copy(alpha = 0.2f),
+                                containerColor = MaterialTheme.colorScheme.surface
                             )
                         )
                     }
@@ -251,7 +278,9 @@ fun BusquedaScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
 
@@ -265,12 +294,12 @@ fun BusquedaScreen(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = null,
                                 modifier = Modifier.size(64.dp),
-                                tint = Color(0xFF9CA3AF)
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "Busca viajes, repostajes, incidencias...",
-                                color = Color(0xFF9CA3AF)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -283,7 +312,7 @@ fun BusquedaScreen(
                     ) {
                         Text(
                             text = "No se encontraron resultados",
-                            color = Color(0xFF9CA3AF)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -316,7 +345,8 @@ fun BusquedaScreen(
     resultadoSeleccionado?.let { resultado ->
         ModalBottomSheet(
             onDismissRequest = { resultadoSeleccionado = null },
-            sheetState = sheetState
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             when (resultado) {
                 is SearchResult.ViajeResult -> {
@@ -347,7 +377,7 @@ fun ResultadoCard(
             .shadow(2.dp, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -398,20 +428,20 @@ fun ResultadoCard(
                     text = resultado.titulo,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
                     text = resultado.subtitulo,
                     fontSize = 13.sp,
-                    color = Color(0xFF6B7280)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 resultado.fecha?.let {
                     Text(
                         text = it.replace("T", " ").substring(0, 16),
                         fontSize = 12.sp,
-                        color = Color(0xFF9CA3AF)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -419,7 +449,7 @@ fun ResultadoCard(
             Icon(
                 imageVector = Icons.Default.PlayArrow,
                 contentDescription = "Ver detalles",
-                tint = Color(0xFF9CA3AF)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -432,7 +462,7 @@ fun DetalleViajeModal(viaje: Viaje) {
             text = viaje.nombre,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
-            color = Color(0xFF1F2937)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -460,7 +490,7 @@ fun DetalleReservaModal(reserva: ReservaDTO) {
             text = "Reserva",
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
-            color = Color(0xFF1F2937)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -491,7 +521,7 @@ fun DetalleRevisionModal(revision: RevisionDTO) {
             text = "Revisión - ${revision.tipo}",
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
-            color = Color(0xFF1F2937)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -522,13 +552,13 @@ fun DetalleItem(label: String, valor: String) {
         Text(
             text = label,
             fontSize = 12.sp,
-            color = Color(0xFF6B7280),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium
         )
         Text(
             text = valor,
             fontSize = 15.sp,
-            color = Color(0xFF1F2937)
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -546,7 +576,7 @@ fun DetalleIncidenciaModal(incidencia: IncidenciaDetalle) {
                 text = incidencia.titulo,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
-                color = Color(0xFF1F2937),
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
 
@@ -617,7 +647,7 @@ fun DetalleIncidenciaModal(incidencia: IncidenciaDetalle) {
             Box(
                 modifier = Modifier
                     .background(
-                        Color(0xFFF3F4F6),
+                        MaterialTheme.colorScheme.surfaceVariant,
                         RoundedCornerShape(8.dp)
                     )
                     .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -626,7 +656,7 @@ fun DetalleIncidenciaModal(incidencia: IncidenciaDetalle) {
                     text = incidencia.tipo,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF374151)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

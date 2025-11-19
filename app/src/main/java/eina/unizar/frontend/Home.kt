@@ -41,22 +41,6 @@ enum class EstadoVehiculo(val color: Color, val texto: String) {
     EN_REPARACION(Color(0xFFEF4444), "En reparación")
 }
 
-/**
- * Pantalla principal tras iniciar sesión.
- *
- * `HomeScreenWrapper`:
- * - Inicializa `HomeViewModel` y obtiene vehículos y nombre de usuario.
- * - Convierte objetos `VehiculoDTO` a `Vehiculo` para la UI.
- * - Llama a `HomeScreen()` con los datos obtenidos.
- *
- * `HomeScreen()`:
- * - Muestra el saludo al usuario y la lista de vehículos.
- * - Incluye navegación inferior mediante `BottomNavigationBar`.
- * - Ofrece accesos directos a otras secciones (Mapa, Incidencias, Calendario).
- *
- * El enum `EstadoVehiculo` define estados visuales con colores y texto.
- */
-
 @Composable
 fun HomeScreenWrapper(
     userId: String,
@@ -162,174 +146,166 @@ fun HomeScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
 
-
-        // Header
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFEF4444),
-            shadowElevation = 4.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.primary,
+                shadowElevation = 4.dp
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Hola,",
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
-                    Text(
-                        text = userName,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-                // Icono perfil
-                val context = LocalContext.current
-                PerfilMenu(
-                    onCerrarSesion = {
-                        authViewModel.logout()
-                        // Borra también de SharedPreferences si es necesario
-                        val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-                        prefs.edit().remove("user_id").remove("token").apply()
-                        navController.navigate("eleccion") {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
-                    navController = navController
-                )
-            }
-        }
-
-        // Contenido
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 20.dp)
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Título Mis Vehículos
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Mis Vehículos",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
-                    )
-                    IconButton(onClick = onAddVehiculoClick) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Añadir vehículo",
-                            tint = Color(0xFFEF4444),
-                            modifier = Modifier.size(32.dp)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Hola,",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text(
+                            text = userName,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
+                    val context = LocalContext.current
+                    PerfilMenu(
+                        onCerrarSesion = {
+                            authViewModel.logout()
+                            val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+                            prefs.edit().remove("user_id").remove("token").apply()
+                            navController.navigate("eleccion") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        },
+                        navController = navController
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // Lista de vehículos
-            items(vehiculos) { vehiculo ->
-                VehiculoCard(
-                    vehiculo = vehiculo.toVehiculoDTO(),
-                    onClick = { onVehiculoClick(vehiculo.id.toString()) }
-                )
-                Spacer(modifier = Modifier.height(15.dp))
-            }
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 20.dp)
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
 
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Mis Vehículos",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        IconButton(onClick = onAddVehiculoClick) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Añadir vehículo",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
 
-                // Acceso Rápido
-                Text(
-                    text = "Acceso Rápido",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937)
-                )
-
-                Spacer(modifier = Modifier.height(15.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    QuickAccessCard(
-                        icon = Icons.Default.LocationOn,
-                        title = "Mapa",
-                        color = Color(0xFFEF4444),
-                        onClick = onMapaClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    QuickAccessCard(
-                        icon = Icons.Default.DateRange,
-                        title = "Calendario",
-                        color = Color(0xFF3B82F6),
-                        onClick = onCalendarioClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    QuickAccessCard(
-                        icon = Icons.Default.Warning,
-                        title = "Incidencias",
-                        color = Color(0xFF10B981),
-                        onClick = onIncidenciasClick,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Segunda fila
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    QuickAccessCard(
-                        icon = Icons.Default.Place,
-                        title = "Viajes",
-                        color = Color(0xFF8B5CF6),
-                        onClick = onViajesClick,
-                        modifier = Modifier.weight(1f)
+                items(vehiculos) { vehiculo ->
+                    VehiculoCard(
+                        vehiculo = vehiculo.toVehiculoDTO(),
+                        onClick = { onVehiculoClick(vehiculo.id.toString()) }
                     )
-                    QuickAccessCard(
-                        icon = Icons.Default.Settings,
-                        title = "Repostajes",
-                        color = Color(0xFFF97316),
-                        onClick = onRepostajesClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                    QuickAccessCard(
-                        icon = Icons.Default.Build,
-                        title = "Revisiones",
-                        color = Color(0xFF9333EA),
-                        onClick = onRevisionesClick,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Spacer(modifier = Modifier.height(15.dp))
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Acceso Rápido",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+
+                    Spacer(modifier = Modifier.height(15.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        QuickAccessCard(
+                            icon = Icons.Default.LocationOn,
+                            title = "Mapa",
+                            color = Color(0xFFEF4444),
+                            onClick = onMapaClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        QuickAccessCard(
+                            icon = Icons.Default.DateRange,
+                            title = "Calendario",
+                            color = Color(0xFF3B82F6),
+                            onClick = onCalendarioClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        QuickAccessCard(
+                            icon = Icons.Default.Warning,
+                            title = "Incidencias",
+                            color = Color(0xFF10B981),
+                            onClick = onIncidenciasClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        QuickAccessCard(
+                            icon = Icons.Default.Place,
+                            title = "Viajes",
+                            color = Color(0xFF8B5CF6),
+                            onClick = onViajesClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                        QuickAccessCard(
+                            icon = Icons.Default.Settings,
+                            title = "Repostajes",
+                            color = Color(0xFFF97316),
+                            onClick = onRepostajesClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                        QuickAccessCard(
+                            icon = Icons.Default.Build,
+                            title = "Revisiones",
+                            color = Color(0xFF9333EA),
+                            onClick = onRevisionesClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                 // Tercera fila
                 Row(
@@ -350,30 +326,20 @@ fun HomeScreen(
                         onClick = onBusquedaClick,
                         modifier = Modifier.weight(1f)
                     )
-                    QuickAccessCard(
-                        icon = Icons.Default.Star,
-                        title = "Logros",
-                        color = Color(0xFFFFD700),
-                        onClick = onLogrosClick,
-                        modifier = Modifier.weight(1f)
-                    )
                 }
 
-                Spacer(modifier = Modifier.height(100.dp))
+                    Spacer(modifier = Modifier.height(100.dp))
+                }
             }
         }
     }
 }
-    }
-
-
 
 @Composable
 fun VehiculoCard(
     vehiculo: VehiculoDTO,
     onClick: () -> Unit
 ) {
-    // Asigna color, icono y nombre según el string tipo
     val (color, iconRes, name) = when (vehiculo.tipo.trim().lowercase()) {
         "coche" -> Triple(Color(0xFF3B82F6), R.drawable.ic_coche, "Coche")
         "moto" -> Triple(Color(0xFFF59E0B), R.drawable.ic_moto, "Moto")
@@ -389,7 +355,7 @@ fun VehiculoCard(
             .clickable(onClick = onClick)
             .shadow(2.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -418,12 +384,12 @@ fun VehiculoCard(
                     text = vehiculo.nombre,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = vehiculo.matricula,
                     fontSize = 14.sp,
-                    color = Color(0xFF6B7280)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -453,7 +419,7 @@ fun VehiculoCard(
             Icon(
                 imageVector = Icons.Default.KeyboardArrowDown,
                 contentDescription = "Ver detalles",
-                tint = Color(0xFF9CA3AF),
+                tint = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -474,7 +440,7 @@ fun QuickAccessCard(
             .clickable(onClick = onClick)
             .shadow(2.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -500,13 +466,11 @@ fun QuickAccessCard(
             Text(
                 text = title,
                 fontSize = 12.sp,
-                color = Color(0xFF1F2937)
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
-
-
 
 @Composable
 fun BottomNavItem(
@@ -523,13 +487,13 @@ fun BottomNavItem(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .background(Color(0xFFEF4444), CircleShape),
+                    .background(MaterialTheme.colorScheme.primary, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -537,7 +501,7 @@ fun BottomNavItem(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = Color(0xFF9CA3AF),
+                tint = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -545,7 +509,7 @@ fun BottomNavItem(
         Text(
             text = label,
             fontSize = 11.sp,
-            color = if (selected) Color(0xFFEF4444) else Color(0xFF9CA3AF),
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
     }
@@ -558,7 +522,7 @@ fun PerfilMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    
+
     var reservationNotificationsEnabled by remember {
         mutableStateOf(NotificationPreferences.areReservationNotificationsEnabled(context))
     }
@@ -569,44 +533,43 @@ fun PerfilMenu(
     Box(
         modifier = Modifier
             .size(50.dp)
-            .background(Color.White, CircleShape)
+            .background(MaterialTheme.colorScheme.onPrimary, CircleShape)
             .clickable { expanded = true },
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = Icons.Default.Person,
             contentDescription = "Perfil",
-            tint = Color(0xFFEF4444),
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(30.dp)
         )
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             DropdownMenuItem(
-                text = { Text("Ver invitaciones") },
+                text = { Text("Ver invitaciones", color = MaterialTheme.colorScheme.onSurface) },
                 onClick = {
                     expanded = false
                     navController.navigate("invitaciones")
                 }
             )
-            
-            Divider()
-            
-            // Título de notificaciones
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+
             DropdownMenuItem(
-                text = { 
+                text = {
                     Text(
                         "Notificaciones",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        color = Color(0xFF6B7280)
-                    ) 
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 },
                 onClick = { }
             )
-            
-            // Notificaciones de Reservas
+
             DropdownMenuItem(
                 text = {
                     Row(
@@ -615,11 +578,11 @@ fun PerfilMenu(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Reservas", fontSize = 14.sp)
+                            Text("Reservas", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                             Text(
                                 "1h antes de la cita",
                                 fontSize = 11.sp,
-                                color = Color(0xFF9CA3AF)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Checkbox(
@@ -629,7 +592,7 @@ fun PerfilMenu(
                                 NotificationPreferences.setReservationNotificationsEnabled(context, enabled)
                             },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = Color(0xFFEF4444)
+                                checkedColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
@@ -642,8 +605,7 @@ fun PerfilMenu(
                     )
                 }
             )
-            
-            // Notificaciones de Mantenimiento
+
             DropdownMenuItem(
                 text = {
                     Row(
@@ -652,11 +614,11 @@ fun PerfilMenu(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Mantenimientos", fontSize = 14.sp)
+                            Text("Mantenimientos", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                             Text(
                                 "Cuando toque revisión",
                                 fontSize = 11.sp,
-                                color = Color(0xFF9CA3AF)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Checkbox(
@@ -666,7 +628,7 @@ fun PerfilMenu(
                                 NotificationPreferences.setMaintenanceNotificationsEnabled(context, enabled)
                             },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = Color(0xFFEF4444)
+                                checkedColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
@@ -679,11 +641,11 @@ fun PerfilMenu(
                     )
                 }
             )
-            
-            Divider()
-            
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+
             DropdownMenuItem(
-                text = { Text("Cerrar Sesión") },
+                text = { Text("Cerrar Sesión", color = MaterialTheme.colorScheme.onSurface) },
                 onClick = {
                     expanded = false
                     onCerrarSesion()

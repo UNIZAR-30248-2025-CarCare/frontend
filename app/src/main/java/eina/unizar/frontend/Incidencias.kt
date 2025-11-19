@@ -27,16 +27,13 @@ import java.time.LocalDate
 import androidx.compose.material.icons.filled.ShoppingCart
 import android.graphics.Paint
 import androidx.compose.ui.res.painterResource
-//import androidx.compose.ui.text.intl.Locale
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-//import com.google.ai.edge.litert.Environment
 import eina.unizar.frontend.models.IncidenciaDetalle
 import eina.unizar.frontend.models.Vehiculo
 import eina.unizar.frontend.models.VehiculoDTO
 import eina.unizar.frontend.viewmodels.HomeViewModel
 import eina.unizar.frontend.viewmodels.IncidenciaViewModel
-
 
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
@@ -44,14 +41,11 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
-
-import java.util.Date           // Para Date
-import java.util.Locale         // Para Locale
+import java.util.Date
+import java.util.Locale
 
 import java.util.*
 
-
-// Clases solicitadas
 data class Usuario(
     val id: String,
     val nombre: String,
@@ -59,7 +53,6 @@ data class Usuario(
     val email: String
 )
 
-//! HAY QUE PONER ICONOS PERSONALIZADOS
 enum class TipoVehiculo(val iconRes: Int, val color: Color) {
     CAMION(R.drawable.ic_camion, Color(0xFF3B82F6)),
     FURGONETA(R.drawable.ic_furgoneta, Color(0xFFF59E0B)),
@@ -98,25 +91,6 @@ enum class EstadoIncidencia {
     RESUELTA
 }
 
-/**
- * Pantalla de gestión y visualización de incidencias de los vehículos.
- *
- * - Muestra dos pestañas: “Activas” y “Resueltas”.
- * - Cada incidencia contiene título, descripción, tipo, prioridad y estado.
- * - Permite seleccionar vehículo y navegar al detalle de la incidencia.
- *
- * Elementos destacados:
- * - `Scaffold` con barra superior y navegación inferior.
- * - Uso de `TabRow` o control similar para cambiar entre incidencias activas/resueltas.
- * - Botón flotante (`onAddIncidenciaClick`) para crear nuevas incidencias.
- *
- * Callbacks:
- * - `onBackClick()` → Regresa a la vista anterior.
- * - `onVehiculoClick()` → Abre selector de vehículo.
- * - `onIncidenciaClick(id)` → Navega al detalle de la incidencia.
- * - `onAddIncidenciaClick()` → Crea una nueva incidencia.
- */
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IncidenciasScreen(
@@ -139,13 +113,11 @@ fun IncidenciasScreen(
     var tabSeleccionada by remember { mutableIntStateOf(0) }
     var expandedVehiculo by remember { mutableStateOf(false) }
 
-    // Estados para modo selección
     var modoSeleccion by remember { mutableStateOf(false) }
     var incidenciasSeleccionadas by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     val currentRoute = navController.currentBackStackEntry?.destination?.route
 
-    // Cargar vehículos e incidencias
     LaunchedEffect(Unit) {
         if (vehiculos.isEmpty()) {
             homeViewModel.fetchVehiculos(userId, token)
@@ -153,14 +125,12 @@ fun IncidenciasScreen(
         viewModel.obtenerIncidenciasUsuario(token)
     }
 
-    // Establecer primer vehículo como seleccionado
     LaunchedEffect(vehiculos) {
         if (vehiculoSeleccionado == null && vehiculos.isNotEmpty()) {
             vehiculoSeleccionado = vehiculos.first()
         }
     }
 
-    // Filtrar incidencias
     val incidenciasFiltradas = incidencias.filter { incidencia ->
         vehiculoSeleccionado?.let { vehiculo ->
             incidencia.vehiculoId.toString() == vehiculo.id
@@ -179,10 +149,9 @@ fun IncidenciasScreen(
     Scaffold(
         bottomBar = {
             if (modoSeleccion) {
-                // Barra de selección
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFEF4444),
+                    color = MaterialTheme.colorScheme.primary,
                     shadowElevation = 8.dp
                 ) {
                     Row(
@@ -198,7 +167,7 @@ fun IncidenciasScreen(
                                 text = "${incidenciasSeleccionadas.size} seleccionadas",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                             TextButton(
                                 onClick = {
@@ -216,7 +185,7 @@ fun IncidenciasScreen(
                                     else
                                         "Seleccionar todas",
                                     fontSize = 13.sp,
-                                    color = Color.White.copy(alpha = 0.9f)
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                                 )
                             }
                         }
@@ -235,8 +204,8 @@ fun IncidenciasScreen(
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White,
-                                contentColor = Color(0xFFEF4444)
+                                containerColor = MaterialTheme.colorScheme.onPrimary,
+                                contentColor = MaterialTheme.colorScheme.primary
                             ),
                             shape = RoundedCornerShape(20.dp),
                             enabled = incidenciasSeleccionadas.isNotEmpty()
@@ -267,21 +236,21 @@ fun IncidenciasScreen(
                     }
                 )
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Header
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFEF4444)
+                    color = MaterialTheme.colorScheme.primary
                 ) {
                     Row(
                         modifier = Modifier
@@ -301,14 +270,14 @@ fun IncidenciasScreen(
                             Icon(
                                 imageVector = if (modoSeleccion) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = if (modoSeleccion) "Cancelar" else "Volver",
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                         Text(
                             text = if (modoSeleccion) "Seleccionar incidencias" else "Incidencias",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.weight(1f),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
@@ -320,7 +289,7 @@ fun IncidenciasScreen(
                                 Icon(
                                     imageVector = Icons.Default.Share,
                                     contentDescription = "Exportar",
-                                    tint = Color.White
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         } else {
@@ -334,7 +303,7 @@ fun IncidenciasScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = Color(0xFFEF4444))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 } else {
                     LazyColumn(
@@ -345,7 +314,6 @@ fun IncidenciasScreen(
                         item {
                             Spacer(modifier = Modifier.height(15.dp))
 
-                            // Selector de vehículo
                             if (vehiculos.isNotEmpty() && vehiculoSeleccionado != null) {
                                 ExposedDropdownMenuBox(
                                     expanded = expandedVehiculo,
@@ -359,7 +327,7 @@ fun IncidenciasScreen(
                                             .menuAnchor()
                                             .clickable { expandedVehiculo = true },
                                         shape = RoundedCornerShape(25.dp),
-                                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -390,25 +358,31 @@ fun IncidenciasScreen(
                                                 Text(
                                                     text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                                     fontSize = 15.sp,
-                                                    color = Color(0xFF1F2937),
+                                                    color = MaterialTheme.colorScheme.onSurface,
                                                     modifier = Modifier.weight(1f)
                                                 )
                                             }
                                             Icon(
                                                 imageVector = Icons.Default.ArrowDropDown,
                                                 contentDescription = "Cambiar vehículo",
-                                                tint = Color(0xFF6B7280)
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
 
                                     ExposedDropdownMenu(
                                         expanded = expandedVehiculo,
-                                        onDismissRequest = { expandedVehiculo = false }
+                                        onDismissRequest = { expandedVehiculo = false },
+                                        containerColor = MaterialTheme.colorScheme.surface
                                     ) {
                                         vehiculos.forEach { vehiculo ->
                                             DropdownMenuItem(
-                                                text = { Text("${vehiculo.nombre} - ${vehiculo.matricula}") },
+                                                text = {
+                                                    Text(
+                                                        "${vehiculo.nombre} - ${vehiculo.matricula}",
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                },
                                                 onClick = {
                                                     vehiculoSeleccionado = vehiculo
                                                     expandedVehiculo = false
@@ -423,7 +397,6 @@ fun IncidenciasScreen(
 
                             Spacer(modifier = Modifier.height(15.dp))
 
-                            // Tabs
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -451,7 +424,6 @@ fun IncidenciasScreen(
                             Spacer(modifier = Modifier.height(20.dp))
                         }
 
-                        // Lista de incidencias
                         if (incidenciasAMostrar.isEmpty()) {
                             item {
                                 Box(
@@ -466,7 +438,7 @@ fun IncidenciasScreen(
                                         else
                                             "No hay incidencias resueltas",
                                         fontSize = 14.sp,
-                                        color = Color(0xFF9CA3AF)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -495,12 +467,11 @@ fun IncidenciasScreen(
                         item {
                             Spacer(modifier = Modifier.height(20.dp))
 
-                            // Estadísticas
                             Text(
                                 text = "Resumen",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1F2937)
+                                color = MaterialTheme.colorScheme.onBackground
                             )
 
                             Spacer(modifier = Modifier.height(15.dp))
@@ -535,7 +506,6 @@ fun IncidenciasScreen(
                 }
             }
 
-            // Botón flotante (solo visible cuando NO está en modo selección)
             if (!modoSeleccion) {
                 Box(
                     modifier = Modifier
@@ -545,13 +515,13 @@ fun IncidenciasScreen(
                 ) {
                     FloatingActionButton(
                         onClick = onAddIncidenciaClick,
-                        containerColor = Color(0xFFEF4444),
+                        containerColor = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(56.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Añadir incidencia",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -587,13 +557,12 @@ fun IncidenciaCardItemSeleccionable(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (seleccionada) Color(0xFFEF4444).copy(alpha = 0.08f) else Color.White
+            containerColor = if (seleccionada) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Barra de color según prioridad
             Box(
                 modifier = Modifier
                     .width(5.dp)
@@ -601,27 +570,24 @@ fun IncidenciaCardItemSeleccionable(
                     .background(prioridadColor)
             )
 
-            // Contenido principal de la tarjeta
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp, horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Checkbox en modo selección
                 if (modoSeleccion) {
                     Checkbox(
                         checked = seleccionada,
                         onCheckedChange = { onClick() },
                         colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFFEF4444),
-                            uncheckedColor = Color(0xFF9CA3AF)
+                            checkedColor = MaterialTheme.colorScheme.primary,
+                            uncheckedColor = MaterialTheme.colorScheme.outline
                         )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
 
-                // Icono
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -645,26 +611,24 @@ fun IncidenciaCardItemSeleccionable(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Información principal
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = incidencia.titulo,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937),
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                     Text(
                         text = incidencia.fechaCreacion.formatToDateOnly(),
                         fontSize = 12.sp,
-                        color = Color(0xFF9CA3AF)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                // Badge de prioridad
                 Surface(
                     shape = RoundedCornerShape(11.dp),
                     color = prioridadColor.copy(alpha = 0.1f)
@@ -682,27 +646,23 @@ fun IncidenciaCardItemSeleccionable(
     }
 }
 
-// Función para generar el PDF
 fun generarPDF(
     context: Context,
     incidencias: List<IncidenciaDetalle>,
     vehiculo: VehiculoDTO?
 ) {
-    // --- Declaraciones de configuración y Paints (Mantienen la estructura original) ---
     try {
         val pdfDocument = PdfDocument()
-        val pageWidth = 595 // Ancho A4 en puntos
-        val pageHeight = 842 // Alto A4 en puntos
+        val pageWidth = 595
+        val pageHeight = 842
 
         var pageNumber = 1
         var yPosition = 80f
         val lineHeight = 20f
         val margin = 40f
 
-        // Helper function para convertir Base64 a Bitmap
         fun base64ToBitmap(base64String: String): android.graphics.Bitmap? {
             return try {
-                // Limpiar prefijo 'data:image/jpeg;base64,' si está presente
                 val cleanBase64 = base64String.removePrefix("data:image/jpeg;base64,")
                 val decodedBytes = android.util.Base64.decode(cleanBase64, android.util.Base64.DEFAULT)
                 android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
@@ -712,12 +672,10 @@ fun generarPDF(
             }
         }
 
-        // Crear primera página
         var pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
         var page = pdfDocument.startPage(pageInfo)
         var canvas = page.canvas
 
-        // Paint para diferentes estilos
         val titlePaint = Paint().apply {
             textSize = 24f
             color = android.graphics.Color.rgb(239, 68, 68)
@@ -740,7 +698,6 @@ fun generarPDF(
             color = android.graphics.Color.GRAY
         }
 
-        // Función para dibujar el pie de página
         fun drawFooter(canvas: android.graphics.Canvas, pageNumber: Int) {
             canvas.drawText(
                 "Página $pageNumber",
@@ -750,9 +707,6 @@ fun generarPDF(
             )
         }
 
-        // --- PORTADA y ÍNDICE ---
-
-        // PORTADA
         canvas.drawText("Reporte de Incidencias", margin, yPosition, titlePaint)
         yPosition += 40f
 
@@ -768,14 +722,12 @@ fun generarPDF(
         canvas.drawText("Total de incidencias: ${incidencias.size}", margin, yPosition, normalPaint)
         yPosition += 50f
 
-        // ÍNDICE
         canvas.drawText("Índice de Incidencias", margin, yPosition, headerPaint)
         yPosition += 30f
 
-        // Dibujar entradas de índice (usando la misma lógica de salto de página que tenías)
         incidencias.forEachIndexed { index, incidencia ->
             if (yPosition > pageHeight - 100) {
-                drawFooter(canvas, pageNumber) // Dibuja pie antes de terminar
+                drawFooter(canvas, pageNumber)
                 pdfDocument.finishPage(page)
                 pageNumber++
                 pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
@@ -787,34 +739,27 @@ fun generarPDF(
             yPosition += lineHeight
         }
 
-        drawFooter(canvas, pageNumber) // Pie de página del índice
-
-        // Nueva página para detalles
+        drawFooter(canvas, pageNumber)
         pdfDocument.finishPage(page)
         pageNumber++
 
-        // --- DETALLES DE CADA INCIDENCIA (Incluyendo Fotos) ---
-
-        val maxContentWidth = pageWidth - (2 * margin) // Ancho máximo disponible para contenido
-        val imageMaxHeight = 250f // Altura máxima reservada para cada imagen
+        val maxContentWidth = pageWidth - (2 * margin)
+        val imageMaxHeight = 250f
 
         incidencias.forEachIndexed { index, incidencia ->
-            // Inicia una nueva página para cada incidencia
             pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
             page = pdfDocument.startPage(pageInfo)
             canvas = page.canvas
             yPosition = 80f
 
-            // Título de la incidencia
             canvas.drawText("Incidencia #${index + 1}: ${incidencia.titulo}", margin, yPosition, headerPaint)
             yPosition += 30f
 
-            // Cuadro de estado con color
             val estadoColor = when (incidencia.estado.uppercase()) {
-                "RESUELTA", "CERRADA" -> android.graphics.Color.rgb(16, 185, 129) // Verde
-                "CANCELADA" -> android.graphics.Color.rgb(107, 114, 128) // Gris
-                "EN PROGRESO" -> android.graphics.Color.rgb(245, 158, 11) // Naranja
-                else -> android.graphics.Color.rgb(239, 68, 68) // Rojo (Activa/Abierta)
+                "RESUELTA", "CERRADA" -> android.graphics.Color.rgb(16, 185, 129)
+                "CANCELADA" -> android.graphics.Color.rgb(107, 114, 128)
+                "EN PROGRESO" -> android.graphics.Color.rgb(245, 158, 11)
+                else -> android.graphics.Color.rgb(239, 68, 68)
             }
 
             val estadoPaint = Paint().apply {
@@ -828,27 +773,23 @@ fun generarPDF(
                 isFakeBoldText = true
             }
 
-            // Dibuja el fondo del estado
             canvas.drawRoundRect(
                 margin, yPosition - 15f, margin + 150f, yPosition + 5f,
                 10f, 10f, estadoPaint
             )
-            // Dibuja el texto del estado
             canvas.drawText(incidencia.estado, margin + 10, yPosition, estadoTextPaint)
             yPosition += 40f
 
-            // Información principal (Título, Descripción, etc.)
             canvas.drawText("Descripción:", margin, yPosition, headerPaint)
             yPosition += 20f
 
-            // Dividir descripción en líneas (Usando lógica original)
             val descripcionPalabras = incidencia.descripcion.split(" ")
             var lineaActual = ""
             val textMargin = margin + 20
 
             descripcionPalabras.forEach { palabra ->
                 val testLine = if (lineaActual.isEmpty()) palabra else "$lineaActual $palabra"
-                if (normalPaint.measureText(testLine) > maxContentWidth - 20) { // Restar el margen extra de 20
+                if (normalPaint.measureText(testLine) > maxContentWidth - 20) {
                     canvas.drawText(lineaActual, textMargin, yPosition, normalPaint)
                     yPosition += lineHeight
                     lineaActual = palabra
@@ -863,7 +804,6 @@ fun generarPDF(
 
             yPosition += 20f
 
-            // Tipo y Prioridad
             canvas.drawText("Tipo: ${incidencia.tipo}", margin, yPosition, normalPaint)
             yPosition += lineHeight
 
@@ -879,25 +819,15 @@ fun generarPDF(
                 isFakeBoldText = true
             }
             canvas.drawText("Prioridad: ", margin, yPosition, normalPaint)
-            // Dibuja la prioridad con color diferente
             canvas.drawText(incidencia.prioridad, margin + normalPaint.measureText("Prioridad: "), yPosition, prioridadPaint)
             yPosition += lineHeight
 
-            // Fecha
-            // Asumiendo que formatToDateOnly() es una función de extensión que funciona.
             canvas.drawText("Fecha de creación: ${incidencia.fechaCreacion.formatToDateOnly()}", margin, yPosition, normalPaint)
             yPosition += 40f
 
-            // -------------------------------------------------------------------
-            // LÓGICA PARA DIBUJAR IMÁGENES (FOTOS)
-            // -------------------------------------------------------------------
-
-            // Suponemos que IncidenciaDetalle tiene un campo 'fotosBase64: List<String>'
-            // DEBES ASEGURARTE DE QUE ESTE CAMPO EXISTE EN TU MODELO DE DATOS
             val fotosBase64 = try {
                 incidencia::class.java.getDeclaredField("fotos").apply { isAccessible = true }.get(incidencia) as? List<String> ?: emptyList()
             } catch (e: Exception) {
-                // Si el campo no existe, simplemente usa una lista vacía y registra el error.
                 e.printStackTrace()
                 emptyList()
             }
@@ -910,19 +840,16 @@ fun generarPDF(
                     val bitmap = base64ToBitmap(base64String)
 
                     if (bitmap != null) {
-                        // Calcula el redimensionamiento de la imagen
                         val imageScaleFactor = maxContentWidth / bitmap.width.toFloat()
                         var imageWidth = bitmap.width.toFloat() * imageScaleFactor
                         var imageHeight = bitmap.height.toFloat() * imageScaleFactor
 
-                        // Si la imagen es muy alta, limitamos la altura y recalculamos el ancho
                         if (imageHeight > imageMaxHeight) {
                             val heightRatio = imageMaxHeight / imageHeight
                             imageHeight = imageMaxHeight
                             imageWidth *= heightRatio
                         }
 
-                        // Si la imagen no cabe en la página actual, salta a la siguiente
                         if (yPosition + imageHeight + lineHeight > pageHeight - margin) {
                             drawFooter(canvas, pageNumber)
                             pdfDocument.finishPage(page)
@@ -930,18 +857,15 @@ fun generarPDF(
                             pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
                             page = pdfDocument.startPage(pageInfo)
                             canvas = page.canvas
-                            yPosition = margin // Reinicia la posición Y en la nueva página
+                            yPosition = margin
 
-                            // Opcional: Escribir un encabezado de continuación
                             canvas.drawText("Incidencia #${index + 1} (Imágenes - Cont.)", margin, yPosition, headerPaint)
                             yPosition += 30f
                         }
 
-                        // Dibuja el subtítulo de la imagen
                         canvas.drawText("Foto ${imgIndex + 1}:", margin, yPosition, normalPaint)
                         yPosition += lineHeight
 
-                        // Dibuja el Bitmap redimensionado en el Canvas
                         val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(
                             bitmap,
                             imageWidth.toInt(),
@@ -951,8 +875,8 @@ fun generarPDF(
 
                         canvas.drawBitmap(scaledBitmap, margin, yPosition, normalPaint)
 
-                        yPosition += imageHeight + 20f // Avanza la posición Y + padding
-                        scaledBitmap.recycle() // Liberar memoria del bitmap escalado
+                        yPosition += imageHeight + 20f
+                        scaledBitmap.recycle()
                     } else {
                         canvas.drawText("Foto ${imgIndex + 1}: [Error al cargar imagen Base64]", margin, yPosition, smallPaint)
                         yPosition += lineHeight + 10f
@@ -962,17 +886,14 @@ fun generarPDF(
                 canvas.drawText("No hay imágenes adjuntas para esta incidencia.", margin, yPosition, normalPaint)
                 yPosition += 20f
             }
-            // -------------------------------------------------------------------
 
-            // Línea separadora
             canvas.drawLine(margin, yPosition, pageWidth - margin, yPosition, smallPaint)
 
-            drawFooter(canvas, pageNumber) // Pie de página
+            drawFooter(canvas, pageNumber)
             pdfDocument.finishPage(page)
             pageNumber++
         }
 
-        // --- PÁGINA DE RESUMEN (Mantenida) ---
         pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
         page = pdfDocument.startPage(pageInfo)
         canvas = page.canvas
@@ -1002,10 +923,9 @@ fun generarPDF(
         yPosition += 20f
         canvas.drawText("  Baja: $totalBaja", margin + 20, yPosition, normalPaint)
 
-        drawFooter(canvas, pageNumber) // Pie de página
+        drawFooter(canvas, pageNumber)
         pdfDocument.finishPage(page)
 
-        // --- Guardar el PDF (Mantenido) ---
         val fileName = "Incidencias_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.pdf"
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, fileName)
@@ -1031,6 +951,7 @@ fun generarPDF(
         ).show()
     }
 }
+
 @Composable
 fun IncidenciaCardItem(
     incidencia: IncidenciaDetalle,
@@ -1054,33 +975,27 @@ fun IncidenciaCardItem(
             .shadow(2.dp, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Barra de color según prioridad: REDUCIMOS LA ALTURA
             Box(
                 modifier = Modifier
                     .width(5.dp)
-                    // Altura reducida de 110.dp a 85.dp para estrechar la tarjeta
                     .height(85.dp)
                     .background(prioridadColor)
             )
 
-            // Contenido principal de la tarjeta
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // Reducimos el padding vertical para estrechar la tarjeta
                     .padding(vertical = 12.dp, horizontal = 16.dp)
             ) {
-                // PRIMERA FILA: Icono, Título/Vehículo, y Badge de Prioridad
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Icono
                     Box(
                         modifier = Modifier
                             .size(36.dp)
@@ -1104,26 +1019,24 @@ fun IncidenciaCardItem(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    // Información principal (Título y Vehículo/ID)
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = incidencia.titulo,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1F2937),
-                            maxLines = 1, // Añadido para evitar que el título ocupe mucho espacio
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                         Text(
                             text = incidencia.fechaCreacion.formatToDateOnly(),
                             fontSize = 12.sp,
-                            color = Color(0xFF9CA3AF)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(10.dp)) // Espacio entre info y badge
+                    Spacer(modifier = Modifier.width(10.dp))
 
-                    // Badge de prioridad (MOVIDO AQUÍ A LA DERECHA)
                     Surface(
                         shape = RoundedCornerShape(11.dp),
                         color = prioridadColor.copy(alpha = 0.1f)
@@ -1142,7 +1055,6 @@ fun IncidenciaCardItem(
     }
 }
 
-
 @Composable
 fun TabButton(
     text: String,
@@ -1155,8 +1067,8 @@ fun TabButton(
         modifier = modifier.height(45.dp),
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (selected) Color(0xFFEF4444) else Color.White,
-            contentColor = if (selected) Color.White else Color(0xFF6B7280)
+            containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+            contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
         ),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = if (selected) 0.dp else 0.dp
@@ -1182,7 +1094,7 @@ fun EstadisticaCard(
             .height(110.dp)
             .shadow(2.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -1200,7 +1112,7 @@ fun EstadisticaCard(
             Text(
                 text = texto,
                 fontSize = 12.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 lineHeight = 14.sp
             )

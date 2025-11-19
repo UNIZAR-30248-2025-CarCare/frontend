@@ -1,4 +1,3 @@
-
 package eina.unizar.frontend
 
 import android.util.Log
@@ -92,12 +91,12 @@ fun CrearRepostajeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFEF4444)
+            color = MaterialTheme.colorScheme.primary
         ) {
             Row(
                 modifier = Modifier
@@ -110,14 +109,14 @@ fun CrearRepostajeScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Text(
                     text = "Crear Repostaje",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -137,7 +136,7 @@ fun CrearRepostajeScreen(
                 text = "Detalles del repostaje",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2937)
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -146,7 +145,7 @@ fun CrearRepostajeScreen(
             Text(
                 text = "Vehículo",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
 
@@ -161,7 +160,7 @@ fun CrearRepostajeScreen(
                         .menuAnchor()
                         .clickable { expandedVehiculo = true },
                     shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Row(
                         modifier = Modifier
@@ -198,25 +197,31 @@ fun CrearRepostajeScreen(
                             Text(
                                 text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                 fontSize = 15.sp,
-                                color = Color(0xFF1F2937),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                         }
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = "Expandir",
-                            tint = Color(0xFF9CA3AF)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
                 ExposedDropdownMenu(
                     expanded = expandedVehiculo,
-                    onDismissRequest = { expandedVehiculo = false }
+                    onDismissRequest = { expandedVehiculo = false },
+                    containerColor = MaterialTheme.colorScheme.surface
                 ) {
                     vehiculosList.forEach { vehiculo ->
                         DropdownMenuItem(
-                            text = { Text("${vehiculo.nombre} - ${vehiculo.matricula}") },
+                            text = {
+                                Text(
+                                    "${vehiculo.nombre} - ${vehiculo.matricula}",
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            },
                             onClick = {
                                 vehiculoSeleccionado = vehiculo
                                 expandedVehiculo = false
@@ -242,9 +247,22 @@ fun CrearRepostajeScreen(
                         }
                     }
                 },
-                label = { Text("Litros repostados") },
+                label = {
+                    Text(
+                        "Litros repostados",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -263,9 +281,22 @@ fun CrearRepostajeScreen(
                         }
                     }
                 },
-                label = { Text("Precio por litro") },
+                label = {
+                    Text(
+                        "Precio por litro",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -276,9 +307,22 @@ fun CrearRepostajeScreen(
                     precioTotal = it
                     precioTotalEditadoManualmente = true
                 },
-                label = { Text("Precio total") },
+                label = {
+                    Text(
+                        "Precio total",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -291,7 +335,12 @@ fun CrearRepostajeScreen(
                 OutlinedTextField(
                     value = fechaHora?.format(formatter) ?: "",
                     onValueChange = {},
-                    label = { Text("Fecha y hora del repostaje") },
+                    label = {
+                        Text(
+                            "Fecha y hora del repostaje",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
                     enabled = false,
@@ -299,7 +348,8 @@ fun CrearRepostajeScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     )
                 )
             }
@@ -350,14 +400,15 @@ fun CrearRepostajeScreen(
                     .height(55.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFEF4444)
+                    containerColor = MaterialTheme.colorScheme.primary
                 ),
                 // enabled = litros.isNotBlank() &&  fechaHora != null && precioPorLitro.isNotBlank() && precioTotal.isNotBlank()
             ) {
                 Text(
                     text = "Crear Repostaje",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
