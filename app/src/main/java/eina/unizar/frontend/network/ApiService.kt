@@ -27,6 +27,9 @@ import eina.unizar.frontend.models.ResumenRepostajesResponse
 import eina.unizar.frontend.models.RevisionRequest
 import eina.unizar.frontend.models.RevisionResponse
 import eina.unizar.frontend.models.RevisionesListResponse
+import eina.unizar.frontend.models.LogrosResponse
+import eina.unizar.frontend.models.LogrosUsuarioResponse
+import eina.unizar.frontend.models.VerificarProgresoResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -516,4 +519,31 @@ interface ApiService {
         @Path("vehiculoId") vehiculoId: String,
         @Query("query") query: String
     ): Response<BusquedaResponse>
+
+    /**
+     * Obtener todos los logros disponibles (activos).
+     */
+    @GET("logro")
+    fun obtenerTodosLosLogros(
+        @Header("Authorization") token: String
+    ): Call<LogrosResponse>
+
+    /**
+     * Obtener logros de un usuario específico con su progreso.
+     */
+    @GET("logro/usuario/{usuarioId}")
+    fun obtenerLogrosUsuario(
+        @Header("Authorization") token: String,
+        @Path("usuarioId") usuarioId: Int
+    ): Call<LogrosUsuarioResponse>
+
+    /**
+     * Verificar y actualizar el progreso de logros de un usuario.
+     * Retorna los logros recién desbloqueados.
+     */
+    @POST("logro/verificar/{usuarioId}")
+    fun verificarProgresoLogros(
+        @Header("Authorization") token: String,
+        @Path("usuarioId") usuarioId: Int
+    ): Call<VerificarProgresoResponse>
 }

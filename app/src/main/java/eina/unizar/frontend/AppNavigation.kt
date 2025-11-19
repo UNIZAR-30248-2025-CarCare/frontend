@@ -271,7 +271,8 @@ fun AppNavigation(intent: Intent? = null) {
                     onRepostajesClick = { navController.navigate("repostajes") },
                     onRevisionesClick = { navController.navigate("revisiones") },
                     onEstadisticasClick = { navController.navigate("estadisticas") },
-                    onBusquedaClick = { navController.navigate("busqueda") }
+                    onBusquedaClick = { navController.navigate("busqueda") },
+                    onLogrosClick = { navController.navigate("logros") }
                 )
             }
         }
@@ -548,6 +549,16 @@ fun AppNavigation(intent: Intent? = null) {
                     navController = navController,
                     efectiveUserId = efectiveUserId,
                     efectiveToken = efectiveToken
+                )
+            }
+        }
+        
+        composable("logros") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                LogrosScreen(
+                    navController = navController,
+                    userId = efectiveUserId, 
+                    token = efectiveToken    
                 )
             }
         }
