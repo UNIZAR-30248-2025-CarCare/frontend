@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.palette.graphics.Palette
 import eina.unizar.frontend.models.VehiculoDetalle
 import eina.unizar.frontend.viewmodels.InvitacionViewModel
 import eina.unizar.frontend.viewmodels.VehiculoViewModel
@@ -463,6 +464,37 @@ fun DetalleVehiculoScreen(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            Button(
+                onClick = {
+                    navController.navigate(
+                        "personalizar_icono/${vehiculo.id}/${vehiculo.nombre}/${vehiculo.tipo.name}"
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "Personalizar Ícono",
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSecondary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Personalizar Ícono del Mapa",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondary
                 )
             }
 

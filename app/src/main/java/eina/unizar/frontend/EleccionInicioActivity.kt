@@ -73,12 +73,9 @@ fun PantallaEleccionInicio(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.carcare_logo),
-                contentDescription = "Logo CarCare",
-                modifier = Modifier
-                    .size(150.dp)
-                    .padding(bottom = 16.dp)
+            // Logo adaptativo de la aplicación
+            LogoCarCare(
+                size = 150.dp
             )
 
             Text(
