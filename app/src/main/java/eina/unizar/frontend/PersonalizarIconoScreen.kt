@@ -31,8 +31,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import eina.unizar.frontend.viewmodels.VehiculoViewModel
+import kotlinx.coroutines.launch
 import java.io.File
+
+
+fun getIconoPorDefecto(tipoVehiculo: TipoVehiculo): Int {
+    return when (tipoVehiculo) {
+        TipoVehiculo.COCHE -> R.drawable.ic_coche
+        TipoVehiculo.MOTO -> R.drawable.ic_moto
+        TipoVehiculo.FURGONETA -> R.drawable.ic_furgoneta
+        TipoVehiculo.CAMION -> R.drawable.ic_camion
+        TipoVehiculo.OTRO -> R.drawable.ic_coche
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,33 +57,12 @@ fun PersonalizarIconoScreen(
     vehiculoId: String,
     vehiculoNombre: String,
     vehiculoTipo: String,
-    navController: NavHostController
+    navController: NavHostController,
+    token: String,
+    iconoActualUrl: String?,
+    onIconoActualizado: (String) -> Unit
 ) {
-    val context = LocalContext.current
-    val iconPreferences = remember { IconPreferences(context) }
 
-    // Estados para la imagen personalizada
-    var customImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var hasCustomImage by remember { mutableStateOf(false) }
-    var isProcessingImage by remember { mutableStateOf(false) }
-    var photoUri by remember { mutableStateOf<Uri?>(null) }
-
-    // Cargar imagen existente al iniciar
-    LaunchedEffect(Unit) {
-        Log.d("PersonalizarIcono", "=== INICIO PANTALLA FOTOS ===")
-        Log.d("PersonalizarIcono", "Vehículo ID: $vehiculoId")
-        Log.d("PersonalizarIcono", "Vehículo Nombre: $vehiculoNombre")
-        Log.d("PersonalizarIcono", "Vehículo Tipo: $vehiculoTipo")
-
-        val bitmap = iconPreferences.loadCustomImageBitmap(vehiculoId)
-        customImageBitmap = bitmap
-        hasCustomImage = bitmap != null
-
-        Log.d("PersonalizarIcono", "Imagen existente: ${if (bitmap != null) "SÍ" else "NO"}")
-        Log.d("PersonalizarIcono", "========================")
-    }
-
-    // Convertir string a TipoVehiculo
     val tipoVehiculo = when (vehiculoTipo.uppercase()) {
         "COCHE" -> TipoVehiculo.COCHE
         "MOTO" -> TipoVehiculo.MOTO
@@ -74,27 +70,36 @@ fun PersonalizarIconoScreen(
         "CAMION" -> TipoVehiculo.CAMION
         else -> TipoVehiculo.OTRO
     }
+    val context = LocalContext.current
+    val vehiculoViewModel: VehiculoViewModel = viewModel()
+    val iconoUrl = vehiculoViewModel.iconoActualUrl
 
-    // Función para crear archivo temporal para la cámara
+    var customImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var hasCustomImage by remember { mutableStateOf(false) }
+    var isProcessingImage by remember { mutableStateOf(false) }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var imagenUri by remember { mutableStateOf<Uri?>(null) }
+    var cargando by remember { mutableStateOf(false) }
+
+    // Al entrar en la pantalla, carga el icono desde el backend
+    LaunchedEffect(vehiculoId) {
+        vehiculoViewModel.cargarIconoVehiculo(token, vehiculoId)
+    }
+
+
+
     val createImageFile: () -> Uri? = {
         try {
             val timeStamp = System.currentTimeMillis()
             val imageFileName = "JPEG_${timeStamp}_"
             val storageDir = File(context.cacheDir, "temp_images")
             storageDir.mkdirs()
-
-            val file = File.createTempFile(
-                imageFileName,
-                ".jpg",
-                storageDir
-            )
-
+            val file = File.createTempFile(imageFileName, ".jpg", storageDir)
             val uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.provider",
                 file
             )
-
             photoUri = uri
             uri
         } catch (e: Exception) {
@@ -103,77 +108,26 @@ fun PersonalizarIconoScreen(
         }
     }
 
-    // Launcher para tomar foto
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && photoUri != null) {
-            isProcessingImage = true
-
-            Log.d("PersonalizarIcono", "Foto tomada exitosamente, procesando...")
-
-            // Procesar la imagen
-            val savedPath = ImageUtils.processImageForVehicle(
-                context, photoUri!!, vehiculoId.toInt()
-            )
-
-            if (savedPath != null) {
-                // Guardar la ruta en preferencias
-                iconPreferences.saveCustomImageForVehicle(vehiculoId, savedPath)
-
-                // Actualizar UI
-                customImageBitmap = iconPreferences.loadCustomImageBitmap(vehiculoId)
-                hasCustomImage = true
-
-                Toast.makeText(context, "Foto guardada exitosamente", Toast.LENGTH_SHORT).show()
-                Log.d("PersonalizarIcono", "Foto desde cámara guardada: $savedPath")
-            } else {
-                Toast.makeText(context, "Error al procesar la foto", Toast.LENGTH_SHORT).show()
-                Log.e("PersonalizarIcono", "Error procesando foto desde cámara")
-            }
-
-            isProcessingImage = false
-        } else {
-            Log.w("PersonalizarIcono", "Foto no tomada o URI nulo")
+            imagenUri = photoUri
+            customImageBitmap = LocalImageUtils.uriToBitmap(context, photoUri!!)
+            hasCustomImage = true
         }
     }
 
-    // Launcher para seleccionar de galería
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            isProcessingImage = true
-
-            Log.d("PersonalizarIcono", "Imagen seleccionada de galería, procesando...")
-
-            // Procesar la imagen
-            val savedPath = ImageUtils.processImageForVehicle(
-                context, uri, vehiculoId.toInt()
-            )
-
-            if (savedPath != null) {
-                // Guardar la ruta en preferencias
-                iconPreferences.saveCustomImageForVehicle(vehiculoId, savedPath)
-
-                // Actualizar UI
-                customImageBitmap = iconPreferences.loadCustomImageBitmap(vehiculoId)
-                hasCustomImage = true
-
-                Toast.makeText(context, "Imagen guardada exitosamente", Toast.LENGTH_SHORT).show()
-                Log.d("PersonalizarIcono", "Imagen desde galería guardada: $savedPath")
-            } else {
-                Toast.makeText(context, "Error al procesar la imagen", Toast.LENGTH_SHORT).show()
-                Log.e("PersonalizarIcono", "Error procesando imagen desde galería")
-            }
-
-            isProcessingImage = false
-        } else {
-            Log.w("PersonalizarIcono", "No se seleccionó imagen de galería")
+            imagenUri = uri
+            customImageBitmap = LocalImageUtils.uriToBitmap(context, uri)
+            hasCustomImage = true
         }
     }
 
-    // Launcher para permisos de cámara
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -183,12 +137,18 @@ fun PersonalizarIconoScreen(
                 cameraLauncher.launch(uri)
             } else {
                 Toast.makeText(context, "Error al crear archivo temporal", Toast.LENGTH_SHORT).show()
-                Log.e("PersonalizarIcono", "No se pudo crear archivo temporal para cámara")
             }
         } else {
             Toast.makeText(context, "Permiso de cámara necesario", Toast.LENGTH_SHORT).show()
-            Log.w("PersonalizarIcono", "Permiso de cámara denegado")
         }
+    }
+
+    // Convierte Uri a MultipartBody.Part
+    fun uriToMultipart(context: android.content.Context, uri: Uri): MultipartBody.Part? {
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        val bytes = inputStream.readBytes()
+        val requestFile = RequestBody.create("image/jpeg".toMediaTypeOrNull(), bytes)
+        return MultipartBody.Part.createFormData("icono", "icono.jpg", requestFile)
     }
 
     Scaffold(
@@ -201,10 +161,7 @@ fun PersonalizarIconoScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        Log.d("PersonalizarIcono", "Volviendo atrás...")
-                        navController.popBackStack()
-                    }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             Icons.Default.ArrowBack,
                             contentDescription = "Volver",
@@ -226,12 +183,14 @@ fun PersonalizarIconoScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Card con info del vehículo
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, bottom = 24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                elevation = CardDefaults.cardElevation(4.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -253,7 +212,6 @@ fun PersonalizarIconoScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Preview del ícono actual
             Card(
                 modifier = Modifier.size(150.dp),
                 shape = CircleShape,
@@ -280,40 +238,64 @@ fun PersonalizarIconoScreen(
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
+                    } else if (vehiculoViewModel.iconoActualUrl != null && vehiculoViewModel.iconoActualUrl!!.isNotBlank()) {
+                        VehiculoIcono(vehiculoViewModel.iconoActualUrl, tipoVehiculo)
                     } else {
-                        Icon(
-                            painter = painterResource(
-                                id = iconPreferences.getDefaultIconForTipo(tipoVehiculo)
-                            ),
-                            contentDescription = "Ícono por defecto",
-                            modifier = Modifier.size(80.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                        Image(
+                            painter = painterResource(id = getIconoPorDefecto(tipoVehiculo)),
+                            contentDescription = "Icono por defecto",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Texto descriptivo
-            Text(
-                text = if (hasCustomImage) "Tu imagen personalizada" else "Usando ícono por defecto",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center
-            )
-
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Botones de acción
+            if (vehiculoViewModel.iconoActualUrl != null && vehiculoViewModel.iconoActualUrl!!.isNotBlank()) {
+                OutlinedButton(
+                    onClick = {
+                        vehiculoViewModel.eliminarIconoVehiculo(token, vehiculoId) {
+                            vehiculoViewModel.cargarIconoVehiculo(token, vehiculoId)
+                            customImageBitmap = null
+                            hasCustomImage = false
+                            imagenUri = null
+                            Toast.makeText(context, "Ahora usas el icono por defecto", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(30.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        "Usar icono por defecto",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Botón tomar foto
                 Button(
                     onClick = {
-                        Log.d("PersonalizarIcono", "Solicitando permiso de cámara...")
                         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     },
                     modifier = Modifier
@@ -338,10 +320,8 @@ fun PersonalizarIconoScreen(
                     )
                 }
 
-                // Botón seleccionar de galería
                 Button(
                     onClick = {
-                        Log.d("PersonalizarIcono", "Abriendo galería...")
                         galleryLauncher.launch("image/*")
                     },
                     modifier = Modifier
@@ -366,50 +346,45 @@ fun PersonalizarIconoScreen(
                     )
                 }
 
-                // Botón eliminar imagen (solo si tiene imagen personalizada)
-                if (hasCustomImage) {
-                    OutlinedButton(
-                        onClick = {
-                            Log.d("PersonalizarIcono", "Eliminando imagen personalizada...")
-                            iconPreferences.removeCustomImageForVehicle(vehiculoId)
-                            customImageBitmap = null
-                            hasCustomImage = false
+            }
 
-                            Toast.makeText(
-                                context,
-                                "Imagen eliminada. Usando ícono por defecto.",
-                                Toast.LENGTH_SHORT
-                            ).show()
+            Spacer(modifier = Modifier.height(24.dp))
 
-                            Log.d("PersonalizarIcono", "Imagen personalizada eliminada para vehículo $vehiculoId")
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp),
-                        enabled = !isProcessingImage,
-                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.error),
-                        shape = RoundedCornerShape(30.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            "Eliminar Imagen",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error
-                        )
+            Button(
+                onClick = {
+                    if (imagenUri != null) {
+                        cargando = true
+                        val multipart = uriToMultipart(context, imagenUri!!)
+                        if (multipart != null) {
+                            vehiculoViewModel.subirIconoVehiculo(token, vehiculoId, multipart) { success, url ->
+                                cargando = false
+                                if (success && url != null) {
+                                    Toast.makeText(context, "Icono subido correctamente", Toast.LENGTH_SHORT).show()
+                                    vehiculoViewModel.cargarIconoVehiculo(token, vehiculoId) // Recarga la URL del icono
+                                    onIconoActualizado(url)
+                                } else {
+                                    Toast.makeText(context, "Error al subir el icono", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        } else {
+                            cargando = false
+                            Toast.makeText(context, "No se pudo procesar la imagen", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(context, "Selecciona una imagen primero", Toast.LENGTH_SHORT).show()
                     }
+                },
+                enabled = imagenUri != null && !cargando
+            ) {
+                if (cargando) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Guardar icono")
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Texto de ayuda
             Text(
                 text = "La imagen se mostrará como ícono circular en el mapa",
                 style = MaterialTheme.typography.bodySmall,
@@ -418,5 +393,65 @@ fun PersonalizarIconoScreen(
                 modifier = Modifier.padding(horizontal = 32.dp)
             )
         }
+    }
+}
+
+// Utilidad para convertir Uri a Bitmap
+object LocalImageUtils {
+    fun uriToBitmap(context: android.content.Context, uri: Uri): Bitmap? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            android.graphics.BitmapFactory.decodeStream(inputStream)
+        } catch (e: Exception) {
+            null
+        }
+    }
+}
+
+@Composable
+fun VehiculoIcono(iconoUrl: String?, tipoVehiculo: TipoVehiculo) {
+    var bitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+
+    LaunchedEffect(iconoUrl) {
+        if (!iconoUrl.isNullOrBlank()) {
+            val urlCompleta = if (iconoUrl.startsWith("/")) {
+                "http://10.0.2.2:3000$iconoUrl"
+            } else {
+                iconoUrl
+            }
+            kotlinx.coroutines.Dispatchers.IO.let { dispatcher ->
+                kotlinx.coroutines.CoroutineScope(dispatcher).launch {
+                    try {
+                        val url = java.net.URL(urlCompleta)
+                        val bmp = android.graphics.BitmapFactory.decodeStream(url.openStream())
+                        bitmap = bmp?.asImageBitmap()
+                    } catch (e: Exception) {
+                        bitmap = null
+                    }
+                }
+            }
+        } else {
+            bitmap = null
+        }
+    }
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap!!,
+            contentDescription = "Icono personalizado",
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Image(
+            painter = painterResource(id = getIconoPorDefecto(tipoVehiculo)),
+            contentDescription = "Icono por defecto",
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
     }
 }

@@ -671,7 +671,10 @@ fun AppNavigation(intent: Intent? = null) {
                 vehiculoId = vehiculoId,
                 vehiculoNombre = vehiculoNombre,
                 vehiculoTipo = vehiculoTipo,
-                navController = navController
+                navController = navController,
+                token = efectiveToken ?: "",
+                iconoActualUrl = null, // O la URL real si la tienes
+                onIconoActualizado = { /* lógica si quieres actualizar la UI */ }
             )
         }
     }
