@@ -69,12 +69,12 @@ fun DetalleVehiculoScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFEF4444)
+            color = MaterialTheme.colorScheme.primary
         ) {
             Row(
                 modifier = Modifier
@@ -87,36 +87,47 @@ fun DetalleVehiculoScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Text(
                     text = vehiculo.nombre,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-                 IconButton(onClick ={ expanded = true }) {
+                IconButton(onClick ={ expanded = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "Más",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                     DropdownMenu(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        onDismissRequest = { expanded = false },
+                        containerColor = MaterialTheme.colorScheme.surface
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Editar vehículo") },
+                            text = {
+                                Text(
+                                    "Editar vehículo",
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            },
                             onClick = {
                                 expanded = false
                                 navController.navigate("editar_vehiculo/${vehiculo.id}/$efectiveUserId/$efectiveToken")
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Eliminar vehículo") },
+                            text = {
+                                Text(
+                                    "Eliminar vehículo",
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            },
                             onClick = {
                                 expanded = false
                                 viewModel.eliminarVehiculo(efectiveToken ?: "", vehiculo.id.toString())
@@ -155,7 +166,7 @@ fun DetalleVehiculoScreen(
                     .height(180.dp)
                     .shadow(4.dp, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -209,7 +220,7 @@ fun DetalleVehiculoScreen(
                     .fillMaxWidth()
                     .shadow(4.dp, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
                     modifier = Modifier
@@ -220,7 +231,7 @@ fun DetalleVehiculoScreen(
                         text = "Información del Vehículo",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -242,7 +253,7 @@ fun DetalleVehiculoScreen(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 15.dp),
-                        color = Color(0xFFE5E7EB)
+                        color = MaterialTheme.colorScheme.outline
                     )
 
                     Row(modifier = Modifier.fillMaxWidth()) {
@@ -261,7 +272,7 @@ fun DetalleVehiculoScreen(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 15.dp),
-                        color = Color(0xFFE5E7EB)
+                        color = MaterialTheme.colorScheme.outline
                     )
 
                     Row(modifier = Modifier.fillMaxWidth()) {
@@ -280,7 +291,7 @@ fun DetalleVehiculoScreen(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 15.dp),
-                        color = Color(0xFFE5E7EB)
+                        color = MaterialTheme.colorScheme.outline
                     )
 
                     InfoItem(
@@ -298,7 +309,7 @@ fun DetalleVehiculoScreen(
                     .fillMaxWidth()
                     .shadow(4.dp, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
                     modifier = Modifier
@@ -314,14 +325,14 @@ fun DetalleVehiculoScreen(
                             text = "Usuarios Vinculados",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1F2937)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         IconButton(onClick = { showDialog = true},
                             modifier = Modifier.testTag("addUserButton")) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Añadir usuario",
-                                tint = Color(0xFFEF4444),
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -361,7 +372,7 @@ fun DetalleVehiculoScreen(
                             Text(
                                 text = nombre,
                                 fontSize = 15.sp,
-                                color = Color(0xFF1F2937)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -370,8 +381,18 @@ fun DetalleVehiculoScreen(
             if (usuarioSeleccionado != null) {
                 AlertDialog(
                     onDismissRequest = { usuarioSeleccionado = null },
-                    title = { Text("Eliminar usuario") },
-                    text = { Text("¿Eliminar a $usuarioSeleccionado del vehículo?") },
+                    title = {
+                        Text(
+                            "Eliminar usuario",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    },
+                    text = {
+                        Text(
+                            "¿Eliminar a $usuarioSeleccionado del vehículo?",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    },
                     confirmButton = {
                         Button(onClick = {
                             usuarioSeleccionado?.let { nombre ->
@@ -380,11 +401,28 @@ fun DetalleVehiculoScreen(
                                 }
                             }
                             usuarioSeleccionado = null
-                        }) { Text("Eliminar") }
+                        },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                "Eliminar",
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     },
                     dismissButton = {
-                        TextButton(onClick = { usuarioSeleccionado = null }) { Text("Cancelar") }
-                    }
+                        TextButton(onClick = { usuarioSeleccionado = null }) {
+                            Text(
+                                "Cancelar",
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    textContentColor = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -410,19 +448,52 @@ fun DetalleVehiculoScreen(
                     .height(55.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFEF4444)
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = "Mapa",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Ver en el mapa",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            Button(
+                onClick = {
+                    navController.navigate(
+                        "personalizar_icono/${vehiculo.id}/${vehiculo.nombre}/${vehiculo.tipo.name}"
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "Personalizar Ícono",
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSecondary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Personalizar Ícono del Mapa",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondary
                 )
             }
 
@@ -432,13 +503,31 @@ fun DetalleVehiculoScreen(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false; email = ""; invitacionViewModel.mensaje = null },
-                title = { Text("Invitar usuario") },
+                title = {
+                    Text(
+                        "Invitar usuario",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
                 text = {
                     Column {
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
-                            label = { Text("Email del invitado") }
+                            label = {
+                                Text(
+                                    "Email del invitado",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                            )
                         )
                         val esExito = invitacionViewModel.mensaje == "Invitación generada exitosamente"
                         val colorMensaje = if (esExito) Color(0xFF22C55E) else Color(0xFFEF4444)
@@ -461,16 +550,28 @@ fun DetalleVehiculoScreen(
                                 )
                             }
                         },
-                        enabled = email.isNotBlank() && !invitacionViewModel.loading
+                        enabled = email.isNotBlank() && !invitacionViewModel.loading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text(if (invitacionViewModel.loading) "Enviando..." else "Enviar")
+                        Text(
+                            if (invitacionViewModel.loading) "Enviando..." else "Enviar",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDialog = false; email = ""; invitacionViewModel.mensaje = null }) {
-                        Text("Cancelar")
+                        Text(
+                            "Cancelar",
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                textContentColor = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -486,14 +587,14 @@ fun InfoItem(
         Text(
             text = label,
             fontSize = 13.sp,
-            color = Color(0xFF6B7280)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(5.dp))
         Text(
             text = value,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF1F2937)
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

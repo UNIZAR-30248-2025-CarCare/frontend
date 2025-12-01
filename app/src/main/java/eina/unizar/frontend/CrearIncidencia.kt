@@ -192,13 +192,13 @@ fun NuevaIncidenciaScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
         ) {
             // Header
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFEF4444)
+                color = MaterialTheme.colorScheme.primary
             ) {
                 Row(
                     modifier = Modifier
@@ -211,14 +211,14 @@ fun NuevaIncidenciaScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
                         text = "Reportar Incidencia",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.weight(1f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -238,7 +238,7 @@ fun NuevaIncidenciaScreen(
                     text = "Detalles",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937)
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -248,14 +248,14 @@ fun NuevaIncidenciaScreen(
                     Text(
                         text = "Cargando vehículos...",
                         fontSize = 14.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(vertical = 20.dp)
                     )
                 } else {
                     Text(
                         text = "Vehículo",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
 
@@ -270,7 +270,7 @@ fun NuevaIncidenciaScreen(
                                 .menuAnchor()
                                 .clickable { expandedVehiculo = true },
                             shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -301,25 +301,31 @@ fun NuevaIncidenciaScreen(
                                     Text(
                                         text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                         fontSize = 15.sp,
-                                        color = Color(0xFF1F2937),
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
                                 Icon(
                                     imageVector = Icons.Default.ArrowDropDown,
                                     contentDescription = "Expandir",
-                                    tint = Color(0xFF9CA3AF)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
 
                         ExposedDropdownMenu(
                             expanded = expandedVehiculo,
-                            onDismissRequest = { expandedVehiculo = false }
+                            onDismissRequest = { expandedVehiculo = false },
+                            containerColor = MaterialTheme.colorScheme.surface
                         ) {
                             vehiculos.forEach { vehiculo ->
                                 DropdownMenuItem(
-                                    text = { Text("${vehiculo.nombre} - ${vehiculo.matricula}") },
+                                    text = {
+                                        Text(
+                                            "${vehiculo.nombre} - ${vehiculo.matricula}",
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         vehiculoSeleccionado = vehiculo
                                         expandedVehiculo = false
@@ -341,7 +347,7 @@ fun NuevaIncidenciaScreen(
                             Text(
                                 text = "Tipo de incidencia",
                                 fontSize = 13.sp,
-                                color = Color(0xFF6B7280),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 5.dp)
                             )
 
@@ -361,25 +367,35 @@ fun NuevaIncidenciaScreen(
                                         .menuAnchor(),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Color(0xFFEF4444),
-                                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
                                     ),
                                     leadingIcon = {
                                         Icon(
                                             imageVector = Icons.Default.Build,
                                             contentDescription = null,
-                                            tint = Color(0xFFEF4444)
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 )
 
                                 ExposedDropdownMenu(
                                     expanded = expandedTipo,
-                                    onDismissRequest = { expandedTipo = false }
+                                    onDismissRequest = { expandedTipo = false },
+                                    containerColor = MaterialTheme.colorScheme.surface
                                 ) {
                                     tiposIncidencia.forEach { tipo ->
                                         DropdownMenuItem(
-                                            text = { Text(tipo) },
+                                            text = {
+                                                Text(
+                                                    tipo,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            },
                                             onClick = {
                                                 tipoSeleccionado = tipo
                                                 expandedTipo = false
@@ -395,7 +411,7 @@ fun NuevaIncidenciaScreen(
                             Text(
                                 text = "Prioridad",
                                 fontSize = 13.sp,
-                                color = Color(0xFF6B7280),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 5.dp)
                             )
 
@@ -415,8 +431,20 @@ fun NuevaIncidenciaScreen(
                                         .menuAnchor(),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Color(0xFFEF4444),
-                                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                        focusedTextColor = when (prioridadSeleccionada) {
+                                            "ALTA" -> Color(0xFFEF4444)
+                                            "MEDIA" -> Color(0xFFF59E0B)
+                                            else -> Color(0xFF10B981)
+                                        },
+                                        unfocusedTextColor = when (prioridadSeleccionada) {
+                                            "ALTA" -> Color(0xFFEF4444)
+                                            "MEDIA" -> Color(0xFFF59E0B)
+                                            else -> Color(0xFF10B981)
+                                        },
+                                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
                                     ),
                                     leadingIcon = {
                                         Icon(
@@ -433,11 +461,17 @@ fun NuevaIncidenciaScreen(
 
                                 ExposedDropdownMenu(
                                     expanded = expandedPrioridad,
-                                    onDismissRequest = { expandedPrioridad = false }
+                                    onDismissRequest = { expandedPrioridad = false },
+                                    containerColor = MaterialTheme.colorScheme.surface
                                 ) {
                                     prioridades.forEach { prioridad ->
                                         DropdownMenuItem(
-                                            text = { Text(prioridad) },
+                                            text = {
+                                                Text(
+                                                    prioridad,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            },
                                             onClick = {
                                                 prioridadSeleccionada = prioridad
                                                 expandedPrioridad = false
@@ -455,18 +489,27 @@ fun NuevaIncidenciaScreen(
                     Text(
                         text = "Título",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
                     OutlinedTextField(
                         value = titulo,
                         onValueChange = { titulo = it },
-                        placeholder = { Text("Ej: Ruido extraño en el motor") },
+                        placeholder = {
+                            Text(
+                                "Ej: Ruido extraño en el motor",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFEF4444),
-                            unfocusedBorderColor = Color(0xFFE5E7EB)
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         )
                     )
 
@@ -476,22 +519,29 @@ fun NuevaIncidenciaScreen(
                     Text(
                         text = "Descripción",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
                     OutlinedTextField(
                         value = descripcion,
                         onValueChange = { descripcion = it },
                         placeholder = {
-                            Text("Describe qué ha ocurrido,\ncuándo lo detectaste...")
+                            Text(
+                                "Describe qué ha ocurrido,\ncuándo lo detectaste...",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFEF4444),
-                            unfocusedBorderColor = Color(0xFFE5E7EB)
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         ),
                         maxLines = 5
                     )
@@ -502,7 +552,7 @@ fun NuevaIncidenciaScreen(
                     Text(
                         text = "Fotos (opcional) - ${fotosBitmap.size} seleccionadas",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
 
@@ -513,12 +563,12 @@ fun NuevaIncidenciaScreen(
                                 .height(100.dp)
                                 .border(
                                     width = 2.dp,
-                                    color = Color(0xFFE5E7EB),
+                                    color = MaterialTheme.colorScheme.outline,
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .clickable { imagePickerLauncher.launch("image/*") },
                             shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Column(
                                 modifier = Modifier.fillMaxSize(),
@@ -528,14 +578,14 @@ fun NuevaIncidenciaScreen(
                                 Icon(
                                     imageVector = Icons.Default.AddCircle,
                                     contentDescription = "Añadir fotos",
-                                    tint = Color(0xFFEF4444),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "Toca para añadir fotos",
                                     fontSize = 13.sp,
-                                    color = Color(0xFF6B7280)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -551,7 +601,10 @@ fun NuevaIncidenciaScreen(
                                     ) {
                                         Card(
                                             modifier = Modifier.fillMaxSize(),
-                                            shape = RoundedCornerShape(8.dp)
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.surface
+                                            )
                                         ) {
                                             Image(
                                                 bitmap = bitmap.asImageBitmap(),
@@ -587,7 +640,9 @@ fun NuevaIncidenciaScreen(
                                             .size(100.dp)
                                             .clickable { imagePickerLauncher.launch("image/*") },
                                         shape = RoundedCornerShape(8.dp),
-                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.background
+                                        )
                                     ) {
                                         Box(
                                             modifier = Modifier.fillMaxSize(),
@@ -596,7 +651,7 @@ fun NuevaIncidenciaScreen(
                                             Icon(
                                                 imageVector = Icons.Default.Add,
                                                 contentDescription = "Añadir más",
-                                                tint = Color(0xFFEF4444),
+                                                tint = MaterialTheme.colorScheme.primary,
                                                 modifier = Modifier.size(32.dp)
                                             )
                                         }
@@ -612,7 +667,7 @@ fun NuevaIncidenciaScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Row(
                             modifier = Modifier
@@ -624,7 +679,7 @@ fun NuevaIncidenciaScreen(
                                 checked = compartirConGrupo,
                                 onCheckedChange = { compartirConGrupo = it },
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
+                                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                                     checkedTrackColor = Color(0xFF10B981)
                                 )
                             )
@@ -632,7 +687,7 @@ fun NuevaIncidenciaScreen(
                             Text(
                                 text = "Compartir con todos los usuarios",
                                 fontSize = 14.sp,
-                                color = Color(0xFF1F2937)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -661,7 +716,7 @@ fun NuevaIncidenciaScreen(
                             .height(55.dp),
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFEF4444)
+                            containerColor = MaterialTheme.colorScheme.primary
                         ),
                         enabled = titulo.isNotBlank() &&
                                 descripcion.isNotBlank() &&
@@ -671,7 +726,7 @@ fun NuevaIncidenciaScreen(
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 strokeWidth = 2.dp
                             )
                         } else {

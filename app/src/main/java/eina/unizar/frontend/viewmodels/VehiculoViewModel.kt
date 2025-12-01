@@ -1,5 +1,6 @@
 package eina.unizar.frontend.viewmodels
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,10 +9,11 @@ import androidx.lifecycle.viewModelScope
 import eina.unizar.frontend.models.RegistrarVehiculoRequest
 import eina.unizar.frontend.network.RetrofitClient
 import kotlinx.coroutines.launch
+import okhttp3.MultipartBody
 
 /**
  * ViewModel para gestionar operaciones relacionadas con vehículos.
- * 
+ *
  * Actualmente maneja el registro de nuevos vehículos en el sistema,
  * proporcionando feedback sobre el éxito o errores en el proceso.
  */
@@ -19,7 +21,7 @@ class VehiculoViewModel : ViewModel() {
 
     /**
      * Mensaje de error en caso de fallo al registrar un vehículo.
-     * 
+     *
      * Es null si no hay error. La UI puede observar este valor
      * para mostrar mensajes de error al usuario.
      */
@@ -27,7 +29,7 @@ class VehiculoViewModel : ViewModel() {
 
     /**
      * Indica si el registro del vehículo fue exitoso.
-     * 
+     *
      * La UI puede observar este valor para navegar a otra pantalla
      * o mostrar un mensaje de confirmación tras el registro exitoso.
      */
@@ -73,11 +75,11 @@ class VehiculoViewModel : ViewModel() {
 
     /**
      * Registra un nuevo vehículo en el sistema.
-     * 
+     *
      * Realiza una petición suspendida al backend para crear un nuevo vehículo.
      * Actualiza registroExitoso a true si tiene éxito, o establece errorMessage
      * con los detalles del error si falla.
-     * 
+     *
      * @param token Token JWT de autenticación (sin el prefijo "Bearer")
      * @param request Objeto con todos los datos del vehículo a registrar
      */
@@ -179,6 +181,64 @@ class VehiculoViewModel : ViewModel() {
             } catch (e: Exception) {
                 errorEliminacionUsuario = "Error de red"
                 mensajeEliminacionUsuario = null
+            }
+        }
+    }
+
+    /**
+     * Sube el icono personalizado del vehículo al backend.
+     *
+     * @param token Token JWT de autenticación (sin el prefijo "Bearer")
+     * @param vehiculoId ID del vehículo
+     * @param icono Imagen en formato MultipartBody.Part
+     * @param onResult Callback con éxito y la URL del icono
+     */
+    fun subirIconoVehiculo(token: String, vehiculoId: String, icono: MultipartBody.Part, onResult: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.instance.subirIconoVehiculo("Bearer $token", vehiculoId, icono)
+                if (response.isSuccessful && response.body() != null) {
+                    val iconoUrl = response.body()!!.iconoUrl
+                    onResult(true, iconoUrl)
+                } else {
+                    onResult(false, null)
+                }
+            } catch (e: Exception) {
+                onResult(false, null)
+            }
+        }
+    }
+
+    var iconoActualUrl by mutableStateOf<String?>(null)
+
+    fun cargarIconoVehiculo(token: String, vehiculoId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.instance.obtenerIconoVehiculo(vehiculoId, "Bearer $token")
+                if (response.isSuccessful && response.body() != null) {
+                    iconoActualUrl = response.body()!!.iconoUrl // O .icono_url según tu modelo
+                    Log.d("IconoURL", "icono_url recibido: ${iconoActualUrl}")
+                } else {
+                    iconoActualUrl = null
+                }
+            } catch (e: Exception) {
+                iconoActualUrl = null
+            }
+        }
+    }
+
+    fun eliminarIconoVehiculo(token: String, vehiculoId: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.instance.eliminarIconoVehiculo("Bearer $token", vehiculoId)
+                if (response.isSuccessful) {
+                    iconoActualUrl = null
+                    onResult(true)
+                } else {
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                onResult(false)
             }
         }
     }

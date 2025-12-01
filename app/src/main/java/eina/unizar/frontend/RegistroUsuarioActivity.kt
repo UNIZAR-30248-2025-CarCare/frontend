@@ -41,17 +41,15 @@ fun hashPassword(password: String): String {
     return bytes.joinToString("") { "%02x".format(it) }
 }
 
-// Función para validar el email
 fun esEmailValido(email: String): Boolean {
     val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
     return regex.matches(email)
 }
 
-// Función para validar la fecha y calcular la edad
 fun obtenerEdad(fechaNacimiento: String): Int? {
     return try {
         val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        formato.isLenient = false // Solo acepta el formato exacto
+        formato.isLenient = false
         val fecha = formato.parse(fechaNacimiento)
         val hoy = Calendar.getInstance()
         val nacimiento = Calendar.getInstance()
@@ -66,22 +64,6 @@ fun obtenerEdad(fechaNacimiento: String): Int? {
     }
 }
 
-
-/**
- * Pantalla de registro de nuevos usuarios.
- *
- * - Permite introducir nombre, email, contraseña y fecha de nacimiento.
- * - Incluye checkbox para aceptar los términos y condiciones.
- * - Muestra un `DatePickerDialog` para seleccionar la fecha de nacimiento.
- *
- * Estados controlados con `remember` para cada campo.
- * Valida que todos los campos estén completos antes de enviar el formulario.
- *
- * Callbacks:
- * - `onBackClick()` → Regresa a la pantalla anterior.
- * - `onRegisterClick()` → Envía los datos de registro.
- * - `onLoginClick()` → Navega a la pantalla de inicio de sesión.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistroUsuarioScreen(
@@ -96,17 +78,12 @@ fun RegistroUsuarioScreen(
     var aceptoTerminos by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Obtener el contexto para mostrar el DatePickerDialog
     val context = LocalContext.current
-
-    // Crear calendario para la fecha actual
     val calendario = Calendar.getInstance()
 
-    // Configurar el DatePickerDialog
     val datePickerDialog = DatePickerDialog(
         context,
         { _, año, mes, dia ->
-            // Formato de la fecha seleccionada (DD/MM/AAAA)
             val fechaSeleccionada = String.format("%02d/%02d/%04d", dia, mes + 1, año)
             fechaNacimiento = fechaSeleccionada
         },
@@ -115,7 +92,6 @@ fun RegistroUsuarioScreen(
         calendario.get(Calendar.DAY_OF_MONTH)
     )
 
-    // Configurar fecha máxima (hoy)
     datePickerDialog.datePicker.maxDate = calendario.timeInMillis
 
     Scaffold(
@@ -124,7 +100,7 @@ fun RegistroUsuarioScreen(
                 title = {
                     Text(
                         "Crear Cuenta",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -134,16 +110,16 @@ fun RegistroUsuarioScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFE53935)
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             )
         },
-        containerColor = Color(0xFFF8F8F8)
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -158,21 +134,30 @@ fun RegistroUsuarioScreen(
                 text = "Cuéntanos un poco\nsobre ti",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1C1C1C),
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campos de entrada
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
                 label = { Text("Nombre") },
                 placeholder = { Text("Tu nombre completo") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -183,7 +168,17 @@ fun RegistroUsuarioScreen(
                 label = { Text("Email") },
                 placeholder = { Text("ejemplo@email.com") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -195,7 +190,17 @@ fun RegistroUsuarioScreen(
                 placeholder = { Text("Clave") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -210,11 +215,22 @@ fun RegistroUsuarioScreen(
                     IconButton(onClick = { datePickerDialog.show() }) {
                         Icon(
                             imageVector = Icons.Filled.DateRange,
-                            contentDescription = "Seleccionar fecha"
+                            contentDescription = "Seleccionar fecha",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -230,23 +246,22 @@ fun RegistroUsuarioScreen(
                     checked = aceptoTerminos,
                     onCheckedChange = { aceptoTerminos = it },
                     colors = CheckboxDefaults.colors(
-                        checkedColor = Color(0xFFE53935)
+                        checkedColor = MaterialTheme.colorScheme.primary
                     )
                 )
                 Text(
                     text = "Acepto los términos y condiciones",
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Mostrar mensaje de error
             errorMessage?.let {
                 Text(
                     text = it,
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 14.sp,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
@@ -299,16 +314,16 @@ fun RegistroUsuarioScreen(
                         return@Button
                     }
                     if (aceptoTerminos) {
-                        val hashedPassword = hashPassword(password) // Hashear la contraseña
-                        Log.d("RegistroUsuario", "Hashed Password: $hashedPassword") // Depuración
+                        val hashedPassword = hashPassword(password)
+                        Log.d("RegistroUsuario", "Hashed Password: $hashedPassword")
                         Log.d(
                             "RegistroUsuario",
                             "Fecha de Nacimiento: $fechaNacimiento"
-                        ) // Depuración
+                        )
                         val usuario = Usuario(
                             nombre = nombre,
                             email = email,
-                            contraseña = hashedPassword, // Usar la contraseña hasheada
+                            contraseña = hashedPassword,
                             fecha_nacimiento = convertirFormatoFecha(fechaNacimiento)
                         )
 
@@ -337,9 +352,7 @@ fun RegistroUsuarioScreen(
                                         }
                                     }
 
-                                    // Función para extraer solo el mensaje de error
                                     private fun extractErrorMessage(errorBody: String): String {
-                                        // Intentar extraer el mensaje entre comillas después de "error":"
                                         val regex = "\"error\":\"(.*?)\"".toRegex()
                                         val matchResult = regex.find(errorBody)
                                         return matchResult?.groupValues?.getOrNull(1) ?: errorBody
@@ -355,13 +368,13 @@ fun RegistroUsuarioScreen(
                     }
                 },
                 enabled = aceptoTerminos,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text("Registrarse", color = Color.White, fontSize = 16.sp)
+                Text("Registrarse", color = MaterialTheme.colorScheme.onPrimary, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -373,17 +386,16 @@ fun RegistroUsuarioScreen(
                 Text(
                     text = "¿Ya tienes una cuenta?",
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "Iniciar Sesión",
                     fontSize = 14.sp,
-                    color = Color(0xFFE53935),
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable { onLoginClick() }
                 )
             }
         }
     }
 }
-

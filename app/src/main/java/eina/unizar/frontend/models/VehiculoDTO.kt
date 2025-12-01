@@ -39,7 +39,8 @@ data class VehiculoDTO(
     val ubicacion_actual: UbicacionDTO?,
     val estado: String,
     val tipo: String,
-    val usuariosVinculados: List<String> = emptyList()
+    val usuariosVinculados: List<String> = emptyList(),
+    val icono_url: String? = null
 )
 
 /**

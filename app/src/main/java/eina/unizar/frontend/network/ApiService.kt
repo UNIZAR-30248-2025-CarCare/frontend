@@ -30,15 +30,18 @@ import eina.unizar.frontend.models.RevisionesListResponse
 import eina.unizar.frontend.models.LogrosResponse
 import eina.unizar.frontend.models.LogrosUsuarioResponse
 import eina.unizar.frontend.models.VerificarProgresoResponse
+import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -182,6 +185,7 @@ interface ApiService {
     ): Response<MensajeResponse>
 
     data class MensajeResponse(val message: String)
+    data class IconoResponse(val iconoUrl: String, val message: String)
 
     /**
      * Elimina un usuario vinculado a un vehículo.
@@ -546,4 +550,24 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("usuarioId") usuarioId: Int
     ): Call<VerificarProgresoResponse>
+
+    @Multipart
+    @POST("/vehiculo/{vehiculoId}/icono")
+    suspend fun subirIconoVehiculo(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String,
+        @Part icono: MultipartBody.Part
+    ): Response<IconoResponse>
+
+    @GET("/vehiculo/{vehiculoId}/icono")
+    suspend fun obtenerIconoVehiculo(
+        @Path("vehiculoId") vehiculoId: String,
+        @Header("Authorization") token: String
+    ): retrofit2.Response<IconoResponse>
+
+    @DELETE("/vehiculo/{vehiculoId}/icono")
+    suspend fun eliminarIconoVehiculo(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<Void>
 }
