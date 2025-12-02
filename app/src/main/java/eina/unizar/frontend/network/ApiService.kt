@@ -6,6 +6,7 @@ import eina.unizar.frontend.models.CrearIncidenciaRequest
 import eina.unizar.frontend.models.CrearIncidenciaResponse
 import eina.unizar.frontend.models.IncidenciaResponse
 import eina.unizar.frontend.models.EstadisticasData
+import eina.unizar.frontend.models.EstadoSuscripcionResponse
 import eina.unizar.frontend.models.Usuario
 import eina.unizar.frontend.models.LoginRequest
 import eina.unizar.frontend.models.LoginResponse
@@ -29,6 +30,9 @@ import eina.unizar.frontend.models.RevisionResponse
 import eina.unizar.frontend.models.RevisionesListResponse
 import eina.unizar.frontend.models.LogrosResponse
 import eina.unizar.frontend.models.LogrosUsuarioResponse
+import eina.unizar.frontend.models.PagoResponse
+import eina.unizar.frontend.models.ProcesarPagoRequest
+import eina.unizar.frontend.models.VerificarAnuncioResponse
 import eina.unizar.frontend.models.VerificarProgresoResponse
 import okhttp3.MultipartBody
 import retrofit2.Call
@@ -570,4 +574,33 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("vehiculoId") vehiculoId: String
     ): Response<Void>
+
+    // Suscripciones
+    /**
+     * Procesa el pago de una suscripción.
+     * POST /api/suscripciones/procesar-pago
+     */
+    @POST("suscripcion/procesar-pago")
+    suspend fun procesarPago(
+        @Header("Authorization") token: String,
+        @Body request: ProcesarPagoRequest
+    ): Response<PagoResponse>
+
+    /**
+     * Obtiene el estado de la suscripción del usuario.
+     * GET /api/suscripciones/estado
+     */
+    @GET("suscripcion/estado")
+    suspend fun obtenerEstadoSuscripcion(
+        @Header("Authorization") token: String
+    ): Response<EstadoSuscripcionResponse>
+
+    /**
+     * Verifica si hay anuncios disponibles para el usuario.
+     * GET /api/suscripciones/verificar-anuncio
+     */
+    @GET("suscripcion/verificar-anuncio")
+    suspend fun verificarAnuncio(
+        @Header("Authorization") token: String
+    ): Response<VerificarAnuncioResponse>
 }
