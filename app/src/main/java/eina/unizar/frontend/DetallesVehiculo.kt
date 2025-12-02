@@ -440,6 +440,84 @@ fun DetalleVehiculoScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // 1. Lógica de habilitación y texto (Necesita 'vehiculo.usuarioActivoId')
+            val isActivo = vehiculo.estado.texto == "Activo"
+            val canLiberar = isActivo && vehiculo.usuarioActivoId == efectiveUserId
+            val canActivar = !isActivo
+
+
+            val nuevoEstado = if (isActivo) "Inactivo" else "Activo"
+            val isButtonEnabled = canActivar || canLiberar
+
+            // --- BOTÓN PRINCIPAL DE ACTIVAR / LIBERAR ---
+            Button(
+                onClick = {
+                    if (efectiveToken != null && isButtonEnabled) {
+                        viewModel.actualizarEstadoVehiculo(
+                            token = efectiveToken,
+                            vehiculoId = vehiculo.id.toString(),
+                            nuevoEstado = nuevoEstado
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+                // ... estilos ...
+                enabled = isButtonEnabled
+            ) {
+                // ... icono y texto ...
+                Text(text = if (isActivo) "LIBERAR VEHÍCULO" else "ACTIVAR VEHÍCULO")
+            }
+
+            // Mensaje de bloqueo
+            if (isActivo && !canLiberar) {
+                Text(
+                    text = "Este vehículo está activo y solo puede ser liberado por el usuario que lo activó.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // --- BOTÓN DE MANTENIMIENTO ---
+            // Se permite si NO está activo (si está libre) O si el usuario es el propietario (puedes ajustar esta regla)
+            if (canActivar) {
+                Button(
+                    onClick = {
+                        if (efectiveToken != null) {
+                            viewModel.actualizarEstadoVehiculo(
+                                token = efectiveToken,
+                                vehiculoId = vehiculo.id.toString(),
+                                nuevoEstado = "Mantenimiento"
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp),
+                ) {
+                    Text(text = "MARCAR EN MANTENIMIENTO")
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            // Observación del resultado del cambio de estado
+            LaunchedEffect(viewModel.mensajeCambioEstado, viewModel.errorCambioEstado) {
+                viewModel.mensajeCambioEstado?.let {
+                    Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                    viewModel.mensajeCambioEstado = null
+                    // **RECARGAR DATOS**
+                    // Debes llamar a la función que recarga 'vehiculo' en el ViewModel
+                }
+                viewModel.errorCambioEstado?.let {
+                    Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                    viewModel.errorCambioEstado = null
+                }
+            }
+
             // Botón Ver en el mapa
             Button(
                 onClick = onVerMapaClick,

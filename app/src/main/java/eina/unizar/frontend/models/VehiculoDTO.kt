@@ -40,6 +40,7 @@ data class VehiculoDTO(
     val estado: String,
     val tipo: String,
     val usuariosVinculados: List<String> = emptyList(),
+    val usuarioActivoId: String?,
     val icono_url: String? = null
 )
 
@@ -56,10 +57,10 @@ fun VehiculoDTO.toVehiculo(): Vehiculo {
     return Vehiculo(
         id = id.toString(),
         estado = when (estado) {
-            "Activo" -> EstadoVehiculo.DISPONIBLE
-            "En uso" -> EstadoVehiculo.EN_USO
-            "En reparación" -> EstadoVehiculo.EN_REPARACION
-            else -> EstadoVehiculo.DISPONIBLE
+            "Inactivo" -> EstadoVehiculo.INACTIVO
+            "Activo" -> EstadoVehiculo.ACTIVO
+            "Mantenimiento" -> EstadoVehiculo.MANTENIMIENTO
+            else -> EstadoVehiculo.INACTIVO
         },
         nombre = nombre,
         matricula = matricula,
@@ -77,6 +78,7 @@ fun VehiculoDTO.toVehiculo(): Vehiculo {
             "Camion" -> TipoVehiculo.CAMION
             else -> TipoVehiculo.OTRO
         },
+        usuarioActivoId = null,
         usuariosVinculados = usuariosVinculados ?: emptyList()
     )
 }
@@ -104,6 +106,7 @@ fun Vehiculo.toVehiculoDTO(): VehiculoDTO {
         litros_combustible = this.litros_combustible,
         consumo_medio = this.consumo_medio,
         ubicacion_actual = this.ubicacion_actual.toUbicacionDTO(),
+        usuarioActivoId = this.usuarioActivoId,
         usuariosVinculados = this.usuariosVinculados
     )
 }

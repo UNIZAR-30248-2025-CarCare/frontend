@@ -37,9 +37,9 @@ import eina.unizar.frontend.viewmodels.SuscripcionViewModel
 import java.util.Calendar
 
 enum class EstadoVehiculo(val color: Color, val texto: String) {
-    DISPONIBLE(Color(0xFF10B981), "Disponible"),
-    EN_USO(Color(0xFFF59E0B), "En uso"),
-    EN_REPARACION(Color(0xFFEF4444), "En reparación")
+    ACTIVO(Color(0xFF10B981), "Inactivo"),
+    INACTIVO(Color(0xFFF59E0B), "Activo"),
+    MANTENIMIENTO(Color(0xFFEF4444), "Mantenimiento")
 }
 
 @Composable
@@ -248,7 +248,8 @@ fun HomeScreen(
                 items(vehiculos) { vehiculo ->
                     VehiculoCard(
                         vehiculo = vehiculo.toVehiculoDTO(),
-                        onClick = { onVehiculoClick(vehiculo.id.toString()) }
+                        onClick = { onVehiculoClick(vehiculo.id.toString()) },
+                        currentUserId = userId
                     )
                     Spacer(modifier = Modifier.height(15.dp))
                 }
@@ -356,8 +357,10 @@ fun HomeScreen(
 @Composable
 fun VehiculoCard(
     vehiculo: VehiculoDTO,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    currentUserId: String
 ) {
+    // 1. Mapeo de tipo de vehículo a icono y color
     val (color, iconRes, name) = when (vehiculo.tipo.trim().lowercase()) {
         "coche" -> Triple(Color(0xFF3B82F6), R.drawable.ic_coche, "Coche")
         "moto" -> Triple(Color(0xFFF59E0B), R.drawable.ic_moto, "Moto")
@@ -365,6 +368,30 @@ fun VehiculoCard(
         "camion" -> Triple(Color(0xFFEF4444), R.drawable.ic_camion, "Camión")
         else -> Triple(Color(0xFF6B7280), R.drawable.ic_otro, "Otro")
     }
+
+    // 2. Lógica de Estado Dinámica (CORREGIDA CON PAIR)
+    val estadoDisplay = remember(vehiculo.estado, vehiculo.usuarioActivoId) {
+        when (vehiculo.estado.trim()) {
+            "Activo" -> {
+                if (vehiculo.usuarioActivoId?.toString() == currentUserId) {
+                    Pair(Color(0xFFF59E0B), "En uso (Tú)")
+                } else {
+                    Pair(Color(0xFFF59E0B), "En uso (Otro)")
+                }
+            }
+            "Inactivo" -> {
+                Pair(Color(0xFF10B981), "Disponible")
+            }
+            "Mantenimiento" -> {
+                Pair(Color(0xFFEF4444), "Mantenimiento")
+            }
+            else -> {
+                Pair(Color(0xFF10B981), "Disponible")
+            }
+        }
+    }
+    // Desestructuración de un Pair (dos valores)
+    val (estadoColor, estadoTexto) = estadoDisplay
 
     Card(
         modifier = Modifier
@@ -410,26 +437,18 @@ fun VehiculoCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))
+
+                // Aplicación del estado dinámico corregido
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "● ",
                         fontSize = 13.sp,
-                        color = when (vehiculo.estado) {
-                            "Activo" -> Color(0xFF10B981)
-                            "En uso" -> Color(0xFFF59E0B)
-                            "En reparación" -> Color(0xFFEF4444)
-                            else -> Color(0xFF10B981)
-                        }
+                        color = estadoColor
                     )
                     Text(
-                        text = vehiculo.estado,
+                        text = estadoTexto,
                         fontSize = 13.sp,
-                        color = when (vehiculo.estado) {
-                            "Activo" -> Color(0xFF10B981)
-                            "En uso" -> Color(0xFFF59E0B)
-                            "En reparación" -> Color(0xFFEF4444)
-                            else -> Color(0xFF10B981)
-                        }
+                        color = estadoColor
                     )
                 }
             }

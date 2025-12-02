@@ -35,6 +35,7 @@ import eina.unizar.frontend.models.ProcesarPagoRequest
 import eina.unizar.frontend.models.VerificarAnuncioResponse
 import eina.unizar.frontend.models.VerificarProgresoResponse
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -603,4 +604,23 @@ interface ApiService {
     suspend fun verificarAnuncio(
         @Header("Authorization") token: String
     ): Response<VerificarAnuncioResponse>
+
+    /**
+     * Actualiza el estado de un vehículo.
+     *
+     * Endpoint: PATCH /api/vehiculos/{id}/estado
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param vehiculoId Identificador del vehículo
+     * @param requestBody Cuerpo de la solicitud con el nuevo estado
+     * @return Response<ResponseBody> Respuesta HTTP con código de estado
+     */
+    @PATCH("vehiculo/{id}/estado")
+    suspend fun actualizarEstadoVehiculo(
+        @Header("Authorization") token: String,
+        @Path("id") vehiculoId: String,
+        @Body requestBody: Map<String, String> // Body: { "estado": "activo" | "inactivo" | "en_mantenimiento" }
+    ): Response<ResponseBody>
 }

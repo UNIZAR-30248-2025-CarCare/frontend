@@ -110,6 +110,16 @@ class HomeViewModel : ViewModel() {
                     if (response.isSuccessful) {
                         val vehiculos = response.body()?.vehiculos ?: emptyList()
                         Log.d("HomeViewModel", "Vehículos obtenidos: ${vehiculos.size}")
+
+                        // >>> LOG CRUCIAL AÑADIDO AQUI <<<
+                        vehiculos.forEach { vehiculo ->
+                            Log.i("HOME_DATA",
+                                "ID: ${vehiculo.id} | " +
+                                        "Estado: ${vehiculo.estado} | " +
+                                        "Usuario Activo ID: ${vehiculo.usuarioActivoId} | " +
+                                        "Tipo de Usuario Activo: ${vehiculo.usuarioActivoId?.javaClass?.simpleName ?: "null"}"
+                            )
+                        }
                         _vehiculos.value = vehiculos
                     } else {
                         Log.e("HomeViewModel", "Error en la respuesta: ${response.errorBody()?.string()}")
