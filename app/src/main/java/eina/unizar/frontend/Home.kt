@@ -33,6 +33,7 @@ import android.app.Application
 import androidx.compose.ui.platform.LocalContext
 import eina.unizar.frontend.notifications.NotificationPreferences
 import eina.unizar.frontend.notifications.NotificationScheduler
+import eina.unizar.frontend.viewmodels.SuscripcionViewModel
 import java.util.Calendar
 
 enum class EstadoVehiculo(val color: Color, val texto: String) {
@@ -179,6 +180,23 @@ fun HomeScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
+                        // Verificar si es premium
+                        val suscripcionViewModel = remember { SuscripcionViewModel() }
+                        val estadoSuscripcion by suscripcionViewModel.estadoSuscripcion.collectAsState()
+
+                        LaunchedEffect(Unit) {
+                            suscripcionViewModel.obtenerEstadoSuscripcion(token)
+                        }
+
+                        if (estadoSuscripcion?.esPremium == true) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Premium",
+                                tint = Color(0xFFFFD700),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                     val context = LocalContext.current
                     PerfilMenu(

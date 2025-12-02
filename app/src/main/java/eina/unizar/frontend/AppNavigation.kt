@@ -33,7 +33,9 @@ import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.models.toVehiculoDetalle
 import eina.unizar.frontend.viewmodels.HomeViewModel
 import android.content.Intent
+import androidx.compose.runtime.setValue
 import eina.unizar.frontend.models.SearchResult
+import eina.unizar.frontend.viewmodels.SuscripcionViewModel
 import eina.unizar.frontend.PersonalizarIconoScreen
 
 /**
@@ -119,6 +121,39 @@ fun AppNavigation(intent: Intent? = null) {
     val efectiveToken = token ?: storedToken
     val selectedVehiculo = remember { mutableStateOf<Vehiculo?>(null) }
 
+    // *** SISTEMA DE ANUNCIOS ***
+    var mostrarAnuncio by remember { mutableStateOf(false) }
+    val suscripcionViewModel: SuscripcionViewModel = viewModel(viewModelStoreOwner = activity)
+    val estadoSuscripcion by suscripcionViewModel.estadoSuscripcion.collectAsState()
+
+    // Cargar estado de suscripción al iniciar
+    LaunchedEffect(efectiveUserId) {
+        val token = efectiveToken
+        Log.d("AnuncioDebug", "🔍 Token encontrado: ${token != null}")
+        if (token != null) {
+            suscripcionViewModel.obtenerEstadoSuscripcion(token)
+            // Dar tiempo a que se cargue el estado
+            kotlinx.coroutines.delay(500)
+        }
+    }
+
+    // Observar cambios en el estado de suscripción
+    LaunchedEffect(estadoSuscripcion) {
+        Log.d("AnuncioDebug", "📊 Estado suscripción: ${estadoSuscripcion?.esPremium}")
+    }
+
+    // Función para registrar acciones y mostrar anuncio
+    fun registrarAccion() {
+        val esPremium = estadoSuscripcion?.esPremium ?: false
+        Log.d("AnuncioDebug", "🎬 Acción registrada - esPremium: $esPremium")
+
+        if (AnuncioManager.deberMostrarAnuncio(esPremium)) {
+            Log.d("AnuncioDebug", "⚠️ MOSTRANDO ANUNCIO")
+            mostrarAnuncio = true
+        } else {
+            Log.d("AnuncioDebug", "✅ Anuncio bloqueado (Premium o contador)")
+        }
+    }
 
 
     // --- Datos de Ejemplo para Home y otras pantallas ---
@@ -247,6 +282,7 @@ fun AppNavigation(intent: Intent? = null) {
 
                     // Callbacks de navegación de la pantalla:
                     onVehiculoClick = { vehiculoId: String ->
+                        registrarAccion()
                         selectedVehiculo.value = vehiculosDisponibles.find { it.id == vehiculoId }
                         navController.navigate("vehiculo_detalle/$vehiculoId")
                     },
@@ -279,6 +315,7 @@ fun AppNavigation(intent: Intent? = null) {
         }
 
         composable("mapa") {
+            registrarAccion()
             UbicacionVehiculoScreen(
                 onBackClick = { navController.popBackStack() },
                 navController = navController,
@@ -385,6 +422,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // --- NUEVA RUTA DE INVITACIONES
         composable("invitaciones") {
+            registrarAccion()
             InvitacionesScreen(
                 usuarioId = efectiveUserId ?: "",
                 token = efectiveToken ?: "",
@@ -397,6 +435,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // --- NUEVA RUTA DE INCIDENCIAS ---
         composable("incidencias") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 IncidenciasScreen(
                     userId = efectiveUserId,
@@ -473,6 +512,7 @@ fun AppNavigation(intent: Intent? = null) {
         }
 
         composable("reservas") {
+            registrarAccion()
             val userId = authViewModel.userId.collectAsState().value ?: ""
             val token = authViewModel.token.collectAsState().value ?: ""
 
@@ -542,6 +582,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para viajes
         composable("viajes") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 ViajesScreen(
                     onBackClick = { navController.popBackStack() },
@@ -555,6 +596,7 @@ fun AppNavigation(intent: Intent? = null) {
         }
         
         composable("logros") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 LogrosScreen(
                     navController = navController,
@@ -582,6 +624,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para repostajes
         composable("repostajes") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 RepostajesScreen(
                     onBackClick = { navController.popBackStack() },
@@ -611,6 +654,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para revisiones
         composable("revisiones") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 RevisionesScreen(
                     onBackClick = { navController.popBackStack() },
@@ -635,6 +679,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para estadisticas
         composable("estadisticas") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 EstadisticasScreen(
                     navController = navController,
@@ -646,6 +691,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para busquedas
         composable("busqueda") {
+            registrarAccion()
             if (efectiveToken != null) {
                 BusquedaScreen(
                     efectiveUserId = efectiveUserId ?: "",
@@ -653,6 +699,14 @@ fun AppNavigation(intent: Intent? = null) {
                     onBackClick = { navController.popBackStack() }
                 )
             }
+        }
+
+        composable("premium") { backStackEntry ->
+
+            PremiumScreen(
+                token = efectiveToken ?: "",
+                onBackClick = { navController.popBackStack() }
+            )
         }
 
         composable(
@@ -677,5 +731,17 @@ fun AppNavigation(intent: Intent? = null) {
                 onIconoActualizado = { /* lógica si quieres actualizar la UI */ }
             )
         }
+    }
+    // *** DIALOG DE ANUNCIO ***
+    if (mostrarAnuncio) {
+        AnuncioDialog(
+            onDismiss = {
+                mostrarAnuncio = false
+                AnuncioManager.resetearContador()
+            },
+            navController = navController
+        )
+
+
     }
 }
