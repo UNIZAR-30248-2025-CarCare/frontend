@@ -440,9 +440,22 @@ fun DetalleVehiculoScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 1. Lógica de habilitación y texto (Necesita 'vehiculo.usuarioActivoId')
+            // 1. Lógica de habilitación y texto
             val isActivo = vehiculo.estado.texto == "Activo"
-            val canLiberar = isActivo && vehiculo.usuarioActivoId == efectiveUserId
+
+            // 💡 LOGS DE DIAGNÓSTICO
+            android.util.Log.d("VEHICULO_ESTADO", "Estado del vehículo (Texto): ${vehiculo.estado.texto}")
+            android.util.Log.d("VEHICULO_ESTADO", "Usuario Activo ID (Vehículo): ${vehiculo.usuarioActivoId} | Tipo: ${vehiculo.usuarioActivoId?.javaClass?.simpleName}")
+            android.util.Log.d("VEHICULO_ESTADO", "Usuario Efectivo ID (App): $efectiveUserId | Tipo: ${efectiveUserId?.javaClass?.simpleName}")
+
+
+            val canLiberar = isActivo && (vehiculo.usuarioActivoId == efectiveUserId)
+
+            // 💡 LOG DE RESULTADO
+            android.util.Log.d("VEHICULO_ESTADO", "Resultado de la comparación (usuarioActivoId == efectiveUserId): ${vehiculo.usuarioActivoId == efectiveUserId}")
+            android.util.Log.d("VEHICULO_ESTADO", "Resultado final de canLiberar: $canLiberar")
+
+
             val canActivar = !isActivo
 
 

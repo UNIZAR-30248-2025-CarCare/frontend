@@ -37,9 +37,9 @@ import eina.unizar.frontend.viewmodels.SuscripcionViewModel
 import java.util.Calendar
 
 enum class EstadoVehiculo(val color: Color, val texto: String) {
-    ACTIVO(Color(0xFF10B981), "Inactivo"),
-    INACTIVO(Color(0xFFF59E0B), "Activo"),
-    MANTENIMIENTO(Color(0xFFEF4444), "Mantenimiento")
+    INACTIVO(Color(0xFF10B981), "Inactivo"),
+    ACTIVO(Color(0xFFEF4444), "Activo"),
+    MANTENIMIENTO(Color(0xFFF59E0B), "Mantenimiento")
 }
 
 @Composable
@@ -374,16 +374,16 @@ fun VehiculoCard(
         when (vehiculo.estado.trim()) {
             "Activo" -> {
                 if (vehiculo.usuarioActivoId?.toString() == currentUserId) {
-                    Pair(Color(0xFFF59E0B), "En uso (Tú)")
+                    Pair(Color(0xFFEF4444), "En uso (Tú)")
                 } else {
-                    Pair(Color(0xFFF59E0B), "En uso (Otro)")
+                    Pair(Color(0xFFEF4444), "En uso (Otro)")
                 }
             }
             "Inactivo" -> {
                 Pair(Color(0xFF10B981), "Disponible")
             }
             "Mantenimiento" -> {
-                Pair(Color(0xFFEF4444), "Mantenimiento")
+                Pair(Color(0xFFF59E0B), "Mantenimiento")
             }
             else -> {
                 Pair(Color(0xFF10B981), "Disponible")
