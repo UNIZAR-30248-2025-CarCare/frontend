@@ -593,6 +593,17 @@ fun PerfilMenu(
                 }
             )
 
+            // 💡 NUEVA OPCIÓN: EDITAR FOTO DE PERFIL
+            DropdownMenuItem(
+                text = { Text("Editar Foto de Perfil", color = MaterialTheme.colorScheme.onSurface) },
+                onClick = {
+                    expanded = false
+                    // Navega a la nueva ruta
+                    navController.navigate("editarFotoPerfil")
+                }
+            )
+            // 💡 FIN NUEVA OPCIÓN
+
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
             DropdownMenuItem(
