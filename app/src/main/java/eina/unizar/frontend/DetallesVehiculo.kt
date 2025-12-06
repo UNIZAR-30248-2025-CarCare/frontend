@@ -466,7 +466,7 @@ fun DetalleVehiculoScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(15.dp))
 
             Button(
                 onClick = {

@@ -77,7 +77,8 @@ fun VehiculoDTO.toVehiculo(): Vehiculo {
             "Camion" -> TipoVehiculo.CAMION
             else -> TipoVehiculo.OTRO
         },
-        usuariosVinculados = usuariosVinculados ?: emptyList()
+        usuariosVinculados = usuariosVinculados ?: emptyList(),
+        icono_url = icono_url
     )
 }
 
