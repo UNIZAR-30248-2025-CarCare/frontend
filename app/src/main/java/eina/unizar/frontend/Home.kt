@@ -30,16 +30,26 @@ import eina.unizar.frontend.models.toVehiculoDTO
 import eina.unizar.frontend.viewmodels.AuthViewModel
 import android.content.Context
 import android.app.Application
+import android.util.Base64
+import android.util.Log
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import eina.unizar.frontend.notifications.NotificationPreferences
 import eina.unizar.frontend.notifications.NotificationScheduler
 import eina.unizar.frontend.viewmodels.SuscripcionViewModel
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.flow.StateFlow
 import java.util.Calendar
 
+import kotlin.io.encoding.ExperimentalEncodingApi
+
 enum class EstadoVehiculo(val color: Color, val texto: String) {
-    DISPONIBLE(Color(0xFF10B981), "Disponible"),
-    EN_USO(Color(0xFFF59E0B), "En uso"),
-    EN_REPARACION(Color(0xFFEF4444), "En reparación")
+    INACTIVO(Color(0xFF10B981), "Inactivo"),
+    ACTIVO(Color(0xFFEF4444), "Activo"),
+    MANTENIMIENTO(Color(0xFFF59E0B), "Mantenimiento")
 }
 
 @Composable
@@ -70,10 +80,12 @@ fun HomeScreenWrapper(
     LaunchedEffect(Unit) {
         viewModel.fetchVehiculos(userId, token)
         viewModel.fetchUserName(userId, token)
+        viewModel.fetchUserPhoto(token)
     }
 
     HomeScreen(
         userName = viewModel.userName,
+        fotoPerfilUrl = viewModel.fotoPerfilUrl,
         vehiculos = vehiculos,
         onVehiculoClick = onVehiculoClick,
         onAddVehiculoClick = onAddVehiculoClick,
@@ -98,6 +110,7 @@ fun HomeScreenWrapper(
 @Composable
 fun HomeScreen(
     userName: String,
+    fotoPerfilUrl: StateFlow<String?>,
     vehiculos: List<Vehiculo>,
     onVehiculoClick: (String) -> Unit,
     onAddVehiculoClick: () -> Unit,
@@ -200,6 +213,7 @@ fun HomeScreen(
                     }
                     val context = LocalContext.current
                     PerfilMenu(
+                        fotoPerfilUrl = fotoPerfilUrl,
                         onCerrarSesion = {
                             authViewModel.logout()
                             val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
@@ -248,7 +262,8 @@ fun HomeScreen(
                 items(vehiculos) { vehiculo ->
                     VehiculoCard(
                         vehiculo = vehiculo.toVehiculoDTO(),
-                        onClick = { onVehiculoClick(vehiculo.id.toString()) }
+                        onClick = { onVehiculoClick(vehiculo.id.toString()) },
+                        currentUserId = userId
                     )
                     Spacer(modifier = Modifier.height(15.dp))
                 }
@@ -356,8 +371,10 @@ fun HomeScreen(
 @Composable
 fun VehiculoCard(
     vehiculo: VehiculoDTO,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    currentUserId: String
 ) {
+    // 1. Mapeo de tipo de vehículo a icono y color
     val (color, iconRes, name) = when (vehiculo.tipo.trim().lowercase()) {
         "coche" -> Triple(Color(0xFF3B82F6), R.drawable.ic_coche, "Coche")
         "moto" -> Triple(Color(0xFFF59E0B), R.drawable.ic_moto, "Moto")
@@ -365,6 +382,30 @@ fun VehiculoCard(
         "camion" -> Triple(Color(0xFFEF4444), R.drawable.ic_camion, "Camión")
         else -> Triple(Color(0xFF6B7280), R.drawable.ic_otro, "Otro")
     }
+
+    // 2. Lógica de Estado Dinámica (CORREGIDA CON PAIR)
+    val estadoDisplay = remember(vehiculo.estado, vehiculo.usuarioActivoId) {
+        when (vehiculo.estado.trim()) {
+            "Activo" -> {
+                if (vehiculo.usuarioActivoId?.toString() == currentUserId) {
+                    Pair(Color(0xFFEF4444), "En uso (Tú)")
+                } else {
+                    Pair(Color(0xFFEF4444), "En uso (Otro)")
+                }
+            }
+            "Inactivo" -> {
+                Pair(Color(0xFF10B981), "Disponible")
+            }
+            "Mantenimiento" -> {
+                Pair(Color(0xFFF59E0B), "Mantenimiento")
+            }
+            else -> {
+                Pair(Color(0xFF10B981), "Disponible")
+            }
+        }
+    }
+    // Desestructuración de un Pair (dos valores)
+    val (estadoColor, estadoTexto) = estadoDisplay
 
     Card(
         modifier = Modifier
@@ -410,26 +451,18 @@ fun VehiculoCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))
+
+                // Aplicación del estado dinámico corregido
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "● ",
                         fontSize = 13.sp,
-                        color = when (vehiculo.estado) {
-                            "Activo" -> Color(0xFF10B981)
-                            "En uso" -> Color(0xFFF59E0B)
-                            "En reparación" -> Color(0xFFEF4444)
-                            else -> Color(0xFF10B981)
-                        }
+                        color = estadoColor
                     )
                     Text(
-                        text = vehiculo.estado,
+                        text = estadoTexto,
                         fontSize = 13.sp,
-                        color = when (vehiculo.estado) {
-                            "Activo" -> Color(0xFF10B981)
-                            "En uso" -> Color(0xFFF59E0B)
-                            "En reparación" -> Color(0xFFEF4444)
-                            else -> Color(0xFF10B981)
-                        }
+                        color = estadoColor
                     )
                 }
             }
@@ -533,8 +566,10 @@ fun BottomNavItem(
     }
 }
 
+@OptIn(ExperimentalEncodingApi::class)
 @Composable
 fun PerfilMenu(
+    fotoPerfilUrl: StateFlow<String?>,
     onCerrarSesion: () -> Unit,
     navController: NavHostController
 ) {
@@ -548,6 +583,8 @@ fun PerfilMenu(
         mutableStateOf(NotificationPreferences.areMaintenanceNotificationsEnabled(context))
     }
 
+    val fotoPerfilUrlFlow: String? by fotoPerfilUrl.collectAsState()
+
     Box(
         modifier = Modifier
             .size(50.dp)
@@ -555,12 +592,54 @@ fun PerfilMenu(
             .clickable { expanded = true },
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.Person,
-            contentDescription = "Perfil",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(30.dp)
-        )
+        if (fotoPerfilUrlFlow != null) {
+
+            // 1. Limpia la cadena (solo si el backend incluye el prefijo)
+            val base64String = fotoPerfilUrlFlow!!.substringAfter(",", missingDelimiterValue = fotoPerfilUrlFlow!!)
+
+            // 2. Decodifica la cadena Base64 limpia a un array de bytes
+            val imageBytes: ByteArray? = try {
+                // Usamos el flag Base64.DEFAULT o Base64.NO_WRAP (si no hay saltos de línea)
+                // Usar Base64.DEFAULT es el más común.
+                android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
+            } catch (e: IllegalArgumentException) {
+                // Manejar el caso en que la cadena no sea una Base64 válida
+                Log.e("PerfilMenu", "Error decodificando Base64: ${e.message}")
+                null
+            }
+
+            // 3. Pasa el array de bytes (ByteArray) a Coil
+            if (imageBytes != null) {
+                AsyncImage(
+                    // Coil puede cargar directamente un ByteArray
+                    model = ImageRequest.Builder(context)
+                        .data(imageBytes) // <-- ¡El cambio clave! Pasa el ByteArray
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .aspectRatio(1f),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            else {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Perfil",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(30.dp)
+                )
+            }
+        } else {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Perfil",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(30.dp)
+            )
+        }
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
@@ -573,6 +652,17 @@ fun PerfilMenu(
                     navController.navigate("invitaciones")
                 }
             )
+
+            // 💡 NUEVA OPCIÓN: EDITAR FOTO DE PERFIL
+            DropdownMenuItem(
+                text = { Text("Editar Foto de Perfil", color = MaterialTheme.colorScheme.onSurface) },
+                onClick = {
+                    expanded = false
+                    // Navega a la nueva ruta
+                    navController.navigate("editarFotoPerfil")
+                }
+            )
+            // 💡 FIN NUEVA OPCIÓN
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 

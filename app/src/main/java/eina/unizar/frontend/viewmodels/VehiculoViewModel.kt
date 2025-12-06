@@ -74,6 +74,21 @@ class VehiculoViewModel : ViewModel() {
     var errorEliminacionUsuario by mutableStateOf<String?>(null)
 
     /**
+     * Mensaje de confirmación tras cambiar el estado de un vehículo.
+     *
+     * La UI puede observar este valor para mostrar un mensaje de confirmación
+     * tras el cambio exitoso.
+     */
+    var mensajeCambioEstado by mutableStateOf<String?>(null)
+
+    /**
+     * Mensaje de error en caso de fallo al cambiar el estado de un vehículo.
+     *
+     * La UI puede observar este valor para mostrar mensajes de error al usuario.
+     */
+    var errorCambioEstado by mutableStateOf<String?>(null)
+
+    /**
      * Registra un nuevo vehículo en el sistema.
      *
      * Realiza una petición suspendida al backend para crear un nuevo vehículo.
@@ -211,6 +226,7 @@ class VehiculoViewModel : ViewModel() {
 
     var iconoActualUrl by mutableStateOf<String?>(null)
 
+
     fun cargarIconoVehiculo(token: String, vehiculoId: String) {
         viewModelScope.launch {
             try {
@@ -227,6 +243,7 @@ class VehiculoViewModel : ViewModel() {
         }
     }
 
+
     fun eliminarIconoVehiculo(token: String, vehiculoId: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
@@ -239,6 +256,35 @@ class VehiculoViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 onResult(false)
+            }
+        }
+    }
+
+    fun actualizarEstadoVehiculo(token: String, vehiculoId: String, nuevoEstado: String) {
+        viewModelScope.launch {
+            try {
+                val requestBody = mapOf("estado" to nuevoEstado)
+
+                val response = RetrofitClient.instance.actualizarEstadoVehiculo(
+                    "Bearer $token",
+                    vehiculoId,
+                    requestBody
+                )
+
+                if (response.isSuccessful) {
+                    mensajeCambioEstado = "Estado actualizado a '$nuevoEstado' correctamente."
+                    errorCambioEstado = null
+                    // NECESARIO: Recargar el detalle del vehículo para actualizar la UI
+                    // Debes tener una función como esta
+                    // fetchVehiculoDetalle(vehiculoId, token)
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Error ${response.code()}: No se pudo cambiar el estado."
+                    errorCambioEstado = errorMsg
+                    mensajeCambioEstado = null
+                }
+            } catch (e: Exception) {
+                errorCambioEstado = "Error de red: ${e.message}"
+                mensajeCambioEstado = null
             }
         }
     }

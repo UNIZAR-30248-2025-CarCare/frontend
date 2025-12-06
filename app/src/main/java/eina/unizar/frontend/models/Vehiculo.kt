@@ -36,7 +36,8 @@ data class Vehiculo(
     val consumo_medio: Float,
     val ubicacion_actual: Ubicacion?,
     val tipo: TipoVehiculo,
-    val usuariosVinculados: List<String> = emptyList()
+    val usuariosVinculados: List<String> = emptyList(),
+    val usuarioActivoId: String?
 )
 
 /**
@@ -61,6 +62,7 @@ fun Vehiculo.toVehiculoDetalle(): VehiculoDetalle {
         consumoMedio = this.consumo_medio.toDouble(),
         tipo = this.tipo,
         estado = this.estado,
-        usuariosVinculados = usuariosVinculados ?: emptyList()
+        usuariosVinculados = usuariosVinculados ?: emptyList(),
+        usuarioActivoId = this.usuarioActivoId
     )
 }
