@@ -641,4 +641,31 @@ interface ApiService {
         @Part foto: MultipartBody.Part // El nombre del campo debe ser 'foto'
     ): Response<FotoPerfilResponse>
 
+    /**
+     * Obtiene la foto de perfil del usuario.
+     * Endpoint: GET /usuario/perfil/foto
+     * Requiere autenticación.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Response<FotoPerfilResponse> Respuesta con la URL de la foto de perfil.
+     */
+    @GET("usuario/perfil/foto")
+    suspend fun obtenerFotoPerfil(
+        @Header("Authorization") token: String
+    ): Response<FotoPerfilResponse>
+
+    /**
+     * Sube o actualiza la foto de perfil del usuario en formato Base64.
+     * Endpoint: PUT /usuario/perfil/foto
+     * Requiere autenticación.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param body Cuerpo de la solicitud con la imagen en Base64.
+     * @return Response<ResponseBody> Respuesta HTTP con código de estado
+     */
+    @PUT("usuario/perfil/foto")
+    suspend fun actualizarFotoPerfilBase64(
+        @Header("Authorization") token: String,
+        @Body body: okhttp3.RequestBody
+    ): retrofit2.Response<okhttp3.ResponseBody>
 }

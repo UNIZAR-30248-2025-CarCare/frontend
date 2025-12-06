@@ -320,6 +320,26 @@ fun AppNavigation(intent: Intent? = null) {
             }
         }
 
+        composable("editarFotoPerfil") {
+            // Usa collectAsState() porque token es un StateFlow
+            val token by authViewModel.token.collectAsState()
+
+            if (token != null) {
+                EditarFotoPerfilScreen(
+                    navController = navController,
+                    token = token!!,
+                    perfilViewModel = viewModel() // Inyección simple con viewModel()
+                )
+            } else {
+                // Redirigir a login si no hay token
+                LaunchedEffect(Unit) {
+                    navController.navigate("eleccion") {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    }
+                }
+            }
+        }
+
         composable("mapa") {
             registrarAccion()
             UbicacionVehiculoScreen(

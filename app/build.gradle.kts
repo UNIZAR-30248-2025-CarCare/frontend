@@ -46,6 +46,7 @@ android {
             excludes += "META-INF/INDEX.LIST"
             excludes += "META-INF/DEPENDENCIES"
             excludes += "META-INF/io.netty.versions.properties"
+            excludes += "mozilla/public-suffix-list.txt"
         }
     }
 }
@@ -69,6 +70,7 @@ dependencies {
     implementation(libs.litert)
     implementation(libs.volley)
     implementation(libs.androidx.espresso.core)
+    implementation(libs.firebase.crashlytics.buildtools)
     testImplementation(libs.junit)
     //testImplementation(libs.androidx.ui.test.junit4.android)
     androidTestImplementation(libs.androidx.junit)

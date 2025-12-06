@@ -13,6 +13,7 @@ import eina.unizar.frontend.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -54,6 +55,13 @@ class HomeViewModel : ViewModel() {
     val vehiculos: StateFlow<List<VehiculoDTO>> = _vehiculos
 
     /**
+     * URL de la foto de perfil del usuario.
+     * Puede ser null si no tiene foto o si aún no se ha cargado.
+     */
+    private val _fotoPerfilUrl = MutableStateFlow<String?>(null)
+    val fotoPerfilUrl: StateFlow<String?> = _fotoPerfilUrl.asStateFlow()
+
+    /**
      * Obtiene el nombre del usuario desde el backend.
      * 
      * Realiza una petición asíncrona para recuperar el nombre del usuario
@@ -81,6 +89,47 @@ class HomeViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Error al obtener nombre: ${e.message}", e)
                 userName = "Error: ${e.message?.take(30) ?: "desconocido"}"
+            }
+        }
+    }
+
+    /**
+     * Obtiene la URL de la foto de perfil del usuario desde el backend
+     * y actualiza el StateFlow observable.
+     *
+     * @param token Token JWT de autenticación (sin el prefijo "Bearer")
+     */
+    fun fetchUserPhoto(token: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("HomeViewModel", "Obteniendo foto de perfil")
+
+                // Llama a la función suspend de Retrofit.
+                // Esto devolverá directamente un Response<FotoPerfilResponse>.
+                val response = RetrofitClient.instance.obtenerFotoPerfil("Bearer $token")
+
+                if (response.isSuccessful) {
+                    // Si la respuesta HTTP fue 2xx (ej. 200 OK):
+                    val fotoResponse = response.body()
+
+                    // Actualiza el StateFlow con la URL/Base64.
+                    _fotoPerfilUrl.value = fotoResponse?.foto_perfil
+
+                    Log.d("HomeViewModel", "Foto de perfil obtenida: ${_fotoPerfilUrl.value}")
+
+                } else {
+                    // Si la respuesta HTTP no es exitosa (ej. 404, 500)
+                    Log.e("HomeViewModel", "Error HTTP al obtener foto: ${response.code()}")
+                    _fotoPerfilUrl.value = null // Limpia la foto en caso de error
+                }
+
+            } catch (e: HttpException) {
+                Log.e("HomeViewModel", "Error HTTP (Excepción) al obtener foto: ${e.code()} ${e.message()}")
+                _fotoPerfilUrl.value = null
+            } catch (e: Exception) {
+                // Este catch maneja errores de red o errores de deserialización (si quedan)
+                Log.e("HomeViewModel", "Error al obtener foto: ${e.message}", e)
+                _fotoPerfilUrl.value = null
             }
         }
     }

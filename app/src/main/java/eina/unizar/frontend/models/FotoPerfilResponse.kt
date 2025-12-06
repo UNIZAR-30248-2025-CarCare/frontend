@@ -1,5 +1,6 @@
 package eina.unizar.frontend.models
 
+import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,5 +11,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FotoPerfilResponse(
     val message: String,
+    @SerializedName("foto_perfil_url")
     val foto_perfil: String
 )

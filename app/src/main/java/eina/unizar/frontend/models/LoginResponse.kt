@@ -10,5 +10,6 @@ package eina.unizar.frontend.models
  */
 data class LoginResponse(
     val token: String,
-    val userId: String
+    val userId: String,
+    val foto_perfil_url: String? = null
 )

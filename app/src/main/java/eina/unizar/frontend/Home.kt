@@ -30,11 +30,21 @@ import eina.unizar.frontend.models.toVehiculoDTO
 import eina.unizar.frontend.viewmodels.AuthViewModel
 import android.content.Context
 import android.app.Application
+import android.util.Base64
+import android.util.Log
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import eina.unizar.frontend.notifications.NotificationPreferences
 import eina.unizar.frontend.notifications.NotificationScheduler
 import eina.unizar.frontend.viewmodels.SuscripcionViewModel
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.flow.StateFlow
 import java.util.Calendar
+
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 enum class EstadoVehiculo(val color: Color, val texto: String) {
     INACTIVO(Color(0xFF10B981), "Inactivo"),
@@ -70,10 +80,12 @@ fun HomeScreenWrapper(
     LaunchedEffect(Unit) {
         viewModel.fetchVehiculos(userId, token)
         viewModel.fetchUserName(userId, token)
+        viewModel.fetchUserPhoto(token)
     }
 
     HomeScreen(
         userName = viewModel.userName,
+        fotoPerfilUrl = viewModel.fotoPerfilUrl,
         vehiculos = vehiculos,
         onVehiculoClick = onVehiculoClick,
         onAddVehiculoClick = onAddVehiculoClick,
@@ -98,6 +110,7 @@ fun HomeScreenWrapper(
 @Composable
 fun HomeScreen(
     userName: String,
+    fotoPerfilUrl: StateFlow<String?>,
     vehiculos: List<Vehiculo>,
     onVehiculoClick: (String) -> Unit,
     onAddVehiculoClick: () -> Unit,
@@ -200,6 +213,7 @@ fun HomeScreen(
                     }
                     val context = LocalContext.current
                     PerfilMenu(
+                        fotoPerfilUrl = fotoPerfilUrl,
                         onCerrarSesion = {
                             authViewModel.logout()
                             val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
@@ -552,8 +566,10 @@ fun BottomNavItem(
     }
 }
 
+@OptIn(ExperimentalEncodingApi::class)
 @Composable
 fun PerfilMenu(
+    fotoPerfilUrl: StateFlow<String?>,
     onCerrarSesion: () -> Unit,
     navController: NavHostController
 ) {
@@ -567,6 +583,8 @@ fun PerfilMenu(
         mutableStateOf(NotificationPreferences.areMaintenanceNotificationsEnabled(context))
     }
 
+    val fotoPerfilUrlFlow: String? by fotoPerfilUrl.collectAsState()
+
     Box(
         modifier = Modifier
             .size(50.dp)
@@ -574,12 +592,54 @@ fun PerfilMenu(
             .clickable { expanded = true },
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.Person,
-            contentDescription = "Perfil",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(30.dp)
-        )
+        if (fotoPerfilUrlFlow != null) {
+
+            // 1. Limpia la cadena (solo si el backend incluye el prefijo)
+            val base64String = fotoPerfilUrlFlow!!.substringAfter(",", missingDelimiterValue = fotoPerfilUrlFlow!!)
+
+            // 2. Decodifica la cadena Base64 limpia a un array de bytes
+            val imageBytes: ByteArray? = try {
+                // Usamos el flag Base64.DEFAULT o Base64.NO_WRAP (si no hay saltos de línea)
+                // Usar Base64.DEFAULT es el más común.
+                android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
+            } catch (e: IllegalArgumentException) {
+                // Manejar el caso en que la cadena no sea una Base64 válida
+                Log.e("PerfilMenu", "Error decodificando Base64: ${e.message}")
+                null
+            }
+
+            // 3. Pasa el array de bytes (ByteArray) a Coil
+            if (imageBytes != null) {
+                AsyncImage(
+                    // Coil puede cargar directamente un ByteArray
+                    model = ImageRequest.Builder(context)
+                        .data(imageBytes) // <-- ¡El cambio clave! Pasa el ByteArray
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .aspectRatio(1f),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            else {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Perfil",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(30.dp)
+                )
+            }
+        } else {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Perfil",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(30.dp)
+            )
+        }
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
