@@ -38,6 +38,7 @@ data class Vehiculo(
     val tipo: TipoVehiculo,
     val usuariosVinculados: List<String> = emptyList(),
     val usuarioActivoId: String?
+    val icono_url: String? = null
 )
 
 /**
@@ -64,5 +65,6 @@ fun Vehiculo.toVehiculoDetalle(): VehiculoDetalle {
         estado = this.estado,
         usuariosVinculados = usuariosVinculados ?: emptyList(),
         usuarioActivoId = this.usuarioActivoId
+        icono_url = this.icono_url
     )
 }

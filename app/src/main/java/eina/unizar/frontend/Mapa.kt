@@ -37,6 +37,10 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import eina.unizar.frontend.IconPreferences
 import eina.unizar.frontend.ImageUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun UbicacionVehiculoScreen(
@@ -56,6 +60,10 @@ fun UbicacionVehiculoScreen(
     val viewModel = remember { HomeViewModel() }
     val vehiculosDTO by viewModel.vehiculos.collectAsState()
     val vehiculos = vehiculosDTO.map { it.toVehiculo() }
+
+    vehiculos.forEach { vehiculo ->
+        Log.d("Mapa", "Vehículo ${vehiculo.id} - tipo: ${vehiculo.tipo} - icono_url: ${vehiculo.icono_url}")
+    }
 
     LaunchedEffect(Unit) {
         if (efectiveUserId != null && efectiveToken != null) {
@@ -193,63 +201,81 @@ fun UbicacionVehiculoScreen(
 
                             try {
                                 val iconFactory = org.maplibre.android.annotations.IconFactory.getInstance(mapView.context)
+                                val iconPreferences = IconPreferences(mapView.context)
 
                                 // Añadir marcadores para TODOS los vehículos
                                 vehiculos.forEachIndexed { index, vehiculo ->
                                     vehiculo.ubicacion_actual?.let { ubicacion ->
                                         val isSelected = index == selectedIndex
 
-                                        val iconPreferences = IconPreferences(mapView.context)
 
-                                        // LOGS DETALLADOS
-                                        Log.d("Mapa", "=== MARCADOR VEHÍCULO ===")
-                                        Log.d("Mapa", "ID: ${vehiculo.id}, Nombre: ${vehiculo.nombre}")
-                                        Log.d("Mapa", "Tipo: ${vehiculo.tipo}")
+                                        val customSize = 100 // tamaño para icono personalizado
+                                        val defaultSize = 50 // tamaño para icono por defecto
 
-                                        // Tamaño dinámico: más grande si está seleccionado
-                                        val size = if (isSelected) 60 else 48
-
-                                        // NUEVA LÓGICA: Intentar cargar imagen personalizada primero
-                                        val customImageBitmap = iconPreferences.getCustomImageOrNull(vehiculo.id)
-
-                                        val finalIcon = if (customImageBitmap != null) {
-                                            // USAR IMAGEN PERSONALIZADA
-                                            Log.d("Mapa", "Usando imagen personalizada para vehículo ${vehiculo.id}")
-
-                                            // Crear ícono circular con la imagen personalizada
-                                            val circularBitmap = ImageUtils.createCircularIcon(customImageBitmap, size)
-                                            iconFactory.fromBitmap(circularBitmap)
-
+                                        if (!vehiculo.icono_url.isNullOrBlank()) {
+                                            Log.d("Mapa", "Intentando descargar icono personalizado para vehículo ${vehiculo.id}: ${vehiculo.icono_url}")
+                                            val urlCompleta = if (vehiculo.icono_url.startsWith("/")) {
+                                                "http://10.0.2.2:3000${vehiculo.icono_url}"
+                                            } else {
+                                                vehiculo.icono_url
+                                            }
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                try {
+                                                    val bmp = android.graphics.BitmapFactory.decodeStream(java.net.URL(urlCompleta).openStream())
+                                                    withContext(Dispatchers.Main) {
+                                                        val circularBitmap = ImageUtils.createCircularIcon(bmp, customSize)
+                                                        val icon = iconFactory.fromBitmap(circularBitmap)
+                                                        map.addMarker(
+                                                            org.maplibre.android.annotations.MarkerOptions()
+                                                                .position(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                                                .title(vehiculo.nombre)
+                                                                .snippet("${vehiculo.matricula} - ${vehiculo.tipo}")
+                                                                .icon(icon)
+                                                        )
+                                                    }
+                                                } catch (e: Exception) {
+                                                    Log.d("Mapa", "Error al descargar icono personalizado: ${e.message}")
+                                                    withContext(Dispatchers.Main) {
+                                                        val defaultIconResId = iconPreferences.getDefaultIconForTipo(vehiculo.tipo)
+                                                        val markerIcon = iconFactory.fromResource(defaultIconResId)
+                                                        val icon = iconFactory.fromBitmap(
+                                                            android.graphics.Bitmap.createScaledBitmap(
+                                                                markerIcon.bitmap,
+                                                                defaultSize,
+                                                                defaultSize,
+                                                                false
+                                                            )
+                                                        )
+                                                        map.addMarker(
+                                                            org.maplibre.android.annotations.MarkerOptions()
+                                                                .position(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                                                .title(vehiculo.nombre)
+                                                                .snippet("${vehiculo.matricula} - ${vehiculo.tipo}")
+                                                                .icon(icon)
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         } else {
-                                            // USAR ÍCONO POR DEFECTO
-                                            Log.d("Mapa", "Usando ícono por defecto para vehículo ${vehiculo.id}")
-
+                                            Log.d("Mapa", "Usando icono por defecto para vehículo ${vehiculo.id} (tipo: ${vehiculo.tipo})")
                                             val defaultIconResId = iconPreferences.getDefaultIconForTipo(vehiculo.tipo)
                                             val markerIcon = iconFactory.fromResource(defaultIconResId)
-
-                                            // Escalar ícono por defecto
-                                            val scaledIcon = iconFactory.fromBitmap(
+                                            val icon = iconFactory.fromBitmap(
                                                 android.graphics.Bitmap.createScaledBitmap(
                                                     markerIcon.bitmap,
-                                                    size,
-                                                    size,
+                                                    defaultSize,
+                                                    defaultSize,
                                                     false
                                                 )
                                             )
-                                            scaledIcon
+                                            map.addMarker(
+                                                org.maplibre.android.annotations.MarkerOptions()
+                                                    .position(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                                    .title(vehiculo.nombre)
+                                                    .snippet("${vehiculo.matricula} - ${vehiculo.tipo}")
+                                                    .icon(icon)
+                                            )
                                         }
-
-                                        Log.d("Mapa", "Ícono final creado para vehículo ${vehiculo.id}")
-                                        Log.d("Mapa", "========================")
-
-                                        // Añadir el marcador al mapa con el ícono final
-                                        map.addMarker(
-                                            org.maplibre.android.annotations.MarkerOptions()
-                                                .position(LatLng(ubicacion.latitud, ubicacion.longitud))
-                                                .title(vehiculo.nombre)
-                                                .snippet("${vehiculo.matricula} - ${vehiculo.tipo}")
-                                                .icon(finalIcon)
-                                        )
                                     }
                                 }
 
@@ -425,3 +451,4 @@ fun BottomNavigationBar(
         )
     }
 }
+

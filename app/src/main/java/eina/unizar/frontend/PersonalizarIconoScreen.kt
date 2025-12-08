@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
@@ -156,7 +158,7 @@ fun PersonalizarIconoScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Personalizar Ícono",
+                        "Personalizar icono",
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 },
@@ -213,7 +215,7 @@ fun PersonalizarIconoScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Card(
-                modifier = Modifier.size(150.dp),
+                modifier = Modifier.size(200.dp),
                 shape = CircleShape,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -253,7 +255,7 @@ fun PersonalizarIconoScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             if (vehiculoViewModel.iconoActualUrl != null && vehiculoViewModel.iconoActualUrl!!.isNotBlank()) {
                 OutlinedButton(
@@ -308,7 +310,7 @@ fun PersonalizarIconoScreen(
                     shape = RoundedCornerShape(30.dp)
                 ) {
                     Icon(
-                        Icons.Default.Person,
+                        Icons.Default.Add,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp)
                     )
@@ -334,7 +336,7 @@ fun PersonalizarIconoScreen(
                     shape = RoundedCornerShape(30.dp)
                 ) {
                     Icon(
-                        Icons.Default.Phone,
+                        Icons.Default.Edit,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp)
                     )

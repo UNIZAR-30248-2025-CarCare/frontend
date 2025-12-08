@@ -81,6 +81,8 @@ fun VehiculoDTO.toVehiculo(): Vehiculo {
         usuarioActivoId = this.usuarioActivoId,
 
         usuariosVinculados = usuariosVinculados ?: emptyList()
+        usuariosVinculados = usuariosVinculados ?: emptyList(),
+        icono_url = icono_url
     )
 }
 
