@@ -160,7 +160,7 @@ fun AppNavigation(intent: Intent? = null) {
     val usuarioEjemplo = Usuario("1", "Juan Pérez", "jp", "juan@eina.com")
     val vehiculoEjemplo = Vehiculo(
         id = "V01",
-        estado = EstadoVehiculo.DISPONIBLE,
+        estado = EstadoVehiculo.INACTIVO,
         nombre = "Furgoneta 1",
         matricula = "Z-1234-AZ",
         tipo = TipoVehiculo.FURGONETA,
@@ -171,12 +171,13 @@ fun AppNavigation(intent: Intent? = null) {
         litros_combustible = 90.0f,
         consumo_medio = 7.5f,
         ubicacion_actual = Ubicacion(41.6488, -0.8891),
-        usuariosVinculados = listOf("David Borrel")
+        usuariosVinculados = listOf("David Borrel"),
+        usuarioActivoId = null
     )
 
     val vehiculoEjemplo2 = Vehiculo(
         id = "V02",
-        estado = EstadoVehiculo.EN_USO,
+        estado = EstadoVehiculo.ACTIVO,
         nombre = "Camión 2",
         matricula = "B-5678-CX",
         tipo = TipoVehiculo.CAMION,
@@ -187,7 +188,8 @@ fun AppNavigation(intent: Intent? = null) {
         litros_combustible = 300.0f,
         consumo_medio = 24.0f,
         ubicacion_actual = Ubicacion(41.6500, -0.8800),
-        usuariosVinculados = listOf("Ana García")
+        usuariosVinculados = listOf("Ana García"),
+        usuarioActivoId = null
     )
     val vehiculosDisponibles = listOf(vehiculoEjemplo, vehiculoEjemplo2)
     val incidenciaActivaEjemplo = Incidencia(
@@ -212,6 +214,9 @@ fun AppNavigation(intent: Intent? = null) {
         vehiculo = vehiculoEjemplo,
         estado = EstadoIncidencia.RESUELTA
     )
+
+
+
     val incidenciasActivas = listOf(incidenciaActivaEjemplo)
     val incidenciasResueltas = listOf(incidenciaResueltaEjemplo)
     // ---------------------------------------------------------------------
@@ -228,8 +233,9 @@ fun AppNavigation(intent: Intent? = null) {
             capacidadDeposito = 90,
             consumoMedio = 7.5,
             tipo = TipoVehiculo.FURGONETA,
-            estado = EstadoVehiculo.DISPONIBLE,
-            usuariosVinculados = listOf("David Borrel")
+            estado = EstadoVehiculo.INACTIVO,
+            usuariosVinculados = listOf("David Borrel"),
+            usuarioActivoId = null
         )
 
     // ---------------------------------------------------------------------
@@ -311,6 +317,26 @@ fun AppNavigation(intent: Intent? = null) {
                     onBusquedaClick = { navController.navigate("busqueda") },
                     onLogrosClick = { navController.navigate("logros") }
                 )
+            }
+        }
+
+        composable("editarFotoPerfil") {
+            // Usa collectAsState() porque token es un StateFlow
+            val token by authViewModel.token.collectAsState()
+
+            if (token != null) {
+                EditarFotoPerfilScreen(
+                    navController = navController,
+                    token = token!!,
+                    perfilViewModel = viewModel() // Inyección simple con viewModel()
+                )
+            } else {
+                // Redirigir a login si no hay token
+                LaunchedEffect(Unit) {
+                    navController.navigate("eleccion") {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    }
+                }
             }
         }
 
