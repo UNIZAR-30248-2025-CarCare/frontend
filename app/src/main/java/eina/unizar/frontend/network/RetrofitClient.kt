@@ -18,10 +18,11 @@ object RetrofitClient {
      * URL base del servidor backend.
      * 
      * NOTA: Esta es una dirección IP local. Debe actualizarse según el entorno:
-     * - Desarrollo local: IP de la máquina que ejecuta el backend
+     * - Emulador Android: 10.0.2.2 (apunta al localhost de la máquina host)
+     * - Dispositivo físico: IP de la máquina en la red local (ej: 192.168.1.37)
      * - Producción: Dominio o IP del servidor en producción
      */
-    private const val BASE_URL = "http://192.168.1.37:3000/"
+    private const val BASE_URL = "http://10.0.2.2:3000/"
 
     /**
      * Cliente OkHttp configurado con interceptor de logging.

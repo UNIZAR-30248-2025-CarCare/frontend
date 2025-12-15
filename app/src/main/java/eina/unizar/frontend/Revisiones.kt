@@ -110,8 +110,9 @@ fun RevisionesScreen(
         ) {
             // Header
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary
+                modifier = Modifier
+                    .fillMaxWidth(),
+                    color = Color(0xFFEF4444),
             ) {
                 Row(
                     modifier = Modifier
@@ -422,7 +423,7 @@ fun RevisionesScreen(
             ) {
                 FloatingActionButton(
                     onClick = onAddRevisionClick,
-                    containerColor = MaterialTheme.colorScheme.primary,
+                    containerColor = Color(0xFFEF4444),
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(

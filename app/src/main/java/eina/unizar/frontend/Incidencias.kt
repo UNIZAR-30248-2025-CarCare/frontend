@@ -249,8 +249,9 @@ fun IncidenciasScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                        color = Color(0xFFEF4444),
                 ) {
                     Row(
                         modifier = Modifier
@@ -515,9 +516,9 @@ fun IncidenciasScreen(
                 ) {
                     FloatingActionButton(
                         onClick = onAddIncidenciaClick,
-                        containerColor = MaterialTheme.colorScheme.primary,
+                        containerColor = Color(0xFFEF4444),
                         modifier = Modifier.size(56.dp)
-                    ) {
+                    ){
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Añadir incidencia",

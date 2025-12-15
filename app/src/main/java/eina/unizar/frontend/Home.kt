@@ -30,27 +30,32 @@ import eina.unizar.frontend.models.toVehiculoDTO
 import eina.unizar.frontend.viewmodels.AuthViewModel
 import android.content.Context
 import android.app.Application
-import android.util.Base64
-import android.util.Log
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import eina.unizar.frontend.notifications.NotificationPreferences
 import eina.unizar.frontend.notifications.NotificationScheduler
-import eina.unizar.frontend.viewmodels.SuscripcionViewModel
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.flow.StateFlow
 import java.util.Calendar
 
-import kotlin.io.encoding.ExperimentalEncodingApi
-
 enum class EstadoVehiculo(val color: Color, val texto: String) {
-    INACTIVO(Color(0xFF10B981), "Inactivo"),
-    ACTIVO(Color(0xFFEF4444), "Activo"),
-    MANTENIMIENTO(Color(0xFFF59E0B), "Mantenimiento")
+    INACTIVO(Color(0xFF6B7280), "Inactivo"),
+    ACTIVO(Color(0xFF10B981), "Activo"),
+    MANTENIMIENTO(Color(0xFFEF4444), "Mantenimiento")
 }
+
+/**
+ * Pantalla principal tras iniciar sesión.
+ *
+ * `HomeScreenWrapper`:
+ * - Inicializa `HomeViewModel` y obtiene vehículos y nombre de usuario.
+ * - Convierte objetos `VehiculoDTO` a `Vehiculo` para la UI.
+ * - Llama a `HomeScreen()` con los datos obtenidos.
+ *
+ * `HomeScreen()`:
+ * - Muestra el saludo al usuario y la lista de vehículos.
+ * - Incluye navegación inferior mediante `BottomNavigationBar`.
+ * - Ofrece accesos directos a otras secciones (Mapa, Incidencias, Calendario).
+ *
+ * El enum `EstadoVehiculo` define estados visuales con colores y texto.
+ */
 
 @Composable
 fun HomeScreenWrapper(
@@ -81,12 +86,10 @@ fun HomeScreenWrapper(
     LaunchedEffect(Unit) {
         viewModel.fetchVehiculos(userId, token)
         viewModel.fetchUserName(userId, token)
-        viewModel.fetchUserPhoto(token)
     }
 
     HomeScreen(
         userName = viewModel.userName,
-        fotoPerfilUrl = viewModel.fotoPerfilUrl,
         vehiculos = vehiculos,
         onVehiculoClick = onVehiculoClick,
         onAddVehiculoClick = onAddVehiculoClick,
@@ -103,7 +106,7 @@ fun HomeScreenWrapper(
         selectedTab = selectedTab,
         onTabSelected = onTabSelected,
         navController = navController,
-        token = token,  
+        token = token,
         userId = userId,
         authViewModel = authViewModel
     )
@@ -112,7 +115,6 @@ fun HomeScreenWrapper(
 @Composable
 fun HomeScreen(
     userName: String,
-    fotoPerfilUrl: StateFlow<String?>,
     vehiculos: List<Vehiculo>,
     onVehiculoClick: (String) -> Unit,
     onAddVehiculoClick: () -> Unit,
@@ -163,19 +165,20 @@ fun HomeScreen(
                     }
                 }
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(Color(0xFFF5F5F5))
         ) {
 
+
+            // Header
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary,
+                color = Color(0xFFEF4444),
                 shadowElevation = 4.dp
             ) {
                 Row(
@@ -188,37 +191,21 @@ fun HomeScreen(
                         Text(
                             text = "Hola,",
                             fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = Color.White
                         )
                         Text(
                             text = userName,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = Color.White
                         )
-                        // Verificar si es premium
-                        val suscripcionViewModel = remember { SuscripcionViewModel() }
-                        val estadoSuscripcion by suscripcionViewModel.estadoSuscripcion.collectAsState()
-
-                        LaunchedEffect(Unit) {
-                            suscripcionViewModel.obtenerEstadoSuscripcion(token)
-                        }
-
-                        if (estadoSuscripcion?.esPremium == true) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "Premium",
-                                tint = Color(0xFFFFD700),
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
                     }
+                    // Icono perfil
                     val context = LocalContext.current
                     PerfilMenu(
-                        fotoPerfilUrl = fotoPerfilUrl,
                         onCerrarSesion = {
                             authViewModel.logout()
+                            // Borra también de SharedPreferences si es necesario
                             val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
                             prefs.edit().remove("user_id").remove("token").apply()
                             navController.navigate("eleccion") {
@@ -230,6 +217,7 @@ fun HomeScreen(
                 }
             }
 
+            // Contenido
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -238,6 +226,7 @@ fun HomeScreen(
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
 
+                    // Título Mis Vehículos
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -247,13 +236,13 @@ fun HomeScreen(
                             text = "Mis Vehículos",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = Color(0xFF1F2937)
                         )
                         IconButton(onClick = onAddVehiculoClick) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Añadir vehículo",
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = Color(0xFFEF4444),
                                 modifier = Modifier.size(32.dp)
                             )
                         }
@@ -262,11 +251,11 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
+                // Lista de vehículos
                 items(vehiculos) { vehiculo ->
                     VehiculoCard(
                         vehiculo = vehiculo.toVehiculoDTO(),
-                        onClick = { onVehiculoClick(vehiculo.id.toString()) },
-                        currentUserId = userId
+                        onClick = { onVehiculoClick(vehiculo.id.toString()) }
                     )
                     Spacer(modifier = Modifier.height(15.dp))
                 }
@@ -274,11 +263,12 @@ fun HomeScreen(
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
 
+                    // Acceso Rápido
                     Text(
                         text = "Acceso Rápido",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = Color(0xFF1F2937)
                     )
 
                     Spacer(modifier = Modifier.height(15.dp))
@@ -314,6 +304,7 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    // Segunda fila
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -343,53 +334,61 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                // Tercera fila
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    QuickAccessCard(
-                        icon = Icons.Default.Info,
-                        title = "Estadísticas",
-                        color = Color(0xFF14B8A6),
-                        onClick = onEstadisticasClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                    QuickAccessCard(
-                        icon = Icons.Default.Search,
-                        title = "Busqueda",
-                        color = Color(0xFF14B8A6),
-                        onClick = onBusquedaClick,
-                        modifier = Modifier.weight(1f)
-                    )
+                    // Tercera fila
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        QuickAccessCard(
+                            icon = Icons.Default.Info,
+                            title = "Estadísticas",
+                            color = Color(0xFF14B8A6),
+                            onClick = onEstadisticasClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                        QuickAccessCard(
+                            icon = Icons.Default.Search,
+                            title = "Busqueda",
+                            color = Color(0xFF14B8A6),
+                            onClick = onBusquedaClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                        QuickAccessCard(
+                            icon = Icons.Default.Star,
+                            title = "Logros",
+                            color = Color(0xFFFFD700),
+                            onClick = onLogrosClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        QuickAccessCard(
+                            iconDrawable = R.drawable.ic_parking,
+                            title = "Parkings",
+                            color = Color(0xFF14B8A6),
+                            onClick = onParkingClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(100.dp))
                 }
-                Spacer(modifier = Modifier.height(10.dp))
-                // Cuarta fila
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    QuickAccessCard(
-                        iconDrawable = R.drawable.ic_parking,
-                        title = "Parkings",
-                        color = Color(0xFF14B8A6),
-                        onClick = onParkingClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                Spacer(modifier = Modifier.height(100.dp))
             }
         }
     }
 }
 
+
+
 @Composable
 fun VehiculoCard(
     vehiculo: VehiculoDTO,
-    onClick: () -> Unit,
-    currentUserId: String
+    onClick: () -> Unit
 ) {
-    // 1. Mapeo de tipo de vehículo a icono y color
+    // Asigna color, icono y nombre según el string tipo
     val (color, iconRes, name) = when (vehiculo.tipo.trim().lowercase()) {
         "coche" -> Triple(Color(0xFF3B82F6), R.drawable.ic_coche, "Coche")
         "moto" -> Triple(Color(0xFFF59E0B), R.drawable.ic_moto, "Moto")
@@ -398,30 +397,6 @@ fun VehiculoCard(
         else -> Triple(Color(0xFF6B7280), R.drawable.ic_otro, "Otro")
     }
 
-    // 2. Lógica de Estado Dinámica (CORREGIDA CON PAIR)
-    val estadoDisplay = remember(vehiculo.estado, vehiculo.usuarioActivoId) {
-        when (vehiculo.estado.trim()) {
-            "Activo" -> {
-                if (vehiculo.usuarioActivoId?.toString() == currentUserId) {
-                    Pair(Color(0xFFEF4444), "En uso (Tú)")
-                } else {
-                    Pair(Color(0xFFEF4444), "En uso (Otro)")
-                }
-            }
-            "Inactivo" -> {
-                Pair(Color(0xFF10B981), "Disponible")
-            }
-            "Mantenimiento" -> {
-                Pair(Color(0xFFF59E0B), "Mantenimiento")
-            }
-            else -> {
-                Pair(Color(0xFF10B981), "Disponible")
-            }
-        }
-    }
-    // Desestructuración de un Pair (dos valores)
-    val (estadoColor, estadoTexto) = estadoDisplay
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -429,7 +404,7 @@ fun VehiculoCard(
             .clickable(onClick = onClick)
             .shadow(2.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
@@ -458,26 +433,34 @@ fun VehiculoCard(
                     text = vehiculo.nombre,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Color(0xFF1F2937)
                 )
                 Text(
                     text = vehiculo.matricula,
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFF6B7280)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-
-                // Aplicación del estado dinámico corregido
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "● ",
                         fontSize = 13.sp,
-                        color = estadoColor
+                        color = when (vehiculo.estado) {
+                            "Activo" -> Color(0xFF10B981)
+                            "En uso" -> Color(0xFFF59E0B)
+                            "En reparación" -> Color(0xFFEF4444)
+                            else -> Color(0xFF10B981)
+                        }
                     )
                     Text(
-                        text = estadoTexto,
+                        text = vehiculo.estado,
                         fontSize = 13.sp,
-                        color = estadoColor
+                        color = when (vehiculo.estado) {
+                            "Activo" -> Color(0xFF10B981)
+                            "En uso" -> Color(0xFFF59E0B)
+                            "En reparación" -> Color(0xFFEF4444)
+                            else -> Color(0xFF10B981)
+                        }
                     )
                 }
             }
@@ -485,7 +468,7 @@ fun VehiculoCard(
             Icon(
                 imageVector = Icons.Default.KeyboardArrowDown,
                 contentDescription = "Ver detalles",
-                tint = MaterialTheme.colorScheme.outline,
+                tint = Color(0xFF9CA3AF),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -507,7 +490,7 @@ fun QuickAccessCard(
             .clickable(onClick = onClick)
             .shadow(2.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -545,11 +528,13 @@ fun QuickAccessCard(
             Text(
                 text = title,
                 fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface
+                color = Color(0xFF1F2937)
             )
         }
     }
 }
+
+
 
 @Composable
 fun BottomNavItem(
@@ -566,13 +551,13 @@ fun BottomNavItem(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+                    .background(Color(0xFFEF4444), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = MaterialTheme.colorScheme.onPrimary,
+                    tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -580,7 +565,7 @@ fun BottomNavItem(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = MaterialTheme.colorScheme.outline,
+                tint = Color(0xFF9CA3AF),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -588,16 +573,14 @@ fun BottomNavItem(
         Text(
             text = label,
             fontSize = 11.sp,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+            color = if (selected) Color(0xFFEF4444) else Color(0xFF9CA3AF),
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
 
-@OptIn(ExperimentalEncodingApi::class)
 @Composable
 fun PerfilMenu(
-    fotoPerfilUrl: StateFlow<String?>,
     onCerrarSesion: () -> Unit,
     navController: NavHostController
 ) {
@@ -611,101 +594,47 @@ fun PerfilMenu(
         mutableStateOf(NotificationPreferences.areMaintenanceNotificationsEnabled(context))
     }
 
-    val fotoPerfilUrlFlow: String? by fotoPerfilUrl.collectAsState()
-
     Box(
         modifier = Modifier
             .size(50.dp)
-            .background(MaterialTheme.colorScheme.onPrimary, CircleShape)
+            .background(Color.White, CircleShape)
             .clickable { expanded = true },
         contentAlignment = Alignment.Center
     ) {
-        if (fotoPerfilUrlFlow != null) {
-
-            // 1. Limpia la cadena (solo si el backend incluye el prefijo)
-            val base64String = fotoPerfilUrlFlow!!.substringAfter(",", missingDelimiterValue = fotoPerfilUrlFlow!!)
-
-            // 2. Decodifica la cadena Base64 limpia a un array de bytes
-            val imageBytes: ByteArray? = try {
-                // Usamos el flag Base64.DEFAULT o Base64.NO_WRAP (si no hay saltos de línea)
-                // Usar Base64.DEFAULT es el más común.
-                android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
-            } catch (e: IllegalArgumentException) {
-                // Manejar el caso en que la cadena no sea una Base64 válida
-                Log.e("PerfilMenu", "Error decodificando Base64: ${e.message}")
-                null
-            }
-
-            // 3. Pasa el array de bytes (ByteArray) a Coil
-            if (imageBytes != null) {
-                AsyncImage(
-                    // Coil puede cargar directamente un ByteArray
-                    model = ImageRequest.Builder(context)
-                        .data(imageBytes) // <-- ¡El cambio clave! Pasa el ByteArray
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clip(CircleShape)
-                        .aspectRatio(1f),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            else {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Perfil",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(30.dp)
-                )
-            }
-        } else {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Perfil",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(30.dp)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = "Perfil",
+            tint = Color(0xFFEF4444),
+            modifier = Modifier.size(30.dp)
+        )
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
-            containerColor = MaterialTheme.colorScheme.surface
+            onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Ver invitaciones", color = MaterialTheme.colorScheme.onSurface) },
+                text = { Text("Ver invitaciones") },
                 onClick = {
                     expanded = false
                     navController.navigate("invitaciones")
                 }
             )
 
-            // 💡 NUEVA OPCIÓN: EDITAR FOTO DE PERFIL
-            DropdownMenuItem(
-                text = { Text("Editar Foto de Perfil", color = MaterialTheme.colorScheme.onSurface) },
-                onClick = {
-                    expanded = false
-                    // Navega a la nueva ruta
-                    navController.navigate("editarFotoPerfil")
-                }
-            )
-            // 💡 FIN NUEVA OPCIÓN
+            Divider()
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-
+            // Título de notificaciones
             DropdownMenuItem(
                 text = {
                     Text(
                         "Notificaciones",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF6B7280)
                     )
                 },
                 onClick = { }
             )
 
+            // Notificaciones de Reservas
             DropdownMenuItem(
                 text = {
                     Row(
@@ -714,11 +643,11 @@ fun PerfilMenu(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Reservas", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Reservas", fontSize = 14.sp)
                             Text(
                                 "1h antes de la cita",
                                 fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color(0xFF9CA3AF)
                             )
                         }
                         Checkbox(
@@ -728,7 +657,7 @@ fun PerfilMenu(
                                 NotificationPreferences.setReservationNotificationsEnabled(context, enabled)
                             },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = MaterialTheme.colorScheme.primary
+                                checkedColor = Color(0xFFEF4444)
                             )
                         )
                     }
@@ -742,6 +671,7 @@ fun PerfilMenu(
                 }
             )
 
+            // Notificaciones de Mantenimiento
             DropdownMenuItem(
                 text = {
                     Row(
@@ -750,11 +680,11 @@ fun PerfilMenu(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Mantenimientos", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Mantenimientos", fontSize = 14.sp)
                             Text(
                                 "Cuando toque revisión",
                                 fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color(0xFF9CA3AF)
                             )
                         }
                         Checkbox(
@@ -764,7 +694,7 @@ fun PerfilMenu(
                                 NotificationPreferences.setMaintenanceNotificationsEnabled(context, enabled)
                             },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = MaterialTheme.colorScheme.primary
+                                checkedColor = Color(0xFFEF4444)
                             )
                         )
                     }
@@ -778,10 +708,10 @@ fun PerfilMenu(
                 }
             )
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            Divider()
 
             DropdownMenuItem(
-                text = { Text("Cerrar Sesión", color = MaterialTheme.colorScheme.onSurface) },
+                text = { Text("Cerrar Sesión") },
                 onClick = {
                     expanded = false
                     onCerrarSesion()

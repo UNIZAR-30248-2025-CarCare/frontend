@@ -101,12 +101,13 @@ fun CrearViajeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
     ) {
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary
-        ) {
+            color = Color(0xFFEF4444),
+            ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

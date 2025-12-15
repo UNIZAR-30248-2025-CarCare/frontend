@@ -97,8 +97,9 @@ fun ViajesScreen(
         ) {
             // Header
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary
+                modifier = Modifier
+                    .fillMaxWidth(),
+                    color = Color(0xFFEF4444),
             ) {
                 Row(
                     modifier = Modifier
