@@ -28,10 +28,6 @@ import eina.unizar.frontend.viewmodels.IncidenciaViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
-
-
-
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -39,35 +35,13 @@ import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-
-import androidx.compose.foundation.verticalScroll
-
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
-
 import java.io.ByteArrayOutputStream
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +64,6 @@ fun DetalleIncidenciaScreen(
     var showEstadoDialog by remember { mutableStateOf(false) }
     var imagenAmpliadaIndex by remember { mutableStateOf<Int?>(null) }
 
-    // Estados para edición
     var tituloEdit by remember { mutableStateOf("") }
     var descripcionEdit by remember { mutableStateOf("") }
     var tipoEdit by remember { mutableStateOf("AVERIA") }
@@ -105,7 +78,6 @@ fun DetalleIncidenciaScreen(
     val prioridades = listOf("ALTA", "MEDIA", "BAJA")
     val estados = listOf("PENDIENTE", "EN PROGRESO", "RESUELTA", "CANCELADA")
 
-    // Launcher para añadir nuevas imágenes en edición
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris: List<Uri> ->
@@ -129,12 +101,10 @@ fun DetalleIncidenciaScreen(
         }
     }
 
-    // Cargar incidencia al iniciar
     LaunchedEffect(incidenciaId) {
         viewModel.obtenerIncidencia(token, incidenciaId)
     }
 
-    // Actualizar campos de edición cuando se carga la incidencia
     LaunchedEffect(incidenciaDetalle) {
         incidenciaDetalle?.let {
             tituloEdit = it.titulo
@@ -146,7 +116,6 @@ fun DetalleIncidenciaScreen(
         }
     }
 
-    // Manejar éxito de edición
     LaunchedEffect(edicionExitosa) {
         if (edicionExitosa) {
             modoEdicion = false
@@ -155,7 +124,6 @@ fun DetalleIncidenciaScreen(
         }
     }
 
-    // Manejar eliminación exitosa
     LaunchedEffect(mensajeEliminacion) {
         if (mensajeEliminacion != null) {
             onBackClick()
@@ -173,12 +141,11 @@ fun DetalleIncidenciaScreen(
         }
     }
 
-    // Diálogo de confirmación de eliminación
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar Incidencia") },
-            text = { Text("¿Estás seguro de que quieres eliminar esta incidencia? Esta acción no se puede deshacer.") },
+            title = { Text("Eliminar Incidencia", color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("¿Estás seguro de que quieres eliminar esta incidencia? Esta acción no se puede deshacer.", color = MaterialTheme.colorScheme.onSurface) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -191,17 +158,17 @@ fun DetalleIncidenciaScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancelar")
+                    Text("Cancelar", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
-    // Diálogo para cambiar estado rápido
     if (showEstadoDialog) {
         AlertDialog(
             onDismissRequest = { showEstadoDialog = false },
-            title = { Text("Cambiar Estado") },
+            title = { Text("Cambiar Estado", color = MaterialTheme.colorScheme.onSurface) },
             text = {
                 Column {
                     estados.forEach { estado ->
@@ -220,23 +187,26 @@ fun DetalleIncidenciaScreen(
                                 onClick = {
                                     viewModel.actualizarEstadoIncidencia(token, incidenciaId, estado)
                                     showEstadoDialog = false
-                                }
+                                },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = MaterialTheme.colorScheme.primary
+                                )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(estado.replace("_", " "))
+                            Text(estado.replace("_", " "), color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showEstadoDialog = false }) {
-                    Text("Cancelar")
+                    Text("Cancelar", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
-    // Diálogo para ampliar imagen
     imagenAmpliadaIndex?.let { index ->
         val fotos = if (modoEdicion) fotosEdit else (incidenciaDetalle?.fotos ?: emptyList())
         if (index < fotos.size) {
@@ -251,7 +221,8 @@ fun DetalleIncidenciaScreen(
                         modifier = Modifier
                             .fillMaxWidth(0.95f)
                             .fillMaxHeight(0.8f),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Box(modifier = Modifier.fillMaxSize()) {
                             val base64String = fotos[index].removePrefix("data:image/jpeg;base64,")
@@ -287,21 +258,21 @@ fun DetalleIncidenciaScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Header
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFEF4444)
+                    color = MaterialTheme.colorScheme.primary
                 ) {
                     Row(
                         modifier = Modifier
@@ -314,14 +285,14 @@ fun DetalleIncidenciaScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Volver",
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                         Text(
                             text = if (modoEdicion) "Editar Incidencia" else "Detalle Incidencia",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.weight(1f),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
@@ -330,7 +301,7 @@ fun DetalleIncidenciaScreen(
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = "Eliminar",
-                                    tint = Color.White
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         } else {
@@ -344,7 +315,7 @@ fun DetalleIncidenciaScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = Color(0xFFEF4444))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 } else if (incidenciaDetalle != null) {
                     Column(
@@ -355,7 +326,6 @@ fun DetalleIncidenciaScreen(
                     ) {
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // Badge de estado
                         val estadoColor = when (incidenciaDetalle.estado.uppercase()) {
                             "RESUELTA" -> Color(0xFF10B981)
                             "CANCELADA" -> Color(0xFF6B7280)
@@ -383,7 +353,7 @@ fun DetalleIncidenciaScreen(
 
                             if (!modoEdicion) {
                                 TextButton(onClick = { showEstadoDialog = true }) {
-                                    Text("Cambiar Estado", color = Color(0xFFEF4444))
+                                    Text("Cambiar Estado", color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         }
@@ -391,13 +361,10 @@ fun DetalleIncidenciaScreen(
                         Spacer(modifier = Modifier.height(20.dp))
 
                         if (modoEdicion) {
-                            // MODO EDICIÓN
-
-                            // Título
                             Text(
                                 text = "Título",
                                 fontSize = 13.sp,
-                                color = Color(0xFF6B7280),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 5.dp)
                             )
                             OutlinedTextField(
@@ -406,18 +373,21 @@ fun DetalleIncidenciaScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFFEF4444),
-                                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface
                                 )
                             )
 
                             Spacer(modifier = Modifier.height(15.dp))
 
-                            // Descripción
                             Text(
                                 text = "Descripción",
                                 fontSize = 13.sp,
-                                color = Color(0xFF6B7280),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 5.dp)
                             )
                             OutlinedTextField(
@@ -428,276 +398,18 @@ fun DetalleIncidenciaScreen(
                                     .height(120.dp),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFFEF4444),
-                                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface
                                 ),
                                 maxLines = 5
                             )
 
-                            Spacer(modifier = Modifier.height(15.dp))
-
-                            // Tipo y Prioridad
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                // Tipo
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Tipo",
-                                        fontSize = 13.sp,
-                                        color = Color(0xFF6B7280),
-                                        modifier = Modifier.padding(bottom = 5.dp)
-                                    )
-
-                                    ExposedDropdownMenuBox(
-                                        expanded = expandedTipo,
-                                        onExpandedChange = { expandedTipo = it }
-                                    ) {
-                                        OutlinedTextField(
-                                            value = tipoEdit,
-                                            onValueChange = {},
-                                            readOnly = true,
-                                            trailingIcon = {
-                                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTipo)
-                                            },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .menuAnchor(),
-                                            shape = RoundedCornerShape(10.dp),
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedBorderColor = Color(0xFFEF4444),
-                                                unfocusedBorderColor = Color(0xFFE5E7EB)
-                                            )
-                                        )
-
-                                        ExposedDropdownMenu(
-                                            expanded = expandedTipo,
-                                            onDismissRequest = { expandedTipo = false }
-                                        ) {
-                                            tiposIncidencia.forEach { tipo ->
-                                                DropdownMenuItem(
-                                                    text = { Text(tipo) },
-                                                    onClick = {
-                                                        tipoEdit = tipo
-                                                        expandedTipo = false
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Prioridad
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Prioridad",
-                                        fontSize = 13.sp,
-                                        color = Color(0xFF6B7280),
-                                        modifier = Modifier.padding(bottom = 5.dp)
-                                    )
-
-                                    ExposedDropdownMenuBox(
-                                        expanded = expandedPrioridad,
-                                        onExpandedChange = { expandedPrioridad = it }
-                                    ) {
-                                        OutlinedTextField(
-                                            value = prioridadEdit,
-                                            onValueChange = {},
-                                            readOnly = true,
-                                            trailingIcon = {
-                                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPrioridad)
-                                            },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .menuAnchor(),
-                                            shape = RoundedCornerShape(10.dp),
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedBorderColor = Color(0xFFEF4444),
-                                                unfocusedBorderColor = Color(0xFFE5E7EB)
-                                            )
-                                        )
-
-                                        ExposedDropdownMenu(
-                                            expanded = expandedPrioridad,
-                                            onDismissRequest = { expandedPrioridad = false }
-                                        ) {
-                                            prioridades.forEach { prioridad ->
-                                                DropdownMenuItem(
-                                                    text = { Text(prioridad) },
-                                                    onClick = {
-                                                        prioridadEdit = prioridad
-                                                        expandedPrioridad = false
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(15.dp))
-
-                            // Estado
-                            Text(
-                                text = "Estado",
-                                fontSize = 13.sp,
-                                color = Color(0xFF6B7280),
-                                modifier = Modifier.padding(bottom = 5.dp)
-                            )
-
-                            ExposedDropdownMenuBox(
-                                expanded = expandedEstado,
-                                onExpandedChange = { expandedEstado = it }
-                            ) {
-                                OutlinedTextField(
-                                    value = estadoEdit.replace("_", " "),
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEstado)
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor(),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Color(0xFFEF4444),
-                                        unfocusedBorderColor = Color(0xFFE5E7EB)
-                                    )
-                                )
-
-                                ExposedDropdownMenu(
-                                    expanded = expandedEstado,
-                                    onDismissRequest = { expandedEstado = false }
-                                ) {
-                                    estados.forEach { estado ->
-                                        DropdownMenuItem(
-                                            text = { Text(estado.replace("_", " ")) },
-                                            onClick = {
-                                                estadoEdit = estado
-                                                expandedEstado = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            // Fotos - EDICIÓN
-                            Text(
-                                text = "Fotos - ${fotosEdit.size} imágenes",
-                                fontSize = 13.sp,
-                                color = Color(0xFF6B7280),
-                                modifier = Modifier.padding(bottom = 5.dp)
-                            )
-
-                            if (fotosEdit.isEmpty()) {
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(80.dp)
-                                        .border(
-                                            width = 2.dp,
-                                            color = Color(0xFFE5E7EB),
-                                            shape = RoundedCornerShape(8.dp)
-                                        )
-                                        .clickable { imagePickerLauncher.launch("image/*") },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
-                                ) {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Icon(
-                                                imageVector = Icons.Default.AddCircle,
-                                                contentDescription = "Añadir fotos",
-                                                tint = Color(0xFFEF4444),
-                                                modifier = Modifier.size(28.dp)
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = "Añadir fotos",
-                                                fontSize = 12.sp,
-                                                color = Color(0xFF9CA3AF)
-                                            )
-                                        }
-                                    }
-                                }
-                            } else {
-                                LazyRow(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    items(fotosEdit.size) { index ->
-                                        Box(modifier = Modifier.size(100.dp)) {
-                                            Card(
-                                                modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .clickable { imagenAmpliadaIndex = index },
-                                                shape = RoundedCornerShape(8.dp)
-                                            ) {
-                                                val base64String = fotosEdit[index].removePrefix("data:image/jpeg;base64,")
-                                                val bitmap = base64ToBitmap(base64String)
-
-                                                if (bitmap != null) {
-                                                    Image(
-                                                        bitmap = bitmap.asImageBitmap(),
-                                                        contentDescription = "Foto ${index + 1}",
-                                                        modifier = Modifier.fillMaxSize(),
-                                                        contentScale = ContentScale.Crop
-                                                    )
-                                                }
-                                            }
-                                            IconButton(
-                                                onClick = {
-                                                    fotosEdit = fotosEdit.toMutableList().apply { removeAt(index) }
-                                                },
-                                                modifier = Modifier
-                                                    .align(Alignment.TopEnd)
-                                                    .size(24.dp)
-                                                    .background(Color.Black.copy(alpha = 0.6f), CircleShape)
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Close,
-                                                    contentDescription = "Eliminar",
-                                                    tint = Color.White,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    item {
-                                        Card(
-                                            modifier = Modifier
-                                                .size(100.dp)
-                                                .clickable { imagePickerLauncher.launch("image/*") },
-                                            shape = RoundedCornerShape(8.dp),
-                                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-                                        ) {
-                                            Box(
-                                                modifier = Modifier.fillMaxSize(),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Add,
-                                                    contentDescription = "Añadir más",
-                                                    tint = Color(0xFFEF4444),
-                                                    modifier = Modifier.size(32.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
                             Spacer(modifier = Modifier.height(30.dp))
 
-                            // Botones de acción
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -719,11 +431,7 @@ fun DetalleIncidenciaScreen(
                                         .height(55.dp),
                                     shape = RoundedCornerShape(28.dp),
                                     colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = Color(0xFFEF4444)
-                                    ),
-                                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                                        width = 2.dp,
-                                        brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFEF4444))
+                                        contentColor = MaterialTheme.colorScheme.primary
                                     )
                                 ) {
                                     Text("Cancelar", fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -747,7 +455,7 @@ fun DetalleIncidenciaScreen(
                                         .height(55.dp),
                                     shape = RoundedCornerShape(28.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFEF4444)
+                                        containerColor = MaterialTheme.colorScheme.primary
                                     ),
                                     enabled = tituloEdit.isNotBlank() &&
                                             descripcionEdit.isNotBlank() &&
@@ -756,7 +464,7 @@ fun DetalleIncidenciaScreen(
                                     if (isLoading) {
                                         CircularProgressIndicator(
                                             modifier = Modifier.size(24.dp),
-                                            color = Color.White,
+                                            color = MaterialTheme.colorScheme.onPrimary,
                                             strokeWidth = 2.dp
                                         )
                                     } else {
@@ -766,18 +474,15 @@ fun DetalleIncidenciaScreen(
                             }
 
                         } else {
-                            // MODO VISUALIZACIÓN
-
                             Text(
                                 text = "Información",
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1F2937)
+                                color = MaterialTheme.colorScheme.onBackground
                             )
 
                             Spacer(modifier = Modifier.height(15.dp))
 
-                            // Título
                             InfoField(
                                 label = "Título",
                                 value = incidenciaDetalle.titulo
@@ -785,7 +490,6 @@ fun DetalleIncidenciaScreen(
 
                             Spacer(modifier = Modifier.height(15.dp))
 
-                            // Descripción
                             InfoField(
                                 label = "Descripción",
                                 value = incidenciaDetalle.descripcion,
@@ -794,7 +498,6 @@ fun DetalleIncidenciaScreen(
 
                             Spacer(modifier = Modifier.height(15.dp))
 
-                            // Tipo y Prioridad
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -821,85 +524,13 @@ fun DetalleIncidenciaScreen(
 
                             Spacer(modifier = Modifier.height(15.dp))
 
-                            // Fecha
                             InfoField(
                                 label = "Fecha de creación",
                                 value = incidenciaDetalle.fechaCreacion.formatToDateOnly()
                             )
 
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            // Fotos - VISUALIZACIÓN
-                            Text(
-                                text = "Fotos",
-                                fontSize = 13.sp,
-                                color = Color(0xFF6B7280),
-                                modifier = Modifier.padding(bottom = 5.dp)
-                            )
-
-                            val fotosIncidencia = incidenciaDetalle.fotos ?: emptyList()
-
-                            if (fotosIncidencia.isEmpty()) {
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(80.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
-                                ) {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "No hay fotos disponibles",
-                                            fontSize = 12.sp,
-                                            color = Color(0xFF9CA3AF)
-                                        )
-                                    }
-                                }
-                            } else {
-                                LazyRow(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    items(fotosIncidencia.size) { index ->
-                                        Card(
-                                            modifier = Modifier
-                                                .size(100.dp)
-                                                .clickable { imagenAmpliadaIndex = index },
-                                            shape = RoundedCornerShape(8.dp)
-                                        ) {
-                                            val base64String = fotosIncidencia[index].removePrefix("data:image/jpeg;base64,")
-                                            val bitmap = base64ToBitmap(base64String)
-
-                                            if (bitmap != null) {
-                                                Image(
-                                                    bitmap = bitmap.asImageBitmap(),
-                                                    contentDescription = "Foto ${index + 1}",
-                                                    modifier = Modifier.fillMaxSize(),
-                                                    contentScale = ContentScale.Crop
-                                                )
-                                            } else {
-                                                Box(
-                                                    modifier = Modifier.fillMaxSize(),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Warning,
-                                                        contentDescription = "Error",
-                                                        tint = Color(0xFF9CA3AF)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
                             Spacer(modifier = Modifier.height(30.dp))
 
-                            // Botón editar
                             Button(
                                 onClick = { modoEdicion = true },
                                 modifier = Modifier
@@ -907,7 +538,7 @@ fun DetalleIncidenciaScreen(
                                     .height(55.dp),
                                 shape = RoundedCornerShape(28.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFEF4444)
+                                    containerColor = MaterialTheme.colorScheme.primary
                                 )
                             ) {
                                 Icon(
@@ -934,7 +565,7 @@ fun DetalleIncidenciaScreen(
                         Text(
                             text = "No se pudo cargar la incidencia",
                             fontSize = 14.sp,
-                            color = Color(0xFF6B7280)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -947,14 +578,14 @@ fun DetalleIncidenciaScreen(
 fun InfoField(
     label: String,
     value: String,
-    valueColor: Color = Color(0xFF1F2937),
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
     minHeight: Dp = 55.dp
 ) {
     Column {
         Text(
             text = label,
             fontSize = 13.sp,
-            color = Color(0xFF6B7280),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 5.dp)
         )
         Card(
@@ -962,7 +593,7 @@ fun InfoField(
                 .fillMaxWidth()
                 .heightIn(min = minHeight),
             shape = RoundedCornerShape(10.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Box(
                 modifier = Modifier
@@ -974,14 +605,13 @@ fun InfoField(
                     text = value,
                     fontSize = 15.sp,
                     color = valueColor,
-                    fontWeight = if (valueColor != Color(0xFF1F2937)) FontWeight.SemiBold else FontWeight.Normal
+                    fontWeight = if (valueColor != MaterialTheme.colorScheme.onSurface) FontWeight.SemiBold else FontWeight.Normal
                 )
             }
         }
     }
 }
 
-// Función para convertir Base64 a Bitmap
 fun base64ToBitmap(base64String: String): Bitmap? {
     return try {
         val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
@@ -992,24 +622,12 @@ fun base64ToBitmap(base64String: String): Bitmap? {
     }
 }
 
-
-/**
- * Convierte una cadena de fecha/hora en formato ISO 8601 (ej: 2025-11-12T12:11:57.000Z)
- * a un formato de solo fecha (ej: 2025-11-12).
- */
 fun String.formatToDateOnly(): String {
     return try {
-        // 1. Parsear la cadena ISO (ej: 2025-11-12T12:11:57.000Z)
         val instant = Instant.parse(this)
-
-        // 2. Convertir a una fecha local usando la zona horaria del sistema y formatearla
         val localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-
-        // 3. Devolver la fecha en formato ISO (AAAA-MM-DD)
         localDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
-
     } catch (e: Exception) {
-        // En caso de error (cadena no válida), devuelve la cadena original
         this
     }
 }

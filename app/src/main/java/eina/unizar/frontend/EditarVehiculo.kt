@@ -88,12 +88,12 @@ fun EditVehiculoScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFEF4444)
+            color = MaterialTheme.colorScheme.primary
         ) {
             Row(
                 modifier = Modifier
@@ -106,14 +106,14 @@ fun EditVehiculoScreen(
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Text(
                     text = "Editar Vehículo",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -133,7 +133,7 @@ fun EditVehiculoScreen(
                 text = "Datos del vehículo",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2937)
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -142,7 +142,7 @@ fun EditVehiculoScreen(
             Text(
                 text = "Tipo de vehículo",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
 
@@ -181,7 +181,7 @@ fun EditVehiculoScreen(
             Text(
                 text = "Nombre del vehículo",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
             OutlinedTextField(
@@ -191,12 +191,21 @@ fun EditVehiculoScreen(
                     nombreError = false
                 },
                 isError = nombreError,
-                placeholder = { Text("Ej: Mi coche, Furgoneta de trabajo...") },
+                placeholder = {
+                    Text(
+                        "Ej: Mi coche, Furgoneta de trabajo...",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (nombreError) Color.Red else Color(0xFFEF4444),
-                    unfocusedBorderColor = if (nombreError) Color.Red else Color(0xFFE5E7EB)
+                    focusedBorderColor = if (nombreError) Color.Red else MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = if (nombreError) Color.Red else MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
 
@@ -207,7 +216,7 @@ fun EditVehiculoScreen(
             Text(
                 text = "Fabricante",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
             OutlinedTextField(
@@ -215,12 +224,21 @@ fun EditVehiculoScreen(
                 onValueChange = { fabricante = it
                     fabricanteError = false },
                 isError = fabricanteError,
-                placeholder = { Text("Ej: Seat, Toyota, Ford...") },
+                placeholder = {
+                    Text(
+                        "Ej: Seat, Toyota, Ford...",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (fabricanteError) Color.Red else Color(0xFFEF4444),
-                    unfocusedBorderColor = if (fabricanteError) Color.Red else Color(0xFFE5E7EB)
+                    focusedBorderColor = if (fabricanteError) Color.Red else MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = if (fabricanteError) Color.Red else MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
 
@@ -230,7 +248,7 @@ fun EditVehiculoScreen(
             Text(
                 text = "Modelo",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
             OutlinedTextField(
@@ -238,12 +256,21 @@ fun EditVehiculoScreen(
                 onValueChange = { modelo = it
                     modeloError = false },
                 isError = modeloError,
-                placeholder = { Text("Ej: Ibiza, Corolla...") },
+                placeholder = {
+                    Text(
+                        "Ej: Ibiza, Corolla...",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (modeloError) Color.Red else Color(0xFFEF4444),
-                    unfocusedBorderColor = if (modeloError) Color.Red else Color(0xFFE5E7EB)
+                    focusedBorderColor = if (modeloError) Color.Red else MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = if (modeloError) Color.Red else MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
 
@@ -258,7 +285,7 @@ fun EditVehiculoScreen(
                     Text(
                         text = "Matrícula",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
                     OutlinedTextField(
@@ -266,12 +293,21 @@ fun EditVehiculoScreen(
                         onValueChange = { matricula = it
                             matriculaError = false },
                         isError = matriculaError,
-                        placeholder = { Text("1234 BBC") },
+                        placeholder = {
+                            Text(
+                                "1234 BBC",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = if (matriculaError) Color.Red else Color(0xFFEF4444),
-                            unfocusedBorderColor = if (matriculaError) Color.Red else Color(0xFFE5E7EB)
+                            focusedBorderColor = if (matriculaError) Color.Red else MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = if (matriculaError) Color.Red else MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         )
                     )
                     if (matriculaError) {
@@ -288,7 +324,7 @@ fun EditVehiculoScreen(
                     Text(
                         text = "Año",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
                     OutlinedTextField(
@@ -296,12 +332,21 @@ fun EditVehiculoScreen(
                         onValueChange = { anio = it
                             anioError = false },
                         isError = anioError,
-                        placeholder = { Text("2020") },
+                        placeholder = {
+                            Text(
+                                "2020",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = if (anioError) Color.Red else Color(0xFFEF4444),
-                            unfocusedBorderColor = if (anioError) Color.Red else Color(0xFFE5E7EB)
+                            focusedBorderColor = if (anioError) Color.Red else MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = if (anioError) Color.Red else MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
@@ -327,7 +372,7 @@ fun EditVehiculoScreen(
                     Text(
                         text = "Tipo de combustible",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
                     ExposedDropdownMenuBox(
@@ -346,17 +391,27 @@ fun EditVehiculoScreen(
                                 .menuAnchor(),
                             shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFEF4444),
-                                unfocusedBorderColor = Color(0xFFE5E7EB)
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
                             )
                         )
                         ExposedDropdownMenu(
                             expanded = expandedCombustible,
-                            onDismissRequest = { expandedCombustible = false }
+                            onDismissRequest = { expandedCombustible = false },
+                            containerColor = MaterialTheme.colorScheme.surface
                         ) {
                             combustibles.forEach { item ->
                                 DropdownMenuItem(
-                                    text = { Text(item) },
+                                    text = {
+                                        Text(
+                                            item,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         combustible = item
                                         expandedCombustible = false
@@ -371,7 +426,7 @@ fun EditVehiculoScreen(
                     Text(
                         text = "Depósito (L)",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
                     OutlinedTextField(
@@ -379,12 +434,21 @@ fun EditVehiculoScreen(
                         onValueChange = { capacidadDeposito = it
                             capacidadError = false },
                         isError = capacidadError,
-                        placeholder = { Text("45.0") },
+                        placeholder = {
+                            Text(
+                                "45.0",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = if (capacidadError) Color.Red else Color(0xFFEF4444),
-                            unfocusedBorderColor = if (capacidadError) Color.Red else Color(0xFFE5E7EB)
+                            focusedBorderColor = if (capacidadError) Color.Red else MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = if (capacidadError) Color.Red else MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
@@ -405,7 +469,7 @@ fun EditVehiculoScreen(
             Text(
                 text = "Consumo medio (L/100km)",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
             OutlinedTextField(
@@ -413,12 +477,21 @@ fun EditVehiculoScreen(
                 onValueChange = { consumoMedio = it
                     consumoError = false },
                 isError = consumoError,
-                placeholder = { Text("5.5") },
+                placeholder = {
+                    Text(
+                        "5.5",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (consumoError) Color.Red else Color(0xFFEF4444),
-                    unfocusedBorderColor = if (consumoError) Color.Red else Color(0xFFE5E7EB)
+                    focusedBorderColor = if (consumoError) Color.Red else MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = if (consumoError) Color.Red else MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
@@ -503,13 +576,14 @@ fun EditVehiculoScreen(
                     .testTag("editarVehiculoButton"),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFEF4444)
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(
                     text = "Editar Vehículo",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
@@ -517,4 +591,3 @@ fun EditVehiculoScreen(
         }
     }
 }
-

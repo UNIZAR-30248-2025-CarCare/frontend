@@ -6,6 +6,8 @@ import eina.unizar.frontend.models.CrearIncidenciaRequest
 import eina.unizar.frontend.models.CrearIncidenciaResponse
 import eina.unizar.frontend.models.IncidenciaResponse
 import eina.unizar.frontend.models.EstadisticasData
+import eina.unizar.frontend.models.EstadoSuscripcionResponse
+import eina.unizar.frontend.models.FotoPerfilResponse
 import eina.unizar.frontend.models.Usuario
 import eina.unizar.frontend.models.LoginRequest
 import eina.unizar.frontend.models.LoginResponse
@@ -29,17 +31,24 @@ import eina.unizar.frontend.models.RevisionResponse
 import eina.unizar.frontend.models.RevisionesListResponse
 import eina.unizar.frontend.models.LogrosResponse
 import eina.unizar.frontend.models.LogrosUsuarioResponse
+import eina.unizar.frontend.models.PagoResponse
+import eina.unizar.frontend.models.ProcesarPagoRequest
+import eina.unizar.frontend.models.VerificarAnuncioResponse
 import eina.unizar.frontend.models.VerificarProgresoResponse
 import eina.unizar.frontend.models.Parking
+import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -55,9 +64,9 @@ interface ApiService {
 
     /**
      * Registra un nuevo usuario en el sistema.
-     * 
+     *
      * Endpoint: POST /usuario/sign-up
-     * 
+     *
      * @param usuario Datos del usuario a registrar
      * @return Call<Void> Respuesta sin contenido en caso de éxito
      */
@@ -66,9 +75,9 @@ interface ApiService {
 
     /**
      * Inicia sesión con credenciales de usuario.
-     * 
+     *
      * Endpoint: POST /usuario/sign-in
-     * 
+     *
      * @param request Credenciales del usuario (email y contraseña)
      * @return Call<LoginResponse> Respuesta con token y userId
      */
@@ -77,10 +86,10 @@ interface ApiService {
 
     /**
      * Obtiene el nombre de un usuario por su ID.
-     * 
+     *
      * Endpoint: GET /usuario/obtenerNombreUsuario/{id}
      * Requiere autenticación.
-     * 
+     *
      * @param id Identificador del usuario
      * @param token Token de autenticación JWT (formato: "Bearer {token}")
      * @return Call<UserNameResponse> Respuesta con id y nombre del usuario
@@ -93,10 +102,10 @@ interface ApiService {
 
     /**
      * Crea una nueva reserva de vehículo.
-     * 
+     *
      * Endpoint: POST /reserva
      * Requiere autenticación.
-     * 
+     *
      * @param token Token de autenticación JWT (formato: "Bearer {token}")
      * @param reserva Datos de la reserva a crear
      * @return Call<ReservaResponse> Respuesta con los datos de la reserva creada
@@ -114,10 +123,10 @@ interface ApiService {
 
     /**
      * Elimina una reserva por su ID.
-     * 
+     *
      * Endpoint: DELETE /reserva/{id}
      * Requiere autenticación.
-     * 
+     *
      * @param id Identificador de la reserva
      * @param token Token de autenticación JWT (formato: "Bearer {token}")
      * @return Call<Void> Respuesta sin contenido en caso de éxito
@@ -130,11 +139,11 @@ interface ApiService {
 
     /**
      * Registra un nuevo vehículo en el sistema.
-     * 
+     *
      * Endpoint: POST /vehiculo/registrar
      * Requiere autenticación.
      * Método suspendido para uso con coroutines.
-     * 
+     *
      * @param token Token de autenticación JWT (formato: "Bearer {token}")
      * @param request Datos del vehículo a registrar
      * @return Response<Void> Respuesta HTTP con código de estado
@@ -183,6 +192,7 @@ interface ApiService {
     ): Response<MensajeResponse>
 
     data class MensajeResponse(val message: String)
+    data class IconoResponse(val iconoUrl: String, val message: String)
 
     /**
      * Elimina un usuario vinculado a un vehículo.
@@ -205,10 +215,10 @@ interface ApiService {
 
     /**
      * Obtiene la lista de vehículos asociados a un usuario.
-     * 
+     *
      * Endpoint: GET /vehiculo/obtenerVehiculos/{userId}
      * Requiere autenticación.
-     * 
+     *
      * @param userId Identificador del usuario
      * @param token Token de autenticación JWT (formato: "Bearer {token}")
      * @return Call<VehiculoResponse> Respuesta con la lista de vehículos
@@ -584,4 +594,122 @@ interface ApiService {
         @Path("parkingId") parkingId: Int,
         @Body parking: eina.unizar.frontend.models.NuevoParkingData
     ): Response<eina.unizar.frontend.models.ParkingResponse>
+    /**
+     * Subir el icono de un vehículo.
+     */
+    @Multipart
+    @POST("/vehiculo/{vehiculoId}/icono")
+    suspend fun subirIconoVehiculo(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String,
+        @Part icono: MultipartBody.Part
+    ): Response<IconoResponse>
+    /**
+     * Obtener el icono de un vehículo.
+     */
+    @GET("/vehiculo/{vehiculoId}/icono")
+    suspend fun obtenerIconoVehiculo(
+        @Path("vehiculoId") vehiculoId: String,
+        @Header("Authorization") token: String
+    ): retrofit2.Response<IconoResponse>
+    /**
+     * Eliminar el icono de un vehículo.
+     */
+    @DELETE("/vehiculo/{vehiculoId}/icono")
+    suspend fun eliminarIconoVehiculo(
+        @Header("Authorization") token: String,
+        @Path("vehiculoId") vehiculoId: String
+    ): Response<Void>
+
+    // Suscripciones
+    /**
+     * Procesa el pago de una suscripción.
+     * POST /api/suscripciones/procesar-pago
+     */
+    @POST("suscripcion/procesar-pago")
+    suspend fun procesarPago(
+        @Header("Authorization") token: String,
+        @Body request: ProcesarPagoRequest
+    ): Response<PagoResponse>
+
+    /**
+     * Obtiene el estado de la suscripción del usuario.
+     * GET /api/suscripciones/estado
+     */
+    @GET("suscripcion/estado")
+    suspend fun obtenerEstadoSuscripcion(
+        @Header("Authorization") token: String
+    ): Response<EstadoSuscripcionResponse>
+
+    /**
+     * Verifica si hay anuncios disponibles para el usuario.
+     * GET /api/suscripciones/verificar-anuncio
+     */
+    @GET("suscripcion/verificar-anuncio")
+    suspend fun verificarAnuncio(
+        @Header("Authorization") token: String
+    ): Response<VerificarAnuncioResponse>
+
+    /**
+     * Actualiza el estado de un vehículo.
+     *
+     * Endpoint: PATCH /api/vehiculos/{id}/estado
+     * Requiere autenticación.
+     * Método suspendido para uso con coroutines.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param vehiculoId Identificador del vehículo
+     * @param requestBody Cuerpo de la solicitud con el nuevo estado
+     * @return Response<ResponseBody> Respuesta HTTP con código de estado
+     */
+    @PATCH("vehiculo/{id}/estado")
+    suspend fun actualizarEstadoVehiculo(
+        @Header("Authorization") token: String,
+        @Path("id") vehiculoId: String,
+        @Body requestBody: Map<String, String> // Body: { "estado": "activo" | "inactivo" | "en_mantenimiento" }
+    ): Response<ResponseBody>
+
+
+    /**
+     * Sube o actualiza la foto de perfil del usuario.
+     * * Endpoint: PUT /usuario/perfil/foto
+     * Requiere autenticación y el envío de un archivo Multipart.
+     * * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param foto Parte del cuerpo multipart que contiene el archivo de imagen.
+     * @return Response<FotoPerfilResponse> Respuesta con la URL de la nueva foto.
+     */
+    @Multipart
+    @PUT("usuario/perfil/foto") // La ruta definida en el backend
+    suspend fun actualizarFotoPerfil(
+        @Header("Authorization") token: String,
+        @Part foto: MultipartBody.Part // El nombre del campo debe ser 'foto'
+    ): Response<FotoPerfilResponse>
+
+    /**
+     * Obtiene la foto de perfil del usuario.
+     * Endpoint: GET /usuario/perfil/foto
+     * Requiere autenticación.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @return Response<FotoPerfilResponse> Respuesta con la URL de la foto de perfil.
+     */
+    @GET("usuario/perfil/foto")
+    suspend fun obtenerFotoPerfil(
+        @Header("Authorization") token: String
+    ): Response<FotoPerfilResponse>
+
+    /**
+     * Sube o actualiza la foto de perfil del usuario en formato Base64.
+     * Endpoint: PUT /usuario/perfil/foto
+     * Requiere autenticación.
+     *
+     * @param token Token de autenticación JWT (formato: "Bearer {token}")
+     * @param body Cuerpo de la solicitud con la imagen en Base64.
+     * @return Response<ResponseBody> Respuesta HTTP con código de estado
+     */
+    @PUT("usuario/perfil/foto")
+    suspend fun actualizarFotoPerfilBase64(
+        @Header("Authorization") token: String,
+        @Body body: okhttp3.RequestBody
+    ): retrofit2.Response<okhttp3.ResponseBody>
 }

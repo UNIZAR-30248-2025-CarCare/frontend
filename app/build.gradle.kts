@@ -46,6 +46,7 @@ android {
             excludes += "META-INF/INDEX.LIST"
             excludes += "META-INF/DEPENDENCIES"
             excludes += "META-INF/io.netty.versions.properties"
+            excludes += "mozilla/public-suffix-list.txt"
         }
     }
 }
@@ -67,6 +68,9 @@ dependencies {
     implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.navigation.testing.android)
     implementation(libs.litert)
+    implementation(libs.volley)
+    implementation(libs.androidx.espresso.core)
+    implementation(libs.firebase.crashlytics.buildtools)
     testImplementation(libs.junit)
     //testImplementation(libs.androidx.ui.test.junit4.android)
     androidTestImplementation(libs.androidx.junit)
@@ -89,4 +93,5 @@ dependencies {
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     androidTestImplementation ("androidx.test.uiautomator:uiautomator:2.2.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }

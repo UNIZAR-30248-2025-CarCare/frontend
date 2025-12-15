@@ -34,7 +34,10 @@ import eina.unizar.frontend.models.toVehiculoDetalle
 import eina.unizar.frontend.viewmodels.HomeViewModel
 import eina.unizar.frontend.models.Parking
 import android.content.Intent
+import androidx.compose.runtime.setValue
 import eina.unizar.frontend.models.SearchResult
+import eina.unizar.frontend.viewmodels.SuscripcionViewModel
+import eina.unizar.frontend.PersonalizarIconoScreen
 
 /**
  * Composable principal que gestiona la navegación entre pantallas.
@@ -120,12 +123,45 @@ fun AppNavigation(intent: Intent? = null) {
     val selectedVehiculo = remember { mutableStateOf<Vehiculo?>(null) }
     val selectedParking = remember { mutableStateOf<Parking?>(null) }
 
+    // *** SISTEMA DE ANUNCIOS ***
+    var mostrarAnuncio by remember { mutableStateOf(false) }
+    val suscripcionViewModel: SuscripcionViewModel = viewModel(viewModelStoreOwner = activity)
+    val estadoSuscripcion by suscripcionViewModel.estadoSuscripcion.collectAsState()
+
+    // Cargar estado de suscripción al iniciar
+    LaunchedEffect(efectiveUserId) {
+        val token = efectiveToken
+        Log.d("AnuncioDebug", "🔍 Token encontrado: ${token != null}")
+        if (token != null) {
+            suscripcionViewModel.obtenerEstadoSuscripcion(token)
+            // Dar tiempo a que se cargue el estado
+            kotlinx.coroutines.delay(500)
+        }
+    }
+
+    // Observar cambios en el estado de suscripción
+    LaunchedEffect(estadoSuscripcion) {
+        Log.d("AnuncioDebug", "📊 Estado suscripción: ${estadoSuscripcion?.esPremium}")
+    }
+
+    // Función para registrar acciones y mostrar anuncio
+    fun registrarAccion() {
+        val esPremium = estadoSuscripcion?.esPremium ?: false
+        Log.d("AnuncioDebug", "🎬 Acción registrada - esPremium: $esPremium")
+
+        if (AnuncioManager.deberMostrarAnuncio(esPremium)) {
+            Log.d("AnuncioDebug", "⚠️ MOSTRANDO ANUNCIO")
+            mostrarAnuncio = true
+        } else {
+            Log.d("AnuncioDebug", "✅ Anuncio bloqueado (Premium o contador)")
+        }
+    }
 
     // --- Datos de Ejemplo para Home y otras pantallas ---
     val usuarioEjemplo = Usuario("1", "Juan Pérez", "jp", "juan@eina.com")
     val vehiculoEjemplo = Vehiculo(
         id = "V01",
-        estado = EstadoVehiculo.DISPONIBLE,
+        estado = EstadoVehiculo.INACTIVO,
         nombre = "Furgoneta 1",
         matricula = "Z-1234-AZ",
         tipo = TipoVehiculo.FURGONETA,
@@ -136,12 +172,13 @@ fun AppNavigation(intent: Intent? = null) {
         litros_combustible = 90.0f,
         consumo_medio = 7.5f,
         ubicacion_actual = Ubicacion(41.6488, -0.8891),
-        usuariosVinculados = listOf("David Borrel")
+        usuariosVinculados = listOf("David Borrel"),
+        usuarioActivoId = null
     )
 
     val vehiculoEjemplo2 = Vehiculo(
         id = "V02",
-        estado = EstadoVehiculo.EN_USO,
+        estado = EstadoVehiculo.ACTIVO,
         nombre = "Camión 2",
         matricula = "B-5678-CX",
         tipo = TipoVehiculo.CAMION,
@@ -152,7 +189,8 @@ fun AppNavigation(intent: Intent? = null) {
         litros_combustible = 300.0f,
         consumo_medio = 24.0f,
         ubicacion_actual = Ubicacion(41.6500, -0.8800),
-        usuariosVinculados = listOf("Ana García")
+        usuariosVinculados = listOf("Ana García"),
+        usuarioActivoId = null
     )
     val vehiculosDisponibles = listOf(vehiculoEjemplo, vehiculoEjemplo2)
     val incidenciaActivaEjemplo = Incidencia(
@@ -177,6 +215,9 @@ fun AppNavigation(intent: Intent? = null) {
         vehiculo = vehiculoEjemplo,
         estado = EstadoIncidencia.RESUELTA
     )
+
+
+
     val incidenciasActivas = listOf(incidenciaActivaEjemplo)
     val incidenciasResueltas = listOf(incidenciaResueltaEjemplo)
     // ---------------------------------------------------------------------
@@ -193,8 +234,9 @@ fun AppNavigation(intent: Intent? = null) {
             capacidadDeposito = 90,
             consumoMedio = 7.5,
             tipo = TipoVehiculo.FURGONETA,
-            estado = EstadoVehiculo.DISPONIBLE,
-            usuariosVinculados = listOf("David Borrel")
+            estado = EstadoVehiculo.INACTIVO,
+            usuariosVinculados = listOf("David Borrel"),
+            usuarioActivoId = null
         )
 
     // ---------------------------------------------------------------------
@@ -247,6 +289,7 @@ fun AppNavigation(intent: Intent? = null) {
 
                     // Callbacks de navegación de la pantalla:
                     onVehiculoClick = { vehiculoId: String ->
+                        registrarAccion()
                         selectedVehiculo.value = vehiculosDisponibles.find { it.id == vehiculoId }
                         navController.navigate("vehiculo_detalle/$vehiculoId")
                     },
@@ -280,7 +323,28 @@ fun AppNavigation(intent: Intent? = null) {
             }
         }
 
+        composable("editarFotoPerfil") {
+            // Usa collectAsState() porque token es un StateFlow
+            val token by authViewModel.token.collectAsState()
+
+            if (token != null) {
+                EditarFotoPerfilScreen(
+                    navController = navController,
+                    token = token!!,
+                    perfilViewModel = viewModel() // Inyección simple con viewModel()
+                )
+            } else {
+                // Redirigir a login si no hay token
+                LaunchedEffect(Unit) {
+                    navController.navigate("eleccion") {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    }
+                }
+            }
+        }
+
         composable("mapa") {
+            registrarAccion()
             UbicacionVehiculoScreen(
                 onBackClick = { navController.popBackStack() },
                 navController = navController,
@@ -387,6 +451,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // --- NUEVA RUTA DE INVITACIONES
         composable("invitaciones") {
+            registrarAccion()
             InvitacionesScreen(
                 usuarioId = efectiveUserId ?: "",
                 token = efectiveToken ?: "",
@@ -399,6 +464,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // --- NUEVA RUTA DE INCIDENCIAS ---
         composable("incidencias") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 IncidenciasScreen(
                     userId = efectiveUserId,
@@ -475,6 +541,7 @@ fun AppNavigation(intent: Intent? = null) {
         }
 
         composable("reservas") {
+            registrarAccion()
             val userId = authViewModel.userId.collectAsState().value ?: ""
             val token = authViewModel.token.collectAsState().value ?: ""
 
@@ -544,6 +611,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para viajes
         composable("viajes") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 ViajesScreen(
                     onBackClick = { navController.popBackStack() },
@@ -557,6 +625,7 @@ fun AppNavigation(intent: Intent? = null) {
         }
         
         composable("logros") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 LogrosScreen(
                     navController = navController,
@@ -584,6 +653,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para repostajes
         composable("repostajes") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 RepostajesScreen(
                     onBackClick = { navController.popBackStack() },
@@ -613,6 +683,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para revisiones
         composable("revisiones") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 RevisionesScreen(
                     onBackClick = { navController.popBackStack() },
@@ -637,6 +708,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para estadisticas
         composable("estadisticas") {
+            registrarAccion()
             if (efectiveUserId != null && efectiveToken != null) {
                 EstadisticasScreen(
                     navController = navController,
@@ -648,6 +720,7 @@ fun AppNavigation(intent: Intent? = null) {
 
         // Ruta para busquedas
         composable("busqueda") {
+            registrarAccion()
             if (efectiveToken != null) {
                 BusquedaScreen(
                     efectiveUserId = efectiveUserId ?: "",
@@ -656,6 +729,7 @@ fun AppNavigation(intent: Intent? = null) {
                 )
             }
         }
+
         // Ruta para crear parking
         composable("add_parking") {
             if (efectiveUserId != null && efectiveToken != null) {
@@ -702,5 +776,46 @@ fun AppNavigation(intent: Intent? = null) {
                 Text("Datos inválidos")
             }
         }
+
+        composable("premium") { backStackEntry ->
+
+            PremiumScreen(
+                token = efectiveToken ?: "",
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            "personalizar_icono/{vehiculoId}/{vehiculoNombre}/{vehiculoTipo}",
+            arguments = listOf(
+                navArgument("vehiculoId") { type = NavType.StringType },
+                navArgument("vehiculoNombre") { type = NavType.StringType },
+                navArgument("vehiculoTipo") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val vehiculoId = backStackEntry.arguments?.getString("vehiculoId") ?: ""
+            val vehiculoNombre = backStackEntry.arguments?.getString("vehiculoNombre") ?: ""
+            val vehiculoTipo = backStackEntry.arguments?.getString("vehiculoTipo") ?: ""
+
+            PersonalizarIconoScreen(
+                vehiculoId = vehiculoId,
+                vehiculoNombre = vehiculoNombre,
+                vehiculoTipo = vehiculoTipo,
+                navController = navController,
+                token = efectiveToken ?: "",
+                iconoActualUrl = null, // O la URL real si la tienes
+                onIconoActualizado = { /* lógica si quieres actualizar la UI */ }
+            )
+        }
+    }
+    // *** DIALOG DE ANUNCIO ***
+    if (mostrarAnuncio) {
+        AnuncioDialog(
+            onDismiss = {
+                mostrarAnuncio = false
+                AnuncioManager.resetearContador()
+            },
+            navController = navController
+        )
     }
 }

@@ -100,12 +100,12 @@ fun CrearViajeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFEF4444)
+            color = MaterialTheme.colorScheme.primary
         ) {
             Row(
                 modifier = Modifier
@@ -118,14 +118,14 @@ fun CrearViajeScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Text(
                     text = "Crear Viaje",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -145,7 +145,7 @@ fun CrearViajeScreen(
                 text = "Detalles del viaje",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2937)
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -154,7 +154,7 @@ fun CrearViajeScreen(
             Text(
                 text = "Vehículo",
                 fontSize = 13.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
 
@@ -169,7 +169,7 @@ fun CrearViajeScreen(
                         .menuAnchor()
                         .clickable { expandedVehiculo = true },
                     shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Row(
                         modifier = Modifier
@@ -206,25 +206,31 @@ fun CrearViajeScreen(
                             Text(
                                 text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                 fontSize = 15.sp,
-                                color = Color(0xFF1F2937),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                         }
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = "Expandir",
-                            tint = Color(0xFF9CA3AF)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
                 ExposedDropdownMenu(
                     expanded = expandedVehiculo,
-                    onDismissRequest = { expandedVehiculo = false }
+                    onDismissRequest = { expandedVehiculo = false },
+                    containerColor = MaterialTheme.colorScheme.surface
                 ) {
                     vehiculosList.forEach { vehiculo ->
                         DropdownMenuItem(
-                            text = { Text("${vehiculo.nombre} - ${vehiculo.matricula}") },
+                            text = {
+                                Text(
+                                    "${vehiculo.nombre} - ${vehiculo.matricula}",
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            },
                             onClick = {
                                 vehiculoSeleccionado = vehiculo
                                 expandedVehiculo = false
@@ -239,9 +245,22 @@ fun CrearViajeScreen(
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                label = { Text("Nombre del viaje") },
+                label = {
+                    Text(
+                        "Nombre del viaje",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -249,9 +268,22 @@ fun CrearViajeScreen(
             OutlinedTextField(
                 value = descripcion,
                 onValueChange = { descripcion = it },
-                label = { Text("Descripción") },
+                label = {
+                    Text(
+                        "Descripción",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -264,7 +296,12 @@ fun CrearViajeScreen(
                 OutlinedTextField(
                     value = fechaHoraInicio?.format(formatter) ?: "",
                     onValueChange = {},
-                    label = { Text("Fecha y hora inicio") },
+                    label = {
+                        Text(
+                            "Fecha y hora inicio",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
                     enabled = false,
@@ -272,7 +309,8 @@ fun CrearViajeScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     )
                 )
             }
@@ -287,7 +325,12 @@ fun CrearViajeScreen(
                 OutlinedTextField(
                     value = fechaHoraFin?.format(formatter) ?: "",
                     onValueChange = {},
-                    label = { Text("Fecha y hora fin") },
+                    label = {
+                        Text(
+                            "Fecha y hora fin",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
                     enabled = false,
@@ -295,7 +338,8 @@ fun CrearViajeScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     )
                 )
             }
@@ -305,9 +349,22 @@ fun CrearViajeScreen(
             OutlinedTextField(
                 value = kmRealizados,
                 onValueChange = { kmRealizados = it },
-                label = { Text("Km realizados") },
+                label = {
+                    Text(
+                        "Km realizados",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -315,9 +372,22 @@ fun CrearViajeScreen(
             OutlinedTextField(
                 value = consumoCombustible,
                 onValueChange = { consumoCombustible = it },
-                label = { Text("Consumo combustible (L)") },
+                label = {
+                    Text(
+                        "Consumo combustible (L)",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -330,7 +400,12 @@ fun CrearViajeScreen(
                 OutlinedTextField(
                     value = ubicacionDestino,
                     onValueChange = {},
-                    label = { Text("Ubicación destino") },
+                    label = {
+                        Text(
+                            "Ubicación destino",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .pointerInput(Unit) {
@@ -345,7 +420,8 @@ fun CrearViajeScreen(
                         disabledTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledBorderColor = MaterialTheme.colorScheme.outline,
                         disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledTrailingIconColor = Color(0xFF9CA3AF)
+                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     trailingIcon = {
                         Icon(
@@ -422,15 +498,16 @@ fun CrearViajeScreen(
                     .height(55.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFEF4444)
+                    containerColor = MaterialTheme.colorScheme.primary
                 ),
-                 // enabled = nombre.isNotBlank() && descripcion.isNotBlank() && fechaHoraInicio != null && fechaHoraFin != null
-                 //       && kmRealizados.isNotBlank() && consumoCombustible.isNotBlank() && latitud.isNotBlank() && longitud.isNotBlank()
+                // enabled = nombre.isNotBlank() && descripcion.isNotBlank() && fechaHoraInicio != null && fechaHoraFin != null
+                //       && kmRealizados.isNotBlank() && consumoCombustible.isNotBlank() && latitud.isNotBlank() && longitud.isNotBlank()
             ) {
                 Text(
                     text = "Crear Viaje",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
@@ -467,5 +544,3 @@ fun validarCampos(
     // Puedes añadir más validaciones aquí
     return null
 }
-
-

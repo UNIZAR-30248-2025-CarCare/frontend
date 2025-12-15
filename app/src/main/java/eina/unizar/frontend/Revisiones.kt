@@ -99,18 +99,19 @@ fun RevisionesScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Header
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFEF4444)
+                color = MaterialTheme.colorScheme.primary
             ) {
                 Row(
                     modifier = Modifier
@@ -123,14 +124,14 @@ fun RevisionesScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
                         text = "Revisiones",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.weight(1f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -155,7 +156,7 @@ fun RevisionesScreen(
                                 .shadow(2.dp, RoundedCornerShape(25.dp))
                                 .clickable { vehiculoMenuExpanded = true },
                             shape = RoundedCornerShape(25.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -183,24 +184,30 @@ fun RevisionesScreen(
                                 Text(
                                     text = "${vehiculo.nombre} - ${vehiculo.matricula}",
                                     fontSize = 15.sp,
-                                    color = Color(0xFF1F2937),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(
                                     imageVector = Icons.Default.ArrowDropDown,
                                     contentDescription = "Cambiar vehículo",
-                                    tint = Color(0xFF6B7280)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
 
                         DropdownMenu(
                             expanded = vehiculoMenuExpanded,
-                            onDismissRequest = { vehiculoMenuExpanded = false }
+                            onDismissRequest = { vehiculoMenuExpanded = false },
+                            containerColor = MaterialTheme.colorScheme.surface
                         ) {
                             vehiculos.forEachIndexed { index, v ->
                                 DropdownMenuItem(
-                                    text = { Text("${v.nombre} - ${v.matricula}") },
+                                    text = {
+                                        Text(
+                                            "${v.nombre} - ${v.matricula}",
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         selectedIndex = index
                                         vehiculoMenuExpanded = false
@@ -221,7 +228,7 @@ fun RevisionesScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
                                 .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .padding(16.dp)
                         ) {
@@ -233,7 +240,7 @@ fun RevisionesScreen(
                                     Icon(
                                         Icons.Default.Settings,
                                         contentDescription = null,
-                                        tint = Color(0xFF1F2937),
+                                        tint = MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
@@ -241,7 +248,7 @@ fun RevisionesScreen(
                                         text = "Filtrar por Tipo",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF1F2937)
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
 
@@ -252,7 +259,7 @@ fun RevisionesScreen(
                                         .fillMaxWidth()
                                         .clickable { tipoMenuExpanded = true },
                                     shape = RoundedCornerShape(8.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -264,22 +271,28 @@ fun RevisionesScreen(
                                         Text(
                                             text = tipoFiltroSeleccionado,
                                             fontSize = 14.sp,
-                                            color = Color(0xFF1F2937)
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Icon(
                                             Icons.Default.ArrowDropDown,
                                             contentDescription = "Seleccionar tipo",
-                                            tint = Color(0xFF6B7280)
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
 
                                 DropdownMenu(
                                     expanded = tipoMenuExpanded,
-                                    onDismissRequest = { tipoMenuExpanded = false }
+                                    onDismissRequest = { tipoMenuExpanded = false },
+                                    containerColor = MaterialTheme.colorScheme.surface
                                 ) {
                                     DropdownMenuItem(
-                                        text = { Text("Todos") },
+                                        text = {
+                                            Text(
+                                                "Todos",
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        },
                                         onClick = {
                                             tipoFiltroSeleccionado = "Todos"
                                             tipoMenuExpanded = false
@@ -287,7 +300,12 @@ fun RevisionesScreen(
                                     )
                                     TiposRevision.TODOS.forEach { tipo ->
                                         DropdownMenuItem(
-                                            text = { Text(tipo) },
+                                            text = {
+                                                Text(
+                                                    tipo,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            },
                                             onClick = {
                                                 tipoFiltroSeleccionado = tipo
                                                 tipoMenuExpanded = false
@@ -315,7 +333,7 @@ fun RevisionesScreen(
                                         .height(200.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    CircularProgressIndicator(color = Color(0xFFEF4444))
+                                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         }
@@ -324,7 +342,7 @@ fun RevisionesScreen(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .background(Color.White, RoundedCornerShape(12.dp))
+                                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
                                         .shadow(2.dp, RoundedCornerShape(12.dp))
                                         .padding(16.dp)
                                         .height(200.dp),
@@ -334,19 +352,19 @@ fun RevisionesScreen(
                                         Icon(
                                             Icons.Default.Build,
                                             contentDescription = null,
-                                            tint = Color(0xFF9CA3AF),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(48.dp)
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
                                             text = "No hay revisiones para este vehículo",
-                                            color = Color(0xFF9CA3AF),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontSize = 16.sp
                                         )
                                         if (tipoFiltroSeleccionado != "Todos") {
                                             Text(
                                                 text = "con el filtro '${tipoFiltroSeleccionado}'",
-                                                color = Color(0xFF9CA3AF),
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontSize = 14.sp
                                             )
                                         }
@@ -366,7 +384,7 @@ fun RevisionesScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
                                 .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .padding(16.dp)
                                 .height(200.dp),
@@ -376,13 +394,13 @@ fun RevisionesScreen(
                                 Icon(
                                     Icons.Default.Build,
                                     contentDescription = null,
-                                    tint = Color(0xFF9CA3AF),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "Selecciona un vehículo para ver sus revisiones",
-                                    color = Color(0xFF9CA3AF),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 16.sp
                                 )
                             }
@@ -404,13 +422,13 @@ fun RevisionesScreen(
             ) {
                 FloatingActionButton(
                     onClick = onAddRevisionClick,
-                    containerColor = Color(0xFFEF4444),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Añadir revisión",
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -425,7 +443,8 @@ fun RevisionItem(revision: RevisionDTO) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -438,18 +457,18 @@ fun RevisionItem(revision: RevisionDTO) {
                         text = revision.tipo,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = revision.fecha,
                         fontSize = 14.sp,
-                        color = Color(0xFF6B7280)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (revision.kilometraje > 0) {
                         Text(
                             text = "${revision.kilometraje} km",
                             fontSize = 14.sp,
-                            color = Color(0xFF6B7280)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -467,7 +486,7 @@ fun RevisionItem(revision: RevisionDTO) {
                         Text(
                             text = "Próxima: ${revision.proximaRevision}",
                             fontSize = 12.sp,
-                            color = Color(0xFF6B7280)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -478,11 +497,11 @@ fun RevisionItem(revision: RevisionDTO) {
                 Text(
                     text = revision.observaciones,
                     fontSize = 14.sp,
-                    color = Color(0xFF6B7280),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            Color(0xFFF5F5F5),
+                            MaterialTheme.colorScheme.surfaceVariant,
                             RoundedCornerShape(6.dp)
                         )
                         .padding(8.dp)

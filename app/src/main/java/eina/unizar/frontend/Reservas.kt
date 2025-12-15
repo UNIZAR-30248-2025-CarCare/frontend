@@ -34,7 +34,6 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlinx.coroutines.launch
 
-// Agregar función para generar colores por vehículo
 fun getColorForVehiculo(vehiculoId: String): Color {
     val colors = listOf(
         Color(0xFF3B82F6), // Azul
@@ -49,12 +48,10 @@ fun getColorForVehiculo(vehiculoId: String): Color {
         Color(0xFFA855F7)  // Violeta
     )
 
-    // Usar el hashCode del ID para seleccionar un color consistente
     val index = vehiculoId.hashCode().absoluteValue % colors.size
     return colors[index]
 }
 
-// Modificar el modelo Reserva
 data class Reserva(
     val id: String,
     val usuario: String,
@@ -98,27 +95,22 @@ fun CalendarioScreenWrapper(
     val isLoading by reservaViewModel.isLoading.collectAsState()
     val error by reservaViewModel.error.collectAsState()
 
-    // ✅ Fetch inicial cuando se carga la pantalla
     LaunchedEffect(token) {
         reservaViewModel.fetchReservas(token)
     }
-    
-    // ✅ AÑADIR: Refresh cuando navegas de vuelta a esta pantalla
+
     LaunchedEffect(navController.currentBackStackEntry) {
         val currentRoute = navController.currentBackStackEntry?.destination?.route
         if (currentRoute == "reservas") {
-            // Pequeño delay para asegurar que la BD se actualizó
             kotlinx.coroutines.delay(300)
             reservaViewModel.fetchReservas(token)
         }
     }
-    
-    // Convertir ReservaDTO a Reserva temporal para el calendario
+
     val reservasCalendario = reservasDTO.map { dto ->
         val fechaInicio = dto.fechaInicio.split("T")[0]
         val fechaFinal = dto.fechaFin.split("T")[0]
-        
-        // Convertir el string del tipo a TipoVehiculo enum
+
         val tipoVehiculo = when (dto.Vehiculo.tipo.uppercase()) {
             "COCHE" -> TipoVehiculo.COCHE
             "MOTO" -> TipoVehiculo.MOTO
@@ -126,7 +118,7 @@ fun CalendarioScreenWrapper(
             "CAMION" -> TipoVehiculo.CAMION
             else -> TipoVehiculo.COCHE
         }
-        
+
         Reserva(
             id = dto.id.toString(),
             usuario = dto.Usuario.nombre,
@@ -150,7 +142,7 @@ fun CalendarioScreenWrapper(
     var diaSeleccionado by remember { mutableStateOf(LocalDate.now()) }
 
     CalendarioScreen(
-        vehiculoSeleccionado = null, // CAMBIADO: ya no pasamos vehículo seleccionado
+        vehiculoSeleccionado = null,
         reservasCalendario = reservasCalendario,
         reservasDTO = reservasDTO,
         isLoading = isLoading,
@@ -159,8 +151,8 @@ fun CalendarioScreenWrapper(
         diaSeleccionado = diaSeleccionado,
         onBackClick = onBackClick,
         onVehiculoClick = onVehiculoClick,
-        onMesAnterior = { /* TODO: implementar */ },
-        onMesSiguiente = { /* TODO: implementar */ },
+        onMesAnterior = { },
+        onMesSiguiente = { },
         onDiaClick = { diaSeleccionado = it },
         onAddReservaClick = onAddReservaClick,
         navController = navController,
@@ -191,7 +183,6 @@ fun CalendarioScreen(
     token: String
 ) {
     val reservasDelDia = reservasCalendario.filter { reserva ->
-        // Obtener todas las fechas del rango de la reserva
         val dias = mutableListOf<LocalDate>()
         var fecha = reserva.fecha
         while (!fecha.isAfter(reserva.fechaFin)) {
@@ -215,18 +206,18 @@ fun CalendarioScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            // Header
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFEF4444)
+                color = MaterialTheme.colorScheme.primary
             ) {
                 Row(
                     modifier = Modifier
@@ -239,14 +230,14 @@ fun CalendarioScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
                         text = "Calendario",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
@@ -260,7 +251,7 @@ fun CalendarioScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = Color(0xFFEF4444))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
                 error != null -> {
@@ -275,14 +266,14 @@ fun CalendarioScreen(
                             Icon(
                                 imageVector = Icons.Default.Warning,
                                 contentDescription = "Error",
-                                tint = Color(0xFFEF4444),
+                                tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(48.dp)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = error,
                                 fontSize = 16.sp,
-                                color = Color(0xFF6B7280),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -297,9 +288,6 @@ fun CalendarioScreen(
                         item {
                             Spacer(modifier = Modifier.height(15.dp))
 
-                            // ELIMINADO: Selector de vehículo
-
-                            // Calendario
                             CalendarioConSelector(
                                 reservas = reservasCalendario,
                                 diaSeleccionado = diaSeleccionado,
@@ -312,7 +300,7 @@ fun CalendarioScreen(
                                 text = "Reservas de hoy",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1F2937)
+                                color = MaterialTheme.colorScheme.onBackground
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -329,7 +317,7 @@ fun CalendarioScreen(
                                     Text(
                                         text = "No hay reservas para este día",
                                         fontSize = 14.sp,
-                                        color = Color(0xFF9CA3AF)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -342,14 +330,14 @@ fun CalendarioScreen(
 
                         item {
                             Spacer(modifier = Modifier.height(20.dp))
-                            
+
                             Text(
                                 text = "Todas mis reservas (${reservasDTO.size})",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1F2937)
+                                color = MaterialTheme.colorScheme.onBackground
                             )
-                            
+
                             Spacer(modifier = Modifier.height(10.dp))
                         }
 
@@ -364,7 +352,7 @@ fun CalendarioScreen(
                                     Text(
                                         text = "No tienes reservas",
                                         fontSize = 14.sp,
-                                        color = Color(0xFF9CA3AF)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -393,13 +381,13 @@ fun CalendarioScreen(
                     ) {
                         FloatingActionButton(
                             onClick = onAddReservaClick,
-                            containerColor = Color(0xFFEF4444),
+                            containerColor = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(56.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Añadir reserva",
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -419,14 +407,11 @@ fun CalendarioMensual(
     onDiaClick: (LocalDate) -> Unit
 ) {
     val primerDiaDelMes = mes.atDay(1)
-    // dayOfWeek.value devuelve: 1=Lunes, 2=Martes, ..., 7=Domingo
-    // Necesitamos convertir a: 0=Lunes, 1=Martes, ..., 6=Domingo
     val diaDeLaSemanaInicio = primerDiaDelMes.dayOfWeek.value - 1
 
     val diasEnMes = mes.lengthOfMonth()
     val totalCeldas = ((diasEnMes + diaDeLaSemanaInicio + 6) / 7) * 7
 
-    // Función auxiliar para obtener todas las fechas de una reserva
     fun obtenerRangoReserva(reserva: Reserva): List<LocalDate> {
         val dias = mutableListOf<LocalDate>()
         var fecha = reserva.fecha
@@ -442,7 +427,7 @@ fun CalendarioMensual(
             .fillMaxWidth()
             .shadow(2.dp, RoundedCornerShape(10.dp)),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -458,7 +443,7 @@ fun CalendarioMensual(
                         text = dia,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.weight(1f)
                     )
@@ -484,21 +469,18 @@ fun CalendarioMensual(
                                 val tieneReservas = reservasDelDia.isNotEmpty()
                                 val esSeleccionado = fecha == diaSeleccionado
                                 val esHoy = fecha == LocalDate.now()
-                                // Obtener color del primer vehículo si hay reservas
                                 val colorVehiculo = if (reservasDelDia.isNotEmpty()) {
                                     getColorForVehiculo(reservasDelDia.first().vehiculoId)
                                 } else {
-                                    Color(0xFF3B82F6) // Color por defecto
+                                    Color(0xFF3B82F6)
                                 }
 
-                                // Verificar si es parte de una reserva de varios días
                                 val reservasMultiDia = reservas.filter { reserva ->
                                     val rango = obtenerRangoReserva(reserva)
                                     rango.size > 1 && rango.contains(fecha)
                                 }
                                 val esMultiDia = reservasMultiDia.isNotEmpty()
 
-                                // Si hay múltiples vehículos el mismo día
                                 val multipleVehiculos = reservasDelDia.map { it.vehiculoId }.distinct().size > 1
 
                                 Box(
@@ -509,12 +491,11 @@ fun CalendarioMensual(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     when {
-                                        // Día seleccionado
                                         esSeleccionado -> {
                                             Box(
                                                 modifier = Modifier
                                                     .size(36.dp)
-                                                    .background(Color(0xFFEF4444), CircleShape)
+                                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
                                                     .clickable { onDiaClick(fecha) },
                                                 contentAlignment = Alignment.Center
                                             ) {
@@ -523,7 +504,6 @@ fun CalendarioMensual(
                                                 ) {
                                                     if (tieneReservas) {
                                                         if (multipleVehiculos) {
-                                                            // Mostrar indicador multicolor
                                                             Row(
                                                                 horizontalArrangement = Arrangement.Center,
                                                                 modifier = Modifier.width(12.dp)
@@ -544,7 +524,7 @@ fun CalendarioMensual(
                                                             Box(
                                                                 modifier = Modifier
                                                                     .size(4.dp)
-                                                                    .background(Color.White, CircleShape)
+                                                                    .background(MaterialTheme.colorScheme.onPrimary, CircleShape)
                                                             )
                                                         }
                                                         Spacer(modifier = Modifier.height(2.dp))
@@ -553,22 +533,20 @@ fun CalendarioMensual(
                                                         text = numeroDia.toString(),
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = Color.White
+                                                        color = MaterialTheme.colorScheme.onPrimary
                                                     )
-                                                    // Subrayado si es multi-día
                                                     if (esMultiDia) {
                                                         Spacer(modifier = Modifier.height(2.dp))
                                                         Box(
                                                             modifier = Modifier
                                                                 .width(20.dp)
                                                                 .height(2.dp)
-                                                                .background(Color.White)
+                                                                .background(MaterialTheme.colorScheme.onPrimary)
                                                         )
                                                     }
                                                 }
                                             }
                                         }
-                                        // Día con reservas (pero no seleccionado)
                                         tieneReservas -> {
                                             Box(
                                                 modifier = Modifier
@@ -584,7 +562,6 @@ fun CalendarioMensual(
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
                                                     if (multipleVehiculos) {
-                                                        // Mostrar indicador multicolor
                                                         Row(
                                                             horizontalArrangement = Arrangement.Center,
                                                             modifier = Modifier.width(12.dp)
@@ -615,7 +592,6 @@ fun CalendarioMensual(
                                                         fontWeight = FontWeight.Bold,
                                                         color = colorVehiculo
                                                     )
-                                                    // Subrayado si es multi-día
                                                     if (esMultiDia) {
                                                         Spacer(modifier = Modifier.height(2.dp))
                                                         Box(
@@ -628,7 +604,6 @@ fun CalendarioMensual(
                                                 }
                                             }
                                         }
-                                        // Día normal
                                         else -> {
                                             Box(
                                                 modifier = Modifier
@@ -640,7 +615,7 @@ fun CalendarioMensual(
                                                     text = numeroDia.toString(),
                                                     fontSize = 14.sp,
                                                     fontWeight = if (esHoy) FontWeight.Bold else FontWeight.Normal,
-                                                    color = if (esHoy) Color(0xFFEF4444) else Color(0xFF1F2937)
+                                                    color = if (esHoy) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                                 )
                                             }
                                         }
@@ -682,20 +657,20 @@ fun CalendarioConSelector(
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowLeft,
                     contentDescription = "Mes anterior",
-                    tint = Color(0xFF6B7280)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Text(
                 text = "${mesActual.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${mesActual.year}",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2937)
+                color = MaterialTheme.colorScheme.onBackground
             )
             IconButton(onClick = { mesActual = mesActual.plusMonths(1) }) {
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,
                     contentDescription = "Mes siguiente",
-                    tint = Color(0xFF6B7280)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -714,14 +689,14 @@ fun CalendarioConSelector(
 @Composable
 fun ReservaCard(reserva: Reserva) {
     val colorVehiculo = getColorForVehiculo(reserva.vehiculoId)
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
             .shadow(2.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier.fillMaxSize()
@@ -760,12 +735,12 @@ fun ReservaCard(reserva: Reserva) {
                         text = reserva.vehiculo,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF1F2937)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "${reserva.horaInicio} - ${reserva.horaFin}",
                         fontSize = 13.sp,
-                        color = Color(0xFF6B7280)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = reserva.tipo.nombre,
@@ -833,7 +808,6 @@ fun ReservaItemCard(
     viewModel: ReservaViewModel,
     token: String
 ) {
-    // Convertir el string del tipo a TipoVehiculo enum
     val tipoVehiculo = when (reserva.Vehiculo.tipo.uppercase()) {
         "COCHE" -> TipoVehiculo.COCHE
         "MOTO" -> TipoVehiculo.MOTO
@@ -841,20 +815,19 @@ fun ReservaItemCard(
         "CAMION" -> TipoVehiculo.CAMION
         else -> TipoVehiculo.COCHE
     }
-    
+
     val colorVehiculo = getColorForVehiculo(reserva.Vehiculo.id)
-    
-    // ✅ Estado para controlar el menú desplegable
+
     var expandedMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(2.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -876,15 +849,14 @@ fun ReservaItemCard(
                         else -> Color(0xFF10B981)
                     }
                 )
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "ID: ${reserva.id}",
                         fontSize = 12.sp,
-                        color = Color(0xFF9CA3AF)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
-                    // ✅ Botón de menú de 3 puntos
+
                     Box {
                         IconButton(
                             onClick = { expandedMenu = true },
@@ -893,15 +865,15 @@ fun ReservaItemCard(
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
                                 contentDescription = "Más opciones",
-                                tint = Color(0xFF6B7280),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
-                        
-                        // ✅ Menú desplegable
+
                         DropdownMenu(
                             expanded = expandedMenu,
-                            onDismissRequest = { expandedMenu = false }
+                            onDismissRequest = { expandedMenu = false },
+                            containerColor = MaterialTheme.colorScheme.surface
                         ) {
                             DropdownMenuItem(
                                 text = {
@@ -919,10 +891,9 @@ fun ReservaItemCard(
                                 onClick = {
                                     expandedMenu = false
                                     navController.navigate("editarReserva/${reserva.Vehiculo.id}/${reserva.id}")
-
                                 }
                             )
-                            
+
                             DropdownMenuItem(
                                 text = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -968,12 +939,12 @@ fun ReservaItemCard(
                         text = reserva.Vehiculo.nombre,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = reserva.Vehiculo.matricula,
                         fontSize = 14.sp,
-                        color = Color(0xFF6B7280)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -989,14 +960,14 @@ fun ReservaItemCard(
                         Icon(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = "Fecha",
-                            tint = Color(0xFF6B7280),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${reserva.fechaInicio.split("T")[0]} → ${reserva.fechaFin.split("T")[0]}",
                             fontSize = 13.sp,
-                            color = Color(0xFF6B7280)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -1004,14 +975,14 @@ fun ReservaItemCard(
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = "Hora",
-                            tint = Color(0xFF6B7280),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${reserva.horaInicio.substring(0, 5)} - ${reserva.horaFin.substring(0, 5)}",
                             fontSize = 13.sp,
-                            color = Color(0xFF6B7280)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1020,20 +991,19 @@ fun ReservaItemCard(
             reserva.descripcion?.let { desc ->
                 if (desc.isNotBlank()) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Divider(color = Color(0xFFE5E7EB))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Notas: $desc",
                         fontSize = 12.sp,
-                        color = Color(0xFF6B7280),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
                 }
             }
         }
     }
-    
-    // ✅ Diálogo de confirmación para eliminar
+
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -1048,15 +1018,17 @@ fun ReservaItemCard(
             title = {
                 Text(
                     text = "Eliminar reserva",
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             },
             text = {
                 Text(
                     text = "¿Estás seguro de que quieres eliminar esta reserva?\n\n" +
-                           "Vehículo: ${reserva.Vehiculo.nombre}\n" +
-                           "Fecha: ${reserva.fechaInicio.split("T")[0]}",
-                    fontSize = 14.sp
+                            "Vehículo: ${reserva.Vehiculo.nombre}\n" +
+                            "Fecha: ${reserva.fechaInicio.split("T")[0]}",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             },
             confirmButton = {
@@ -1079,9 +1051,10 @@ fun ReservaItemCard(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancelar", color = Color(0xFF6B7280))
+                    Text("Cancelar", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }

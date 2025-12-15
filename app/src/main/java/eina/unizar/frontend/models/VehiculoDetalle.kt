@@ -36,5 +36,7 @@ data class VehiculoDetalle(
     val consumoMedio: Double,
     val tipo: TipoVehiculo,
     val estado: EstadoVehiculo,
-    val usuariosVinculados: List<String>
+    val usuariosVinculados: List<String>,
+    val usuarioActivoId: String?
+    val icono_url: String? = null
 )
