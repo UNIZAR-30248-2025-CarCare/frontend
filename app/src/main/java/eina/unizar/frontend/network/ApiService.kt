@@ -30,6 +30,7 @@ import eina.unizar.frontend.models.RevisionesListResponse
 import eina.unizar.frontend.models.LogrosResponse
 import eina.unizar.frontend.models.LogrosUsuarioResponse
 import eina.unizar.frontend.models.VerificarProgresoResponse
+import eina.unizar.frontend.models.Parking
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -546,4 +547,41 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("usuarioId") usuarioId: Int
     ): Call<VerificarProgresoResponse>
+
+    /**
+     * Crear un nuevo parking
+     */
+    @POST("/parking/crear")
+    suspend fun crearParking(
+        @Header("Authorization") token: String,
+        @Body parking: eina.unizar.frontend.models.NuevoParkingData
+    ): Response<eina.unizar.frontend.models.ParkingResponse>
+
+    /**
+     * Obtener parkings de un usuario
+     */
+    @GET("/parking/usuario/{usuarioId}")
+    suspend fun obtenerParkingsUsuario(
+        @Header("Authorization") token: String,
+        @Path("usuarioId") usuarioId: String
+    ): Response<eina.unizar.frontend.models.ParkingsResponse>
+
+    /**
+     * Eliminar un parking
+     */
+    @DELETE("/parking/eliminar/{parkingId}")
+    suspend fun eliminarParking(
+        @Header("Authorization") token: String,
+        @Path("parkingId") parkingId: Int
+    ): Response<Map<String, String>>
+
+    /**
+     * Actualizar un parking
+     */
+    @PUT("/parking/actualizar/{parkingId}")
+    suspend fun actualizarParking(
+        @Header("Authorization") token: String,
+        @Path("parkingId") parkingId: Int,
+        @Body parking: eina.unizar.frontend.models.NuevoParkingData
+    ): Response<eina.unizar.frontend.models.ParkingResponse>
 }
