@@ -32,6 +32,7 @@ import eina.unizar.frontend.models.VehiculoDetalle
 import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.models.toVehiculoDetalle
 import eina.unizar.frontend.viewmodels.HomeViewModel
+import eina.unizar.frontend.models.Parking
 import android.content.Intent
 import androidx.compose.runtime.setValue
 import eina.unizar.frontend.models.SearchResult
@@ -120,6 +121,7 @@ fun AppNavigation(intent: Intent? = null) {
     val efectiveUserId = userId ?: storedUserId
     val efectiveToken = token ?: storedToken
     val selectedVehiculo = remember { mutableStateOf<Vehiculo?>(null) }
+    val selectedParking = remember { mutableStateOf<Parking?>(null) }
 
     // *** SISTEMA DE ANUNCIOS ***
     var mostrarAnuncio by remember { mutableStateOf(false) }
@@ -154,7 +156,6 @@ fun AppNavigation(intent: Intent? = null) {
             Log.d("AnuncioDebug", "✅ Anuncio bloqueado (Premium o contador)")
         }
     }
-
 
     // --- Datos de Ejemplo para Home y otras pantallas ---
     val usuarioEjemplo = Usuario("1", "Juan Pérez", "jp", "juan@eina.com")
@@ -315,7 +316,9 @@ fun AppNavigation(intent: Intent? = null) {
                     onRevisionesClick = { navController.navigate("revisiones") },
                     onEstadisticasClick = { navController.navigate("estadisticas") },
                     onBusquedaClick = { navController.navigate("busqueda") },
-                    onLogrosClick = { navController.navigate("logros") }
+                    onLogrosClick = { navController.navigate("logros") },
+                    onParkingClick = { navController.navigate("parkings")
+                    }
                 )
             }
         }
@@ -727,6 +730,53 @@ fun AppNavigation(intent: Intent? = null) {
             }
         }
 
+        // Ruta para crear parking
+        composable("add_parking") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                CrearParkingScreen(
+                    onBackClick = { navController.popBackStack() },
+                    efectiveUserId = efectiveUserId,
+                    efectiveToken = efectiveToken
+                )
+            } else {
+                Text("Usuario o token no válido")
+            }
+        }
+
+        // Ruta para ver lista de parkings
+        composable("parkings") {
+            if (efectiveUserId != null && efectiveToken != null) {
+                ParkingsScreen(
+                    userId = efectiveUserId,
+                    token = efectiveToken,
+                    onBackClick = { navController.popBackStack() },
+                    onAddParkingClick = { navController.navigate("add_parking") },
+                    onEditParkingClick = { parking ->
+                        selectedParking.value = parking
+                        navController.navigate("editar_parking")
+                    }
+                )
+            } else {
+                Text("Usuario o token no válido")
+            }
+        }
+
+        // Ruta para editar parking
+        composable("editar_parking") {
+            if (efectiveUserId != null && efectiveToken != null && selectedParking.value != null) {
+                EditarParkingScreen(
+                    parking = selectedParking.value!!,
+                    onBackClick = { navController.popBackStack() },
+                    efectiveToken = efectiveToken,
+                    onEditSuccess = {
+                        navController.popBackStack()
+                    }
+                )
+            } else {
+                Text("Datos inválidos")
+            }
+        }
+
         composable("premium") { backStackEntry ->
 
             PremiumScreen(
@@ -767,7 +817,5 @@ fun AppNavigation(intent: Intent? = null) {
             },
             navController = navController
         )
-
-
     }
 }

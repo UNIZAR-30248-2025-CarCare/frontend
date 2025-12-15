@@ -35,6 +35,7 @@ import eina.unizar.frontend.models.PagoResponse
 import eina.unizar.frontend.models.ProcesarPagoRequest
 import eina.unizar.frontend.models.VerificarAnuncioResponse
 import eina.unizar.frontend.models.VerificarProgresoResponse
+import eina.unizar.frontend.models.Parking
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -557,6 +558,45 @@ interface ApiService {
         @Path("usuarioId") usuarioId: Int
     ): Call<VerificarProgresoResponse>
 
+    /**
+     * Crear un nuevo parking
+     */
+    @POST("/parking/crear")
+    suspend fun crearParking(
+        @Header("Authorization") token: String,
+        @Body parking: eina.unizar.frontend.models.NuevoParkingData
+    ): Response<eina.unizar.frontend.models.ParkingResponse>
+
+    /**
+     * Obtener parkings de un usuario
+     */
+    @GET("/parking/usuario/{usuarioId}")
+    suspend fun obtenerParkingsUsuario(
+        @Header("Authorization") token: String,
+        @Path("usuarioId") usuarioId: String
+    ): Response<eina.unizar.frontend.models.ParkingsResponse>
+
+    /**
+     * Eliminar un parking
+     */
+    @DELETE("/parking/eliminar/{parkingId}")
+    suspend fun eliminarParking(
+        @Header("Authorization") token: String,
+        @Path("parkingId") parkingId: Int
+    ): Response<Map<String, String>>
+
+    /**
+     * Actualizar un parking
+     */
+    @PUT("/parking/actualizar/{parkingId}")
+    suspend fun actualizarParking(
+        @Header("Authorization") token: String,
+        @Path("parkingId") parkingId: Int,
+        @Body parking: eina.unizar.frontend.models.NuevoParkingData
+    ): Response<eina.unizar.frontend.models.ParkingResponse>
+    /**
+     * Subir el icono de un vehículo.
+     */
     @Multipart
     @POST("/vehiculo/{vehiculoId}/icono")
     suspend fun subirIconoVehiculo(
@@ -564,13 +604,17 @@ interface ApiService {
         @Path("vehiculoId") vehiculoId: String,
         @Part icono: MultipartBody.Part
     ): Response<IconoResponse>
-
+    /**
+     * Obtener el icono de un vehículo.
+     */
     @GET("/vehiculo/{vehiculoId}/icono")
     suspend fun obtenerIconoVehiculo(
         @Path("vehiculoId") vehiculoId: String,
         @Header("Authorization") token: String
     ): retrofit2.Response<IconoResponse>
-
+    /**
+     * Eliminar el icono de un vehículo.
+     */
     @DELETE("/vehiculo/{vehiculoId}/icono")
     suspend fun eliminarIconoVehiculo(
         @Header("Authorization") token: String,

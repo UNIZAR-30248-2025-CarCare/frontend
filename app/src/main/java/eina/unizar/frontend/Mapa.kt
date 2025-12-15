@@ -28,6 +28,7 @@ import androidx.navigation.NavHostController
 import eina.unizar.frontend.R
 import eina.unizar.frontend.models.toVehiculo
 import eina.unizar.frontend.viewmodels.HomeViewModel
+import eina.unizar.frontend.viewmodels.ParkingsViewModel
 import org.maplibre.android.MapLibre
 import org.maplibre.android.WellKnownTileServer
 import org.maplibre.android.camera.CameraPosition
@@ -42,6 +43,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+// Combinamos vehículos y parkings en una lista de items
+sealed class MapItem {
+    data class VehiculoItem(val vehiculo: eina.unizar.frontend.models.Vehiculo) : MapItem()
+    data class ParkingItem(val parking: eina.unizar.frontend.models.Parking) : MapItem()
+}
+
 @Composable
 fun UbicacionVehiculoScreen(
     onBackClick: () -> Unit = {},
@@ -53,13 +60,16 @@ fun UbicacionVehiculoScreen(
     efectiveToken: String?
 ) {
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-
     val currentRoute = navController.currentBackStackEntry?.destination?.route
 
-    // ViewModel y vehículos
-    val viewModel = remember { HomeViewModel() }
-    val vehiculosDTO by viewModel.vehiculos.collectAsState()
+    // ViewModels para vehículos y parkings
+    val vehiculosViewModel = remember { HomeViewModel() }
+    val parkingsViewModel = remember { ParkingsViewModel() }
+    
+    val vehiculosDTO by vehiculosViewModel.vehiculos.collectAsState()
     val vehiculos = vehiculosDTO.map { it.toVehiculo() }
+    
+    val parkings by parkingsViewModel.parkings.collectAsState()
 
     vehiculos.forEach { vehiculo ->
         Log.d("Mapa", "Vehículo ${vehiculo.id} - tipo: ${vehiculo.tipo} - icono_url: ${vehiculo.icono_url}")
@@ -67,55 +77,64 @@ fun UbicacionVehiculoScreen(
 
     LaunchedEffect(Unit) {
         if (efectiveUserId != null && efectiveToken != null) {
-            viewModel.fetchVehiculos(efectiveUserId, efectiveToken)
+            vehiculosViewModel.fetchVehiculos(efectiveUserId, efectiveToken)
+            parkingsViewModel.fetchParkings(efectiveUserId, efectiveToken)
         }
     }
 
-    Log.d("Mapa", "Vehículos obtenidos: ${vehiculos.size}")
+    Log.d("Mapa", "Vehículos obtenidos: ${vehiculos.size}, Parkings obtenidos: ${parkings.size}")
 
-    // Estado para el vehículo seleccionado y referencia al mapa
+    
+    val mapItems = remember(vehiculos, parkings) {
+        vehiculos.map { MapItem.VehiculoItem(it) } + parkings.map { MapItem.ParkingItem(it) }
+    }
+
     var selectedIndex by remember { mutableIntStateOf(0) }
-    val selectedVehiculo = vehiculos.getOrNull(selectedIndex)
+    val selectedItem = mapItems.getOrNull(selectedIndex)
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
-    var shouldCenterMap by remember { mutableStateOf(false) }
     var showTutorialSnackbar by remember { mutableStateOf(true) }
 
-// Ocultar el snackbar después de 5 segundos
     LaunchedEffect(showTutorialSnackbar) {
-        if (showTutorialSnackbar && vehiculos.size > 1) {
+        if (showTutorialSnackbar && mapItems.size > 1) {
             kotlinx.coroutines.delay(5000)
             showTutorialSnackbar = false
         }
     }
 
-    // Función para centrar el mapa en el vehículo seleccionado
-    fun centerMapOnVehicle() {
-        selectedVehiculo?.ubicacion_actual?.let { ubicacion ->
-            mapLibreMap?.let { map ->
-                val position = CameraPosition.Builder()
-                    .target(LatLng(ubicacion.latitud, ubicacion.longitud))
-                    .zoom(16.0)
-                    .build()
-
-                map.animateCamera(
-                    CameraUpdateFactory.newCameraPosition(position),
-                    1000 // Duración de la animación en ms
+    // Función para centrar el mapa en el item seleccionado
+    fun centerMapOnItem() {
+        selectedItem?.let { item ->
+            val latLng = when (item) {
+                is MapItem.VehiculoItem -> item.vehiculo.ubicacion_actual?.let { 
+                    LatLng(it.latitud, it.longitud) 
+                }
+                is MapItem.ParkingItem -> LatLng(item.parking.ubicacion.lat, item.parking.ubicacion.lng)
+            }
+            
+            latLng?.let { position ->
+                mapLibreMap?.animateCamera(
+                    CameraUpdateFactory.newCameraPosition(
+                        CameraPosition.Builder()
+                            .target(position)
+                            .zoom(16.0)
+                            .build()
+                    ),
+                    1000
                 )
             }
         }
     }
 
-    // Efecto para centrar cuando cambia el vehículo seleccionado
     LaunchedEffect(selectedIndex) {
-        if (vehiculos.isNotEmpty()) {
-            centerMapOnVehicle()
+        if (mapItems.isNotEmpty()) {
+            centerMapOnItem()
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ubicación del Vehículo", color = Color.White, fontSize = 18.sp) },
+                title = { Text("Mapa de Vehículos y Parkings", color = Color.White, fontSize = 18.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
@@ -148,38 +167,20 @@ fun UbicacionVehiculoScreen(
                         getMapAsync { map ->
                             mapLibreMap = map
                             map.setStyle("https://api.maptiler.com/maps/streets/style.json?key=vzU3m7mUFKYAvOtFHKIq") {
-                                // Crear el icono del marcador con tamaño apropiado
                                 val iconFactory = org.maplibre.android.annotations.IconFactory.getInstance(context)
-                                val markerIcon = iconFactory.fromResource(R.drawable.ic_marker)
 
-                                // Escalar el icono a un tamaño razonable (en píxeles)
-                                val scaledIcon = iconFactory.fromBitmap(
-                                    android.graphics.Bitmap.createScaledBitmap(
-                                        markerIcon.bitmap,
-                                        60, // ancho en píxeles
-                                        80, // alto en píxeles
-                                        false
-                                    )
-                                )
-
-                                // Añadir marcadores para todos los vehículos
-                                vehiculos.forEach { vehiculo ->
-                                    vehiculo.ubicacion_actual?.let { ubicacion ->
-                                        map.addMarker(
-                                            org.maplibre.android.annotations.MarkerOptions()
-                                                .position(LatLng(ubicacion.latitud, ubicacion.longitud))
-                                                .title(vehiculo.nombre)
-                                                .snippet(vehiculo.matricula)
-                                                .icon(scaledIcon) // Usa el icono escalado
-                                        )
+                                // Centrar en el primer item al iniciar
+                                if (mapItems.isNotEmpty()) {
+                                    val firstPosition = when (val item = mapItems[0]) {
+                                        is MapItem.VehiculoItem -> item.vehiculo.ubicacion_actual?.let {
+                                            LatLng(it.latitud, it.longitud)
+                                        }
+                                        is MapItem.ParkingItem -> LatLng(item.parking.ubicacion.lat, item.parking.ubicacion.lng)
                                     }
-                                }
-
-                                // Centrar en el primer vehículo al iniciar
-                                if (vehiculos.isNotEmpty()) {
-                                    selectedVehiculo?.ubicacion_actual?.let { ubicacion ->
+                                    
+                                    firstPosition?.let {
                                         map.cameraPosition = CameraPosition.Builder()
-                                            .target(LatLng(ubicacion.latitud, ubicacion.longitud))
+                                            .target(it)
                                             .zoom(14.0)
                                             .build()
                                     }
@@ -190,28 +191,23 @@ fun UbicacionVehiculoScreen(
                     mapView
                 },
                 update = { mapView ->
-                    // Esta función se llama cuando el composable se recompone
-                    // Este bloque se ejecuta cada vez que vehiculos cambia
                     mapView.getMapAsync { map ->
-                        if (vehiculos.isNotEmpty()) {
-                            Log.d("Mapa", "Actualizando marcadores. Vehículos: ${vehiculos.size}")
+                        if (mapItems.isNotEmpty()) {
+                            Log.d("Mapa", "Actualizando marcadores. Items: ${mapItems.size}")
 
-                            // Limpiar marcadores anteriores
                             map.clear()
 
                             try {
                                 val iconFactory = org.maplibre.android.annotations.IconFactory.getInstance(mapView.context)
                                 val iconPreferences = IconPreferences(mapView.context)
 
-                                // Añadir marcadores para TODOS los vehículos
-                                vehiculos.forEachIndexed { index, vehiculo ->
+                                val customSize = 100 // tamaño para icono personalizado
+                                val defaultSize = 50 // tamaño para icono por defecto
+                                val parkingSize = 50 // tamaño para icono de parking
+
+                                // Añadir marcadores para vehículos
+                                vehiculos.forEach { vehiculo ->
                                     vehiculo.ubicacion_actual?.let { ubicacion ->
-                                        val isSelected = index == selectedIndex
-
-
-                                        val customSize = 100 // tamaño para icono personalizado
-                                        val defaultSize = 50 // tamaño para icono por defecto
-
                                         if (!vehiculo.icono_url.isNullOrBlank()) {
                                             Log.d("Mapa", "Intentando descargar icono personalizado para vehículo ${vehiculo.id}: ${vehiculo.icono_url}")
                                             val urlCompleta = if (vehiculo.icono_url.startsWith("/")) {
@@ -279,45 +275,59 @@ fun UbicacionVehiculoScreen(
                                     }
                                 }
 
-                                // Centrar SOLO en el vehículo seleccionado
-                                selectedVehiculo?.ubicacion_actual?.let { ubicacion ->
-                                    map.animateCamera(
-                                        CameraUpdateFactory.newCameraPosition(
-                                            CameraPosition.Builder()
-                                                .target(LatLng(ubicacion.latitud, ubicacion.longitud))
-                                                .zoom(15.0)
-                                                .build()
-                                        ),
-                                        500
+                                // Añadir marcadores para parkings
+                                parkings.forEach { parking ->
+                                    val parkingIcon = iconFactory.fromResource(R.drawable.ic_parking)
+                                    val scaledIcon = iconFactory.fromBitmap(
+                                        android.graphics.Bitmap.createScaledBitmap(
+                                            parkingIcon.bitmap,
+                                            parkingSize,
+                                            parkingSize,
+                                            false
+                                        )
+                                    )
+
+                                    map.addMarker(
+                                        org.maplibre.android.annotations.MarkerOptions()
+                                            .position(LatLng(parking.ubicacion.lat, parking.ubicacion.lng))
+                                            .title(parking.nombre)
+                                            .snippet(parking.notas ?: "Parking")
+                                            .icon(scaledIcon)
                                     )
                                 }
-                            } catch (e: Exception) {
-                                Log.e("Mapa", "Error al añadir marcadores: ${e.message}", e)
 
-                                // Si hay error, usar marcadores por defecto
-                                vehiculos.forEach { vehiculo ->
-                                    vehiculo.ubicacion_actual?.let { ubicacion ->
-                                        map.addMarker(
-                                            org.maplibre.android.annotations.MarkerOptions()
-                                                .position(LatLng(ubicacion.latitud, ubicacion.longitud))
-                                                .title(vehiculo.nombre)
-                                                .snippet(vehiculo.matricula)
+                                // Centrar en el item seleccionado
+                                selectedItem?.let { item ->
+                                    val position = when (item) {
+                                        is MapItem.VehiculoItem -> item.vehiculo.ubicacion_actual?.let {
+                                            LatLng(it.latitud, it.longitud)
+                                        }
+                                        is MapItem.ParkingItem -> LatLng(item.parking.ubicacion.lat, item.parking.ubicacion.lng)
+                                    }
+                                    
+                                    position?.let {
+                                        map.animateCamera(
+                                            CameraUpdateFactory.newCameraPosition(
+                                                CameraPosition.Builder()
+                                                    .target(it)
+                                                    .zoom(15.0)
+                                                    .build()
+                                            ),
+                                            500
                                         )
                                     }
                                 }
+                            } catch (e: Exception) {
+                                Log.e("Mapa", "Error al añadir marcadores: ${e.message}", e)
                             }
-                        } else {
-                            Log.d("Mapa", "No hay vehículos para mostrar")
                         }
                     }
                 }
             )
 
+            // Pager con las tarjetas
+            val pagerState = rememberPagerState(pageCount = { mapItems.size })
 
-            // Pager con las tarjetas de vehículos
-            val pagerState = rememberPagerState(pageCount = { vehiculos.size })
-
-            // Sincronizar el índice seleccionado con el pager
             LaunchedEffect(pagerState.currentPage) {
                 selectedIndex = pagerState.currentPage
             }
@@ -332,7 +342,7 @@ fun UbicacionVehiculoScreen(
                 pageSpacing = 80.dp,
                 key = { it }
             ) { page ->
-                val vehiculo = vehiculos[page]
+                val item = mapItems[page]
                 Card(
                     shape = RoundedCornerShape(24.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
@@ -344,37 +354,73 @@ fun UbicacionVehiculoScreen(
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Place,
-                            contentDescription = "Vehículo",
-                            tint = Color(0xFFE53935),
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                vehiculo.nombre,
-                                color = Color.Black,
-                                fontSize = 18.sp,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                vehiculo.matricula,
-                                color = Color.Gray,
-                                fontSize = 14.sp,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            vehiculo.ubicacion_actual?.let { ubicacion ->
-                                Text(
-                                    "Lat: ${String.format("%.4f", ubicacion.latitud)}, Lon: ${String.format("%.4f", ubicacion.longitud)}",
-                                    color = Color.Gray,
-                                    fontSize = 12.sp,
-                                    style = MaterialTheme.typography.bodySmall
+                        when (item) {
+                            is MapItem.VehiculoItem -> {
+                                val vehiculo = item.vehiculo
+                                Icon(
+                                    imageVector = Icons.Default.Place,
+                                    contentDescription = "Vehículo",
+                                    tint = Color(0xFFE53935),
+                                    modifier = Modifier.size(48.dp)
                                 )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        vehiculo.nombre,
+                                        color = Color.Black,
+                                        fontSize = 18.sp,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text(
+                                        vehiculo.matricula,
+                                        color = Color.Gray,
+                                        fontSize = 14.sp,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    vehiculo.ubicacion_actual?.let { ubicacion ->
+                                        Text(
+                                            "Lat: ${String.format("%.4f", ubicacion.latitud)}, Lon: ${String.format("%.4f", ubicacion.longitud)}",
+                                            color = Color.Gray,
+                                            fontSize = 12.sp,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
+                            }
+                            is MapItem.ParkingItem -> {
+                                val parking = item.parking
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_parking),
+                                    contentDescription = "Parking",
+                                    tint = Color.Unspecified,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        parking.nombre,
+                                        color = Color.Black,
+                                        fontSize = 18.sp,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text(
+                                        parking.notas ?: "Sin notas",
+                                        color = Color.Gray,
+                                        fontSize = 14.sp,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        "Lat: ${String.format("%.4f", parking.ubicacion.lat)}, Lon: ${String.format("%.4f", parking.ubicacion.lng)}",
+                                        color = Color.Gray,
+                                        fontSize = 12.sp,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
                             }
                         }
                         Button(
-                            onClick = { centerMapOnVehicle() },
+                            onClick = { centerMapOnItem() },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
                             shape = RoundedCornerShape(50)
                         ) {
@@ -384,8 +430,8 @@ fun UbicacionVehiculoScreen(
                 }
             }
 
-            // Snackbar tutorial (aparece solo si hay más de 1 vehículo)
-            if (showTutorialSnackbar && vehiculos.size > 1) {
+            // Snackbar tutorial
+            if (showTutorialSnackbar && mapItems.size > 1) {
                 Snackbar(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -409,7 +455,7 @@ fun UbicacionVehiculoScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            "Desliza para ver el resto de vehículos",
+                            "Desliza para ver vehículos y parkings",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -451,4 +497,3 @@ fun BottomNavigationBar(
         )
     }
 }
-

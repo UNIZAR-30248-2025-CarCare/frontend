@@ -68,6 +68,7 @@ fun HomeScreenWrapper(
     onEstadisticasClick: () -> Unit,
     onBusquedaClick: () -> Unit,
     onLogrosClick: () -> Unit,
+    onParkingClick : () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -98,6 +99,7 @@ fun HomeScreenWrapper(
         onEstadisticasClick = onEstadisticasClick,
         onBusquedaClick = onBusquedaClick,
         onLogrosClick = onLogrosClick,
+        onParkingClick = onParkingClick,
         selectedTab = selectedTab,
         onTabSelected = onTabSelected,
         navController = navController,
@@ -123,6 +125,7 @@ fun HomeScreen(
     onEstadisticasClick: () -> Unit,
     onBusquedaClick: () -> Unit,
     onLogrosClick: () -> Unit,
+    onParkingClick: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -360,9 +363,21 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
-
-                    Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+                // Cuarta fila
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    QuickAccessCard(
+                        iconDrawable = R.drawable.ic_parking,
+                        title = "Parkings",
+                        color = Color(0xFF14B8A6),
+                        onClick = onParkingClick,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
+                Spacer(modifier = Modifier.height(100.dp))
             }
         }
     }
@@ -479,7 +494,8 @@ fun VehiculoCard(
 
 @Composable
 fun QuickAccessCard(
-    icon: ImageVector,
+    icon: ImageVector? = null,
+    iconDrawable: Int? = null,
     title: String,
     color: Color,
     onClick: () -> Unit,
@@ -506,12 +522,24 @@ fun QuickAccessCard(
                     .background(color.copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    tint = color,
-                    modifier = Modifier.size(20.dp)
-                )
+                when {
+                    icon != null -> {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = title,
+                            tint = color,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    iconDrawable != null -> {
+                        Icon(
+                            painter = painterResource(id = iconDrawable),
+                            contentDescription = title,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
