@@ -78,8 +78,10 @@ fun BusquedaScreen(
     Scaffold(
         topBar = {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding(),
+                color = Color(0xFFEF4444),
             ) {
                 Column {
                     Row(
@@ -113,6 +115,7 @@ fun BusquedaScreen(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
                                 .height(50.dp)
                                 .shadow(2.dp, RoundedCornerShape(25.dp))
                                 .clickable{vehiculoMenuExpanded = true},

@@ -37,6 +37,6 @@ data class VehiculoDetalle(
     val tipo: TipoVehiculo,
     val estado: EstadoVehiculo,
     val usuariosVinculados: List<String>,
-    val usuarioActivoId: String?
+    val usuarioActivoId: String?,
     val icono_url: String? = null
 )

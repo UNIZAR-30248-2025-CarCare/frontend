@@ -73,8 +73,10 @@ fun DetalleVehiculoScreen(
     ) {
         // Header
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding(),
+            color = Color(0xFFEF4444),
         ) {
             Row(
                 modifier = Modifier

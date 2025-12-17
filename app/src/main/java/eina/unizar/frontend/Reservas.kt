@@ -216,8 +216,9 @@ fun CalendarioScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary
+                modifier = Modifier
+                    .fillMaxWidth(),
+                color = Color(0xFFEF4444),
             ) {
                 Row(
                     modifier = Modifier
@@ -381,7 +382,7 @@ fun CalendarioScreen(
                     ) {
                         FloatingActionButton(
                             onClick = onAddReservaClick,
-                            containerColor = MaterialTheme.colorScheme.primary,
+                            containerColor = Color(0xFFEF4444),
                             modifier = Modifier.size(56.dp)
                         ) {
                             Icon(

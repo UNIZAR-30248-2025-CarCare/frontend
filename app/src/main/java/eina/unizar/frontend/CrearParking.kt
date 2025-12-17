@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import eina.unizar.frontend.models.NuevoParkingData
 import eina.unizar.frontend.models.UbicacionParking
 import eina.unizar.frontend.viewmodels.ParkingsViewModel
@@ -32,7 +33,8 @@ import org.json.JSONObject
 fun CrearParkingScreen(
     onBackClick: () -> Unit,
     efectiveUserId: String,
-    efectiveToken: String
+    efectiveToken: String,
+    navController: NavHostController? = null
 ) {
     val context = LocalContext.current
     val parkingViewModel = remember { ParkingsViewModel() }
@@ -45,12 +47,28 @@ fun CrearParkingScreen(
     var mostrarSelectorMapa by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-            .statusBarsPadding()
-    ) {
+    Scaffold(
+        bottomBar = {
+            if (navController != null) {
+                BottomNavigationBar(
+                    currentRoute = "add_parking",
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+        },
+        containerColor = Color(0xFFF5F5F5)
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color(0xFFF5F5F5))
+        ) {
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -228,6 +246,7 @@ fun CrearParkingScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
         }
+    }
     }
 }
 
